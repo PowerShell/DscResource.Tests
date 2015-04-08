@@ -16,7 +16,7 @@ Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
 
-Import-Module $PSScriptRoot\Fixers.psm1
+Import-Module $PSScriptRoot\MetaFixers.psm1
 
 Describe 'Text files formatting' {
     
