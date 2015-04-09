@@ -1,4 +1,4 @@
-﻿<#
+<#
     This module helps fix problems, found by Meta.Tests.ps1
 #>
 
@@ -80,3 +80,4 @@ function Get-UnicodeFilesList()
 
     Get-TextFilesList $root | ? { Test-FileUnicode $_ }
 }
+
