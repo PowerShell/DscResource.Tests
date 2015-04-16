@@ -53,11 +53,13 @@ Describe 'Text files formatting' {
 }
 
 Describe 'PowerShell DSC resource modules' {
-    $psm1Files = ls $RepoRoot -Recurse -Filter "*.psm1" -File | ? {
+    
+    # Force convert to array
+    $psm1Files = @(ls $RepoRoot -Recurse -Filter "*.psm1" -File | ? {
         # Ignore Composite configurations
         # They requires additional resources to be installed on the box
         ($_.FullName -like "*\DscResources\*") -and (-not ($_.Name -like "*.schema.psm1"))
-    }
+    })
 
     if (-not $psm1Files) {
         Write-Verbose -Verbose "There are no resource files to analyze"
