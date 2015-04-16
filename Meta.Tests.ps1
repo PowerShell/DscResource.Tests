@@ -58,35 +58,41 @@ Describe 'PowerShell DSC resource modules' {
         # They requires additional resources to be installed on the box
         ($_.FullName -like "*\DscResources\*") -and (-not ($_.Name -like "*.schema.psm1"))
     }
-    Write-Verbose -Verbose "Analyzing $($psm1Files.Count) files"
 
-    Context 'Correctness' {
+    if (-not $psm1Files) {
+        Write-Verbose -Verbose "There are no resource files to analyze"
+    } else {
 
-        function Get-ParseErrors
-        {
-            param(
-                [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
-                [string]$fileName
-            )    
+        Write-Verbose -Verbose "Analyzing $($psm1Files.Count) files"
 
-            $tokens = $null 
-            $errors = $null
-            $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref] $tokens, [ref] $errors)
-            return $errors
-        }
+        Context 'Correctness' {
 
+            function Get-ParseErrors
+            {
+                param(
+                    [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
+                    [string]$fileName
+                )    
 
-        It 'all .psm1 files don''t have parse errors' {
-            $errors = @()
-            $psm1Files | %{ 
-                $localErrors = Get-ParseErrors $_.FullName
-                if ($localErrors) {
-                    Write-Warning "There are parsing errors in $($_.FullName)"
-                    Write-Warning ($localErrors | fl | Out-String)
-                }
-                $errors += $localErrors
+                $tokens = $null 
+                $errors = $null
+                $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref] $tokens, [ref] $errors)
+                return $errors
             }
-            $errors.Count | Should Be 0
+
+
+            It 'all .psm1 files don''t have parse errors' {
+                $errors = @()
+                $psm1Files | %{ 
+                    $localErrors = Get-ParseErrors $_.FullName
+                    if ($localErrors) {
+                        Write-Warning "There are parsing errors in $($_.FullName)"
+                        Write-Warning ($localErrors | fl | Out-String)
+                    }
+                    $errors += $localErrors
+                }
+                $errors.Count | Should Be 0
+            }
         }
     }
 }
