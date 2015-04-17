@@ -4,7 +4,7 @@ Common meta tests for PowerShell DSC resources repositories.
 ## Goals
 
 1. Consistency in encoding and indentations. 
-Consistency is good by itself. But more importent it allow us to:
+Consistency is good by itself. But more importent it allows us to:
 2. Avoid big diffs with cosmetic changes in Pull Requests. 
 Cosmetic changes (like formatting) make reviews harder.
 If you want to include formatting changes (like replacing `"` by `'`), 
