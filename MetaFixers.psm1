@@ -17,7 +17,7 @@ function ConvertTo-UTF8()
     process 
     {
         $content = Get-Content -Raw -Encoding Unicode -Path $fileInfo.FullName
-        Set-Content -Encoding UTF8 -Value $content -Path $fileInfo.FullName
+        [System.IO.File]::WriteAllText($fileInfo.FullName, $content, [System.Text.Encoding]::UTF8)
     }
 }
 
@@ -33,7 +33,7 @@ function ConvertTo-SpaceIndentation()
     process 
     {
         $content = (Get-Content -Raw -Path $fileInfo.FullName) -replace "`t",'    '
-        Set-Content -Value $content -Path $fileInfo.FullName
+        [System.IO.File]::WriteAllText($fileInfo.FullName, $content)
     }
 }
 
