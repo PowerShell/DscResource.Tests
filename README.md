@@ -15,7 +15,7 @@ Reviewers would have an option to review meanful changes separately from formatt
 
 By default, git treat [unicode files as binary files](http://stackoverflow.com/questions/6855712/why-does-git-treat-this-text-file-as-a-binary-file).
 You may not notice it, if your client (like VS or GitHub for Windows) takes care of such convertion. 
-History with Unicode files is hardly usable command line git.
+History with Unicode files is hardly usable from command line `git`.
 
 ```
 > git diff
@@ -45,7 +45,7 @@ With forced `--text` option it would look like this:
  \ No newline at end of file
 ```
 
-Command line git version is a core component and should be used as common denamenator.
+Command line `git` version is a core component and should be used as a common denamenator.
 
 ## Fixers
 
