@@ -3,7 +3,7 @@
     .PARAM
         resourcesPath Path where DSC resource modules have been cloned (tests will run for all modules in that path)
     .EXAMPLE
-        $localPath = Get-GitHubRepository -repositoryUrl https://github.com/PowerShell/xWebDeploy.git -destinationPath C:\git\GitHubPowerShell -branch 'dev'
+        Start-DscResourceTests -resourcesPath C:\DscResources\xDscResources
 #>
 function Start-DscResourceTests
 {
