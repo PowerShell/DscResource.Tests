@@ -9,7 +9,7 @@ Consistency is good by itself. But more important it allows us to:
 Cosmetic changes (like formatting) make reviews harder.
 If you want to include formatting changes (like replacing `"` by `'`), 
 please make it a **separate commit**. 
-This will give reviewers an option to review meaningful changes separatly from formatting changes.
+This will give reviewers an option to review meaningful changes separately from formatting changes.
 
 ## Git and Unicode
 
