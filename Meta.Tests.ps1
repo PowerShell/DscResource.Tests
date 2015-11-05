@@ -9,6 +9,8 @@ if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 {
     $PSScriptRoot = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)
 }
+# Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
@@ -27,9 +29,6 @@ if (($env:PSModulePath.Split(';') | Select-Object -First 1) -ne $pwd)
 {
     $env:PSModulePath = "$pwd;$env:PSModulePath"
 }
-
-# Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
 Describe 'Text files formatting' {
     
