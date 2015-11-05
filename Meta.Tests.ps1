@@ -2,7 +2,6 @@
 .summary
     Test that describes code.
 #>
-
 [CmdletBinding()]
 param()
 
@@ -16,41 +15,10 @@ Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
 
-Import-Module $PSScriptRoot\MetaFixers.psm1
+# Load the TestHelper module which contains the Get-ResourceDesigner function
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
 
-#region Download and import latest stable DSC Resource Designer module
-
-# We are using nuget to be compatible with WMF v4 machines which
-# do not have the PowerShell Package Management module.
-$DesignerModuleName = 'xDscResourceDesigner'
-$DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$DesignerModuleName"
-$nugetSource = 'https://www.powershellgallery.com/api/v2'
-$nugetOutputDirectory = "$(Split-Path -Path $DesignerModulePath -Parent)\\"
-
-
-if (Test-Path -Path $DesignerModulePath)
-{
-    # Remove any installed version of the DscResourceDesigner module
-    Remove-Item -Path $DesignerModulePath -Recurse -Force
-}
-
-$nugetArguments = @(
-    "install $DesignerModuleName"
-    '-source "{0}"' -f $nugetSource
-    '-outputDirectory "{0}"' -f $nugetOutputDirectory
-    '-ExcludeVersion'
-)
-$nugetProcess = Start-Process -Wait -PassThru -FilePath 'nuget.exe' -ArgumentList $nugetArguments
-if ($nugetProcess.ExitCode -ne 0)
-{
-    throw (
-        'Module installation of {0} failed with exit code {1}' -f $DesignerModuleName,
-            $nugetProcess.ExitCode
-    )
-}
-
-Import-Module -Name $DesignerModulePath -Force
-#endregion
+Get-ResourceDesigner
 
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource
@@ -59,6 +27,9 @@ if (($env:PSModulePath.Split(';') | Select-Object -First 1) -ne $pwd)
 {
     $env:PSModulePath = "$pwd;$env:PSModulePath"
 }
+
+# Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
 Describe 'Text files formatting' {
     
@@ -171,4 +142,3 @@ Describe 'PowerShell DSC resource modules' {
         }
     }
 }
-

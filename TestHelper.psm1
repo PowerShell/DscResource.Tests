@@ -73,3 +73,61 @@ function New-Nuspec
     New-Item -Path $nuspecPath -ItemType File -Force > $null
     Set-Content -Path $nuspecPath -Value $content
 }
+
+<#
+    .SYNOPSIS
+        Will attempt to download the resource designer code via PowerShellGet or Nuget package.
+    
+    .EXAMPLE
+        Get-ResourceDesigner
+
+#>
+function Get-ResourceDesigner {
+    [CmdletBinding()]
+       
+    $DesignerModuleName = 'xDscResourceDesigner'
+    $DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$DesignerModuleName"
+    $OutputDirectory = "$(Split-Path -Path $DesignerModulePath -Parent)\"
+
+    if ($env:APPVEYOR) {
+        if (Test-Path -Path $DesignerModulePath)
+        {
+            # Remove any installed version of the DscResourceDesigner module
+            Remove-Item -Path $DesignerModulePath -Recurse -Force
+        }
+  
+        # Is PowerShellGet module installed?
+        if (@(Get-Module -Name PowerShellGet -ListAvailable).Count -ne 0)
+        {
+            Import-Module PackageManagement
+
+            # Make sure the Nuget Package provider is initialized.
+            Get-PackageProvider -name nuget -ForceBootStrap -Force
+
+            # PowerShellGet is available - use that
+            Import-Module PowerShellGet
+
+            # Install the module - make sure we terminate if it fails.
+            Install-Module -Name $DesignerModuleName -Force
+        }
+        else
+        {
+            # PowerShellGet module isn't available, so use Nuget directly to download it
+            $nugetSource = 'https://www.powershellgallery.com/api/v2'
+            $nugetPath = 'nuget.exe'
+            & "$nugetPath" @('install',$DesignerModuleName,'-source',$nugetSource,'-outputDirectory',$OutputDirectory,'-ExcludeVersion')
+            $ExitCode = $LASTEXITCODE
+
+            if ($ExitCode -ne 0)
+            {
+                throw (
+                    'Module installation using Nuget of {0} failed with exit code {1}.' `
+                        -f $DesignerModuleName,$ExitCode
+                    )
+            }
+        }
+    }
+
+    # Import the module using the name
+    Import-Module -Name $DesignerModuleName -Force
+}
