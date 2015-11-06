@@ -1,9 +1,15 @@
 <# 
-.summary
-    Test that describes code.
+    .summary
+        Test that describes code.
+
+    .PARAMETER Force
+        Used to force any installations to occur without confirming with
+        the user.
 #>
 [CmdletBinding()]
-param()
+Param (
+    [Boolean]$Force = $false
+)
 
 if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 {
@@ -12,7 +18,7 @@ if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 # Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
-# Load the TestHelper module which contains the Get-ResourceDesigner function
+# Load the TestHelper module which contains the *-ResourceDesigner functions
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
 
 $ErrorActionPreference = 'stop'
@@ -20,7 +26,12 @@ Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
 
-Get-ResourceDesigner
+# Install and/or Import xDSCResourceDesigner Module
+if ($env:APPVEYOR) {
+    # Running in AppVeyor so force silent install of xDSCResourceDesigner
+    $PSBoundParameters.Force = $true
+}
+Import-ResourceDesigner @PSBoundParameters
 
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource

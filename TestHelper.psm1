@@ -83,24 +83,23 @@ function New-Nuspec
 <#
     .SYNOPSIS
         Will attempt to install the xDSCResourceDesignerModule and import it.
-    
+
+    .PARAMETER Force
+        Used to force any installations to occur without confirming with
+        the user.
+            
     .EXAMPLE
-        Get-ResourceDesigner
+        Import-ResourceDesigner
 
 #>
-function Get-ResourceDesigner {
+function Import-ResourceDesigner {
     [CmdletBinding(
         SupportsShouldProcess = $true
     )]
     Param (
         [Boolean]$Force = $false
     )
-
-    if ($env:APPVEYOR) {
-        # Running in AppVeyor so force the install
-        $PSBoundParameters.Force = $true
-    }
-    
+   
     Install-ResourceDesigner @PSBoundParameters
 
     if (@(Get-Module -Name $Script:DesignerModuleName -ListAvailable).Count -ne 0)
@@ -121,8 +120,13 @@ function Get-ResourceDesigner {
 <#
     .SYNOPSIS
         Will attempt to download the xDSCResourceDesignerModule code via
-        PowerShellGet or Nuget package.
+        PowerShellGet or Nuget package. If already installed will return
+        without making any changes.
     
+    .PARAMETER Force
+        Used to force any installations to occur without confirming with
+        the user.
+
     .EXAMPLE
         Install-ResourceDesigner
 
@@ -146,6 +150,11 @@ function Install-ResourceDesigner {
         # Could check for a newer version available here in future and perform an update.
         return
     }
+
+    Write-Verbose -Verbose (`
+        'The {0} module is not installed.' `
+            -f $Script:DesignerModuleName            
+    )
    
     $OutputDirectory = "$(Split-Path -Path $Script:DesignerModulePath -Parent)\"
 
@@ -186,38 +195,46 @@ function Install-ResourceDesigner {
         # PowerShellGet module isn't available, so use Nuget directly to download it
         $nugetPath = 'nuget.exe'
 
-        # Can't assume nuget.exe is available
+        # Can't assume nuget.exe is available - look for it in Path
         if ((Get-Command $nugetPath -ErrorAction SilentlyContinue) -eq $null) 
         {
-            # Nuget.exe can't be found - download it to current folder
-            $nugetURL = 'http://nuget.org/nuget.exe'
-            If ($Force -or $PSCmdlet.ShouldProcess( `
-                "Download and Install Nuget.exe from '{0}'" `
-                    -f $nugetSource))
+            # Is it in temp folder?
+            $nugetPath = Join-Path -Path $ENV:Temp -ChildPath $nugetPath
+            if (-not (Test-Path -Path $nugetPath))
             {
-                $nugetPath = Join-Path -Path (Get-Location) -ChildPath $nugetPath
-                Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
+                # Nuget.exe can't be found - download it to temp folder
+                $NugetDownloadURL = 'http://nuget.org/nuget.exe'
+                If ($Force -or $PSCmdlet.ShouldProcess( `
+                    "Download Nuget.exe from '{0}' to Temp folder" `
+                        -f $NugetDownloadURL))
+                {
+                    Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
 
-                Write-Verbose -Verbose (`
-                    "Nuget.exe was installed from '{0}'." `
-                        -f $Script:NugetDownloadURL
-                )
+                    Write-Verbose -Verbose (`
+                        "Nuget.exe was installed from '{0}' to Temp folder." `
+                            -f $Script:NugetDownloadURL
+                    )
+                }
+                else
+                {
+                    # Without Nuget.exe we can't continue
+                    Write-Warning -Message (`
+                        'Nuget.exe was not installed. {0} module can not be installed automatically.' `
+                            -f $Script:DesignerModuleName
+                    )
+                    return        
+                }
             }
             else
             {
-                # Without Nuget.exe we can't continue
-                Write-Warning -Message (`
-                    'Nuget.exe was not installed. {0} module can not be installed automatically.' `
-                        -f $Script:DesignerModuleName
-                )
-                return        
+                Write-Verbose -Verbose 'Using Nuget.exe found in Temp folder.'
             }
         }
         
         $nugetSource = 'https://www.powershellgallery.com/api/v2'
-        If ($Force -or $PSCmdlet.ShouldProcess( `
+        If ($Force -or $PSCmdlet.ShouldProcess(( `
             "Download and install the {0} module from '{1}' using Nuget" `
-                -f $Script:DesignerModuleName,$nugetSource))
+                -f $Script:DesignerModuleName,$nugetSource)))
         {
             # Use Nuget.exe to install the module
             & "$nugetPath" @( `
