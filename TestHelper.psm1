@@ -3,7 +3,7 @@
 #>
 $Script:DesignerModuleName = 'xDscResourceDesigner'
 $Script:DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:DesignerModuleName}"
-
+$Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
 <#
     .SYNOPSIS Creates a new nuspec file for nuget package.
         Will create $packageName.nuspec in $destinationPath
@@ -89,7 +89,9 @@ function New-Nuspec
 
 #>
 function Get-ResourceDesigner {
-    [CmdletBinding()]
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
     Param (
         [Boolean]$Force = $false
     )
@@ -108,11 +110,11 @@ function Get-ResourceDesigner {
     }
     else
     {
-        Write-Warning -Message @(
+        Write-Warning -Message ( @(
             "The '$Script:DesignerModuleName' module is not installed. "
             "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
             'will fail until this module is installed.'
-            ) -Join ''
+            ) -Join '' )
     }
 }
 
@@ -127,7 +129,9 @@ function Get-ResourceDesigner {
 #>
 
 function Install-ResourceDesigner {
-    [CmdletBinding()]
+    [CmdletBinding(
+        SupportsShouldProcess = $true,
+        ConfirmImpact = 'High')]
     Param (
         [Boolean]$Force = $false
     )
@@ -155,13 +159,18 @@ function Install-ResourceDesigner {
             Import-Module PackageManagement
 
             # Make sure the Nuget Package provider is initialized.
-            Get-PackageProvider -name nuget -ForceBootStrap -Force
+            $null = Get-PackageProvider -name nuget -ForceBootStrap -Force
 
             # PowerShellGet is available - use that
             Import-Module PowerShellGet
 
             # Install the module
             Install-Module -Name $Script:DesignerModuleName -Force
+
+            Write-Verbose -Verbose (`
+                'The {0} module was installed using PowerShellGet.' `
+                    -f $Script:DesignerModuleName            
+            )
         }
         else
         {
@@ -187,7 +196,12 @@ function Install-ResourceDesigner {
                     -f $nugetSource))
             {
                 $nugetPath = Join-Path -Path (Get-Location) -ChildPath $nugetPath
-                Invoke-WebRequest 'http://nuget.org/nuget.exe' -OutFile $nugetPath
+                Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
+
+                Write-Verbose -Verbose (`
+                    "Nuget.exe was installed from '{0}'." `
+                        -f $Script:NugetDownloadURL
+                )
             }
             else
             {
@@ -221,6 +235,10 @@ function Install-ResourceDesigner {
                         -f $Script:DesignerModuleName,$ExitCode
                     )
             }
+            Write-Verbose -Verbose (`
+                'The {0} module was installed using Nuget.' `
+                    -f $Script:DesignerModuleName            
+            )
         }
         else
         {
