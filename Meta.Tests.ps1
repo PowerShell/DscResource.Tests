@@ -12,13 +12,13 @@ if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 # Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
+# Load the TestHelper module which contains the Get-ResourceDesigner function
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
-
-# Load the TestHelper module which contains the Get-ResourceDesigner function
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
 
 Get-ResourceDesigner
 
