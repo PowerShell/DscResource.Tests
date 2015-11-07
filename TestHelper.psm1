@@ -82,46 +82,12 @@ function New-Nuspec
 
 <#
     .SYNOPSIS
-        Will attempt to install the xDSCResourceDesignerModule and import it.
-
-    .PARAMETER Force
-        Used to force any installations to occur without confirming with
-        the user.
-            
-    .EXAMPLE
-        Import-ResourceDesigner
-
-#>
-function Import-ResourceDesigner {
-    [CmdletBinding(
-        SupportsShouldProcess = $true
-    )]
-    Param (
-        [Boolean]$Force = $false
-    )
-   
-    Install-ResourceDesigner @PSBoundParameters
-
-    if (@(Get-Module -Name $Script:DesignerModuleName -ListAvailable).Count -ne 0)
-    {
-        # Import the module using the name if it is available
-        Import-Module -Name $Script:DesignerModuleName -Force
-    }
-    else
-    {
-        Write-Warning -Message ( @(
-            "The '$Script:DesignerModuleName' module is not installed. "
-            "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
-            'will fail until this module is installed.'
-            ) -Join '' )
-    }
-}
-
-<#
-    .SYNOPSIS
         Will attempt to download the xDSCResourceDesignerModule code via
-        PowerShellGet or Nuget package. If already installed will return
-        without making any changes.
+        PowerShellGet or Nuget package and return the module.
+        
+        If already installed will return the module without making changes.
+
+        If module could not be downloaded it will return null.
     
     .PARAMETER Force
         Used to force any installations to occur without confirming with
@@ -133,6 +99,7 @@ function Import-ResourceDesigner {
 #>
 
 function Install-ResourceDesigner {
+    [OutputType([System.Management.Automation.PSModuleInfo])]
     [CmdletBinding(
         SupportsShouldProcess = $true,
         ConfirmImpact = 'High')]
@@ -148,7 +115,7 @@ function Install-ResourceDesigner {
                 -f $DesignerModule.Version,$Script:DesignerModuleName            
         )
         # Could check for a newer version available here in future and perform an update.
-        return
+        return $DesignerModule
     }
 
     Write-Verbose -Verbose (`
@@ -187,7 +154,7 @@ function Install-ResourceDesigner {
                 '{0} module was not installed automatically.' `
                     -f $Script:DesignerModuleName
             )
-            return
+            return $null
         }
     }
     else
@@ -222,7 +189,7 @@ function Install-ResourceDesigner {
                         'Nuget.exe was not installed. {0} module can not be installed automatically.' `
                             -f $Script:DesignerModuleName
                     )
-                    return        
+                    return $null    
                 }
             }
             else
@@ -263,7 +230,8 @@ function Install-ResourceDesigner {
                 '{0} module was not installed automatically.' `
                     -f $Script:DesignerModuleName
             )
-            return
+            return $null
         }
     }
+    return (Get-Module -Name $Script:DesignerModuleName -ListAvailable)
 }

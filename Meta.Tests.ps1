@@ -31,7 +31,21 @@ if ($env:APPVEYOR) {
     # Running in AppVeyor so force silent install of xDSCResourceDesigner
     $PSBoundParameters.Force = $true
 }
-Import-ResourceDesigner @PSBoundParameters
+
+$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
+if ($xDSCResourceDesignerModule) {
+    # Import the module if it is available
+    $xDSCResourceDesignerModule | Import-Module -Force
+}
+else
+{
+    # Module could not/would not be installed - so warn user that tests will fail.
+    Write-Warning -Message ( @(
+        "The 'xDSCResourceDesigner' module is not installed. "
+        "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
+        'will fail until this module is installed.'
+        ) -Join '' )
+}
 
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource
