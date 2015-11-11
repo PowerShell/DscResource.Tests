@@ -170,7 +170,7 @@ function Install-ResourceDesigner {
             -f $Script:DesignerModuleName,$nugetSource)))
     {
         # Use Nuget.exe to install the module
-        & "$nugetPath" @( `
+        $null = & "$nugetPath" @( `
             'install', $Script:DesignerModuleName, `
             '-source', $nugetSource, `
             '-outputDirectory', $OutputDirectory, `
