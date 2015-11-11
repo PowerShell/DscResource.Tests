@@ -60,24 +60,5 @@ The test helper module contains cmdlets for assiting in either running standard 
 Resource Pester tests or creating a NuGet package from the build.
 
 ## Example Usage in AppVeyor.yml
-To automatically download and install the DscResource.Tests in an AppVeyor.yml file, add
-the following to the install section:
-
-```
-install:
-  - cinst -y pester
-  - git clone https://github.com/PowerShell/DscResource.Tests
-  - ps: Import-Module .\DscResource.Tests\TestHelper.psm1 -force
-```
-
-The test_script section should contain code similar to:
-```
-test_script:
-    - ps: |
-        $testResultsFile = ".\TestsResults.xml"
-        $res = Invoke-Pester -OutputFormat NUnitXml -OutputFile $testResultsFile -PassThru
-        (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsFile))
-        if ($res.FailedCount -gt 0) { 
-            throw "$($res.FailedCount) tests failed."
-        }
-```
+To automatically download and install the DscResource.Tests in an AppVeyor.yml file, please see the following sample AppVeyor.yml.
+[https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml)
