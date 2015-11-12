@@ -1,4 +1,10 @@
 <#
+    Script Constants used by *-ResourceDesigner Functions
+#>
+$Script:DesignerModuleName = 'xDscResourceDesigner'
+$Script:DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:DesignerModuleName}"
+$Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
+<#
     .SYNOPSIS Creates a new nuspec file for nuget package.
         Will create $packageName.nuspec in $destinationPath
     
@@ -72,4 +78,126 @@ function New-Nuspec
     $nuspecPath = Join-Path $destinationPath "$packageName.nuspec"
     New-Item -Path $nuspecPath -ItemType File -Force > $null
     Set-Content -Path $nuspecPath -Value $content
+}
+
+<#
+    .SYNOPSIS
+        Will attempt to download the xDSCResourceDesignerModule using
+        Nuget package and return the module.
+        
+        If already installed will return the module without making changes.
+
+        If module could not be downloaded it will return null.
+    
+    .PARAMETER Force
+        Used to force any installations to occur without confirming with
+        the user.
+
+    .EXAMPLE
+        Install-ResourceDesigner
+
+#>
+
+function Install-ResourceDesigner {
+    [OutputType([System.Management.Automation.PSModuleInfo])]
+    [CmdletBinding(
+        SupportsShouldProcess = $true,
+        ConfirmImpact = 'High')]
+    Param (
+        [Boolean]$Force = $false
+    )
+    $DesignerModule = Get-Module -Name $Script:DesignerModuleName -ListAvailable
+    if (@($DesignerModule).Count -ne 0)
+    {
+        # ResourceDesigner is already installed - report it.
+        Write-Verbose -Verbose (`
+            'Version {0} of the {1} module is already installed.' `
+                -f $DesignerModule.Version,$Script:DesignerModuleName            
+        )
+        # Could check for a newer version available here in future and perform an update.
+        return $DesignerModule
+    }
+
+    Write-Verbose -Verbose (`
+        'The {0} module is not installed.' `
+            -f $Script:DesignerModuleName            
+    )
+   
+    $OutputDirectory = "$(Split-Path -Path $Script:DesignerModulePath -Parent)\"
+
+    # Use Nuget directly to download the module
+    $nugetPath = 'nuget.exe'
+
+    # Can't assume nuget.exe is available - look for it in Path
+    if ((Get-Command $nugetPath -ErrorAction SilentlyContinue) -eq $null) 
+    {
+        # Is it in temp folder?
+        $nugetPath = Join-Path -Path $ENV:Temp -ChildPath $nugetPath
+        if (-not (Test-Path -Path $nugetPath))
+        {
+            # Nuget.exe can't be found - download it to temp folder
+            $NugetDownloadURL = 'http://nuget.org/nuget.exe'
+            If ($Force -or $PSCmdlet.ShouldProcess( `
+                "Download Nuget.exe from '{0}' to Temp folder" `
+                    -f $NugetDownloadURL))
+            {
+                Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
+
+                Write-Verbose -Verbose (`
+                    "Nuget.exe was installed from '{0}' to Temp folder." `
+                        -f $Script:NugetDownloadURL
+                )
+            }
+            else
+            {
+                # Without Nuget.exe we can't continue
+                Write-Warning -Message (`
+                    'Nuget.exe was not installed. {0} module can not be installed automatically.' `
+                        -f $Script:DesignerModuleName
+                )
+                return $null    
+            }
+        }
+        else
+        {
+            Write-Verbose -Verbose 'Using Nuget.exe found in Temp folder.'
+        }
+    }
+        
+    $nugetSource = 'https://www.powershellgallery.com/api/v2'
+    If ($Force -or $PSCmdlet.ShouldProcess(( `
+        "Download and install the {0} module from '{1}' using Nuget" `
+            -f $Script:DesignerModuleName,$nugetSource)))
+    {
+        # Use Nuget.exe to install the module
+        $null = & "$nugetPath" @( `
+            'install', $Script:DesignerModuleName, `
+            '-source', $nugetSource, `
+            '-outputDirectory', $OutputDirectory, `
+            '-ExcludeVersion' `
+            )
+        $ExitCode = $LASTEXITCODE
+
+        if ($ExitCode -ne 0)
+        {
+            throw (
+                'Installation of {0} module using Nuget failed with exit code {1}.' `
+                    -f $Script:DesignerModuleName,$ExitCode
+                )
+        }
+        Write-Verbose -Verbose (`
+            'The {0} module was installed using Nuget.' `
+                -f $Script:DesignerModuleName            
+        )
+    }
+    else
+    {
+        Write-Warning -Message (`
+            '{0} module was not installed automatically.' `
+                -f $Script:DesignerModuleName
+        )
+        return $null
+    }
+    
+    return (Get-Module -Name $Script:DesignerModuleName -ListAvailable)
 }

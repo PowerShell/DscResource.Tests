@@ -1,56 +1,51 @@
 <# 
-.summary
-    Test that describes code.
-#>
+    .summary
+        Test that describes code.
 
+    .PARAMETER Force
+        Used to force any installations to occur without confirming with
+        the user.
+#>
 [CmdletBinding()]
-param()
+Param (
+    [Boolean]$Force = $false
+)
 
 if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 {
     $PSScriptRoot = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)
 }
+# Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
+
+# Load the TestHelper module which contains the *-ResourceDesigner functions
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
 
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
 
-Import-Module $PSScriptRoot\MetaFixers.psm1
-
-#region Download and import latest stable DSC Resource Designer module
-
-# We are using nuget to be compatible with WMF v4 machines which
-# do not have the PowerShell Package Management module.
-$DesignerModuleName = 'xDscResourceDesigner'
-$DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$DesignerModuleName"
-$nugetSource = 'https://www.powershellgallery.com/api/v2'
-$nugetOutputDirectory = "$(Split-Path -Path $DesignerModulePath -Parent)\\"
-
-
-if (Test-Path -Path $DesignerModulePath)
-{
-    # Remove any installed version of the DscResourceDesigner module
-    Remove-Item -Path $DesignerModulePath -Recurse -Force
+# Install and/or Import xDSCResourceDesigner Module
+if ($env:APPVEYOR) {
+    # Running in AppVeyor so force silent install of xDSCResourceDesigner
+    $PSBoundParameters.Force = $true
 }
 
-$nugetArguments = @(
-    "install $DesignerModuleName"
-    '-source "{0}"' -f $nugetSource
-    '-outputDirectory "{0}"' -f $nugetOutputDirectory
-    '-ExcludeVersion'
-)
-$nugetProcess = Start-Process -Wait -PassThru -FilePath 'nuget.exe' -ArgumentList $nugetArguments
-if ($nugetProcess.ExitCode -ne 0)
-{
-    throw (
-        'Module installation of {0} failed with exit code {1}' -f $DesignerModuleName,
-            $nugetProcess.ExitCode
-    )
+$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
+if ($xDSCResourceDesignerModule) {
+    # Import the module if it is available
+    $xDSCResourceDesignerModule | Import-Module -Force
 }
-
-Import-Module -Name $DesignerModulePath -Force
-#endregion
+else
+{
+    # Module could not/would not be installed - so warn user that tests will fail.
+    Write-Warning -Message ( @(
+        "The 'xDSCResourceDesigner' module is not installed. "
+        "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
+        'will fail until this module is installed.'
+        ) -Join '' )
+}
 
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource
@@ -171,4 +166,3 @@ Describe 'PowerShell DSC resource modules' {
         }
     }
 }
-
