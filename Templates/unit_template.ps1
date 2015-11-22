@@ -18,7 +18,7 @@ $DSCResourceName    = 'MSFT_x<ResourceName>' # Example MSFT_xFirewall
 # /TODO
 
 #region HEADER
-Import-Module DSCResource.Tools\TestHelper.psm1
+Import-Module .\DSCResource.Tests\TestHelper.psm1 -Force
 $TestEnvironment = Initialize-TestEnvironment `
     -DSCModuleName $DSCModuleName `
     -DSCResourceName $DSCResourceName `

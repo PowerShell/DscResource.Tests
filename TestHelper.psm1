@@ -295,13 +295,13 @@ function Initialize-TestEnvironment {
         # Copy the existing folder out to the temp directory to hold until the end of the run
         # Delete the folder to remove the old files.
         [String] $BackupLocation = Join-Path -Path $env:Temp -ChildPath $DSCModuleName
-        Copy-Item -Path $moduleRoot -Destination $BackupLocation -Recurse -Force
+        $null = Copy-Item -Path $moduleRoot -Destination $BackupLocation -Recurse -Force
         Remove-Item -Path $moduleRoot -Recurse -Force
         $null = New-Item -Path $moduleRoot -ItemType Directory
     }
     
     # Copy the module to be tested into the Module Root
-    Copy-Item -Path $PSScriptRoot\..\..\* -Destination $moduleRoot -Recurse -Force -Exclude '.git'
+    $null = Copy-Item -Path $PSScriptRoot\..\..\* -Destination $moduleRoot -Recurse -Force -Exclude '.git'
     
     # Import the Module
     $Splat = @{
@@ -403,7 +403,7 @@ function Restore-TestEnvironment  {
     if ($TestEnvironment.BackupLocation)
     {
         $null = New-Item -Path $moduleRoot -ItemType Directory
-        Copy-Item -Path $TestEnvironment.BackupLocation -Destination "${env:ProgramFiles}\WindowsPowerShell\Modules" -Recurse -Force
+        $null = Copy-Item -Path $TestEnvironment.BackupLocation -Destination "${env:ProgramFiles}\WindowsPowerShell\Modules" -Recurse -Force
         Remove-Item -Path $TestEnvironment.BackupLocation -Recurse -Force
     }  
 }
