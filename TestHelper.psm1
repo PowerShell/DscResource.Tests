@@ -251,7 +251,6 @@ function Install-ResourceDesigner {
         This command will initialize the test enviroment for Integration testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.    
 #>
-
 function Initialize-TestEnvironment {
     [OutputType([PSObject])]
     [CmdletBinding()]
@@ -355,20 +354,23 @@ function Initialize-TestEnvironment {
 
 <#
     .SYNOPSIS
-        Will attempt to download the xDSCResourceDesignerModule using
-        Nuget package and return the module.
+        Restores the enviroment after running unit or integration tests
+        on a DSC resource.
         
-        If already installed will return the module without making changes.
-
-        If module could not be downloaded it will return null.
+        This restores the following things:
+        1. Restores any backed up any modules.
+        2. Deletes the Working folder.
+        3. Restores any settings that were changed to test the resource.
     
-    .PARAMETER Force
-        Used to force any installations to occur without confirming with
-        the user.
-
+    .PARAMETER TestEnvironment
+        This is the object created by the Initialize-TestEnvironment
+        cmdlet.
+      
     .EXAMPLE
-        Install-ResourceDesigner
-
+        Restore-TestEnvironment -TestEnvironment $TestEnvrionment
+            
+        This command will initialize the test enviroment for Unit testing
+        the MSFT_xFirewall DSC resource in the xNetworking DSC module.      
 #>
 function Restore-TestEnvironment  {
     [CmdletBinding()]
