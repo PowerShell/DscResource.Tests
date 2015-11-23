@@ -281,7 +281,7 @@ function Initialize-TestEnvironment {
     [String] $WorkingFolder = Join-Path -Path $env:Temp -ChildPath $DSCResourceName
     
     # Copy to Program Files for WMF 4.0 Compatability as it can only find resources in a few known places.
-    [String] $moduleRoot = "${env:ProgramFiles}\WindowsPowerShell\Modules\$DSCModuleName"
+    [String] $moduleRoot = Join-Path -Path "${env:ProgramFiles}\WindowsPowerShell\Modules" -ChildPath $DSCModuleName
     
     # If this module already exists in the Modules folder, make a copy of it in
     # the temporary folder so that it isn't accidentally used in this test.
@@ -301,7 +301,7 @@ function Initialize-TestEnvironment {
     }
     
     # Copy the module to be tested into the Module Root
-    $null = Copy-Item -Path $PSScriptRoot\..\..\* -Destination $moduleRoot -Recurse -Force -Exclude '.git'
+    $null = Copy-Item -Path $PSScriptRoot\..\* -Destination $moduleRoot -Recurse -Force -Exclude '.git'
     
     # Import the Module
     $Splat = @{
@@ -349,7 +349,7 @@ function Initialize-TestEnvironment {
         OldExecutionPolicy = $OldExecutionPolicy        
     }
     
-    return $TestEnvrionment  
+    return $TestEnvironment  
 }
 
 <#
@@ -389,6 +389,7 @@ function Restore-TestEnvironment  {
         Set-ExecutionPolicy -ExecutionPolicy $TestEnvironment.OldExecutionPolicy -Force
     }   
 
+    Write-Verbose -Verbose $TestEnvironment.WorkingFolder
     # Cleanup Working Folder
     if (Test-Path -Path $TestEnvironment.WorkingFolder)
     {
@@ -396,7 +397,7 @@ function Restore-TestEnvironment  {
     }
 
     # Clean up after the test completes.
-    [String] $moduleRoot = "${env:ProgramFiles}\WindowsPowerShell\Modules\$DSCModuleName"
+    [String] $moduleRoot = Join-Path -Path "${env:ProgramFiles}\WindowsPowerShell\Modules" -ChildPath $TestEnvironment.DSCModuleName
     Remove-Item -Path $moduleRoot -Recurse -Force
 
     # Restore previous versions, if it exists.
