@@ -15,7 +15,7 @@ This will give reviewers an option to review meaningful changes separately from 
 ## Git and Unicode
 
 By default git treats [unicode files as binary files](http://stackoverflow.com/questions/6855712/why-does-git-treat-this-text-file-as-a-binary-file).
-You may not notice it if your client (like VS or GitHub for Windows) takes care of such convertion. 
+You may not notice it if your client (like VS or GitHub for Windows) takes care of such conversion. 
 History with Unicode files is hardly usable from command line `git`.
 
 ```
@@ -46,16 +46,14 @@ With forced `--text` option it would look like this:
  \ No newline at end of file
 ```
 
-Command line `git` version is a core component and should be used as a common denamenator.
+Command line `git` version is a core component and should be used as a common denominator.
 
 
 ## MetaFixers Module
 
-We are trying to provide automatic fixers where it's appropriate. 
-A fixer corresponds to a particular test.
+We are trying to provide automatic fixers where it's appropriate. A fixer corresponds to a particular test.
 
-For example, if `Files encoding` test from [Meta.Tests.ps1](Meta.Tests.ps1) test fails, 
-you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixers.psm1).
+For example, if `Files encoding` test from [Meta.Tests.ps1](Meta.Tests.ps1) test fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixers.psm1).
 
 
 ## TestHelper Module
@@ -63,8 +61,8 @@ you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixe
 The test helper module (TestHelper.psm1) contains the following functions:
 **New-Nuspec**: Creates a new nuspec file for nuget package.
 **Install-ResourceDesigner**: Will attempt to download the xDSCResourceDesignerModule using Nuget package and return the module.
-**Initialize-TestEnvironment**: Initializes an enviroment for running unit or integration tests on a DSC resource.
-**Restore-TestEnvironment**: Restores the enviroment after running unit or integration tests on a DSC resource.
+**Initialize-TestEnvironment**: Initializes an environment for running unit or integration tests on a DSC resource.
+**Restore-TestEnvironment**: Restores the environment after running unit or integration tests on a DSC resource.
 
 
 ## Templates
