@@ -267,6 +267,9 @@ function Initialize-TestEnvironment {
         $TestType = 'Unit'
     )
     
+    Write-Verbose -Verbose (`
+        'Initializing Test Environment for {0} testing of {1} in module {2}.' `
+            -f $TestType,$DSCResourceName,$DSCModuleName)   
     if ($TestType -eq 'Unit')
     {
         [String] $RelativeModulePath = "DSCResources\$DSCResourceName\$DSCResourceName.psm1"
@@ -379,6 +382,10 @@ function Restore-TestEnvironment  {
         [ValidateNotNullOrEmpty()]
         [PSObject] $TestEnvironment
     )
+
+    Write-Verbose -Verbose (`
+        'Cleaning up Test Environment after {0} testing of {1} in module {2}.' `
+            -f $TestEnvironment.TestType,$TestEnvironment.DSCResourceName,$TestEnvironment.DSCModuleName)
     
     # Set PSModulePath back to previous settings
     $env:PSModulePath = $TestEnvironment.OldModulePath
@@ -389,7 +396,6 @@ function Restore-TestEnvironment  {
         Set-ExecutionPolicy -ExecutionPolicy $TestEnvironment.OldExecutionPolicy -Force
     }   
 
-    Write-Verbose -Verbose $TestEnvironment.WorkingFolder
     # Cleanup Working Folder
     if (Test-Path -Path $TestEnvironment.WorkingFolder)
     {
