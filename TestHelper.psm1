@@ -13,7 +13,8 @@ $Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
 #>
 function New-Nuspec
 {
-    param (
+    param
+    (
         [Parameter(Mandatory=$true)]
         [string] $packageName,
         [Parameter(Mandatory=$true)]
@@ -98,12 +99,14 @@ function New-Nuspec
 
 #>
 
-function Install-ResourceDesigner {
+function Install-ResourceDesigner
+{
     [OutputType([System.Management.Automation.PSModuleInfo])]
     [CmdletBinding(
         SupportsShouldProcess = $true,
         ConfirmImpact = 'High')]
-    Param (
+    Param
+    (
         [Boolean]$Force = $false
     )
     $DesignerModule = Get-Module -Name $Script:DesignerModuleName -ListAvailable
@@ -251,10 +254,12 @@ function Install-ResourceDesigner {
         This command will initialize the test enviroment for Integration testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.    
 #>
-function Initialize-TestEnvironment {
+function Initialize-TestEnvironment
+{
     [OutputType([PSObject])]
     [CmdletBinding()]
-    Param (
+    Param
+    (
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [String] $DSCModuleName,
@@ -263,8 +268,9 @@ function Initialize-TestEnvironment {
         [ValidateNotNullOrEmpty()]
         [String] $DSCResourceName,
 
+        [Parameter(Mandatory=$true)]
         [ValidateSet('Unit','Integration')]
-        $TestType = 'Unit'
+        [String] $TestType
     )
     
     Write-Verbose -Verbose (`
@@ -291,7 +297,7 @@ function Initialize-TestEnvironment {
     if(-not (Test-Path -Path $moduleRoot))
     {
         $null = New-Item -Path $moduleRoot -ItemType Directory
-        [String] $BackupLocation = ''
+        [String] $BackupLocation = [string]::Empty
     }
     else
     {
@@ -375,9 +381,11 @@ function Initialize-TestEnvironment {
         This command will initialize the test enviroment for Unit testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.      
 #>
-function Restore-TestEnvironment  {
+function Restore-TestEnvironment
+{
     [CmdletBinding()]
-    Param (
+    Param
+    (
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [PSObject] $TestEnvironment
