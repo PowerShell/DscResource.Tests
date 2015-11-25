@@ -12,7 +12,7 @@
 #>
 
 
-# TODO: Customize these paramters...
+# TODO: Customize these parameters...
 $DSCModuleName      = 'x<ModuleName>' # Example xNetworking
 $DSCResourceName    = 'MSFT_x<ResourceName>' # Example MSFT_xFirewall
 # /TODO

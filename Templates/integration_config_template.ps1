@@ -11,7 +11,7 @@
 
 
 # TODO: Modify ResourceName
-configuration 'MSFT_<xResourceName>' {
+configuration 'MSFT_<xResourceName>_config' {
     Import-DscResource -ModuleName xNetworking
     node localhost {
        # TODO: Modify ResourceName

@@ -238,7 +238,7 @@ function Install-ResourceDesigner
         back to the original state as well as clean up and working/temp files.
         
     .EXAMPLE
-        $TestEnvrionment = Inialize-TestEnvironment `
+        $TestEnvironment = Inialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
             -DSCResourceName 'MSFT_xFirewall'
             
@@ -246,7 +246,7 @@ function Install-ResourceDesigner
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.      
 
     .EXAMPLE
-        $TestEnvrionment = Inialize-TestEnvironment `
+        $TestEnvironment = Inialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
             -DSCResourceName 'MSFT_xFirewall'
             -TestType Integration
@@ -376,7 +376,7 @@ function Initialize-TestEnvironment
         cmdlet.
       
     .EXAMPLE
-        Restore-TestEnvironment -TestEnvironment $TestEnvrionment
+        Restore-TestEnvironment -TestEnvironment $TestEnvironment
             
         This command will initialize the test enviroment for Unit testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.      
