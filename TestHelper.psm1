@@ -285,9 +285,15 @@ function Initialize-TestEnvironment
         [String] $RelativeModulePath = "$DSCModuleName.psd1"
     }
 
-    # Temp Working Folder - always gets removed on completion
+    # Unique Temp Working Folder - always gets removed on completion
     # The tests can put anything in here and it will get cleaned up.
-    [String] $WorkingFolder = Join-Path -Path $env:Temp -ChildPath $DSCResourceName
+    [String] $RandomFileName = [System.IO.Path]::GetRandomFileName()
+    [String] $WorkingFolder = Join-Path -Path $env:Temp -ChildPath "$DSCResourceName_$RandomFileName" 
+    # Create the working folder if it doesn't exist (it really shouldn't anyway)
+    if (-not (Test-Path -Path $WorkingFolder))
+    {
+        New-Item -Path $WorkingFolder -ItemType Directory
+    } 
     
     # Copy to Program Files for WMF 4.0 Compatability as it can only find resources in a few known places.
     [String] $moduleRoot = Join-Path -Path "${env:ProgramFiles}\WindowsPowerShell\Modules" -ChildPath $DSCModuleName

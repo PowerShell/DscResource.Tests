@@ -24,7 +24,7 @@ if ( (-not (Test-Path -Path '.\DSCResource.Tests\')) -or `
     Throw @(
         "The DSCResource.Tests folder could not be found in the root folder of the $DSCModuleName DSC Module to test."
         "Please use Git to clone this repository to the root folder of the $DSCModuleName DSC Module that needs to be tested using the command:"
-        "git clone https://github.com/PowerShell/DscResource.Tests.git"
+        'git clone https://github.com/PowerShell/DscResource.Tests.git'
     ) -join "`n"
 }
 Import-Module .\DSCResource.Tests\TestHelper.psm1 -Force
@@ -56,7 +56,7 @@ try
                 [System.Environment]::SetEnvironmentVariable('PSModulePath',
                     $env:PSModulePath,[System.EnvironmentVariableTarget]::Machine)
                 Invoke-Expression -Command "$($DSCResourceName)_Config -OutputPath `$TestEnvironment.WorkingFolder"
-                Start-DscConfiguration -Path (Join-Path -Path $env:Temp -ChildPath $DSCResourceName) `
+                Start-DscConfiguration -Path $TestEnvironment.WorkingFolder `
                     -ComputerName localhost -Wait -Verbose -Force
             } | Should not throw
         }

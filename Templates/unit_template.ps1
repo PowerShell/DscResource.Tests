@@ -24,7 +24,7 @@ if ( (-not (Test-Path -Path '.\DSCResource.Tests\')) -or `
     Throw @(
         "The DSCResource.Tests folder could not be found in the root folder of the $DSCModuleName DSC Module to test."
         "Please use Git to clone this repository to the root folder of the $DSCModuleName DSC Module that needs to be tested using the command:"
-        "git clone https://github.com/PowerShell/DscResource.Tests.git"
+        'git clone https://github.com/PowerShell/DscResource.Tests.git'
     ) -join "`n"
 }
 Import-Module .\DSCResource.Tests\TestHelper.psm1 -Force
@@ -42,6 +42,8 @@ try
 
     #region Pester Tests
 
+    # The InModuleScope command allows you to perform white-box unit testing on the internal
+    # (non-exported) code of a Script Module.
     InModuleScope $DSCResourceName {
 
         #region Pester Test Initialization
