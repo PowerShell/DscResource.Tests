@@ -65,16 +65,16 @@ The test helper module (TestHelper.psm1) contains the following functions:
 **Restore-TestEnvironment**: Restores the environment after running unit or integration tests on a DSC resource.
 
 
-## Templates
+## Templates for Creating Tests
 
-The Templates folder contains template files for creating new Unit/Integration Pester test scripts for DSC Resources.
+The Template files that are used for creating Unit and Integration tests for a DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources)
 
 To use these files, see the instructions at the top of each template file.
 
 The resource files are:
-**Unit_Template.ps1**: Use to create a set of Unit Pester tests for a single DSC Resource.
-**Integration_Template.ps1**: Use to create a set of Integration Pester tests for a single DSC Resource.
-**Integration_Config_Template.ps1**: Use to create a DSC Configuration file for a single DSC Resource. Used in conjunction with Integration_Template.ps1.
+**[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/dev/Test.Template/Unit_Template.ps1)**: Use to create a set of Unit Pester tests for a single DSC Resource.
+**[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/dev/Test.Template/Integration_Template.ps1)**: Use to create a set of Integration Pester tests for a single DSC Resource.
+**[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/dev/Test.Template/Integration_Config_Template.ps1)**: Use to create a DSC Configuration file for a single DSC Resource. Used in conjunction with Integration_Template.ps1.
 
 
 ## Example Test Usage 
