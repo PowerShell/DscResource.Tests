@@ -295,29 +295,12 @@ function Initialize-TestEnvironment
         New-Item -Path $WorkingFolder -ItemType Directory
     } 
     
-    # Copy to Program Files for WMF 4.0 Compatability as it can only find resources in a few known places.
-    [String] $moduleRoot = Join-Path -Path "${env:ProgramFiles}\WindowsPowerShell\Modules" -ChildPath $DSCModuleName
-    
-    # If this module already exists in the Modules folder, make a copy of it in
-    # the temporary folder so that it isn't accidentally used in this test.
-    if(-not (Test-Path -Path $moduleRoot))
-    {
-        $null = New-Item -Path $moduleRoot -ItemType Directory
-        [String] $BackupLocation = [string]::Empty
-    }
-    else
-    {
-        # Copy the existing folder out to the temp directory to hold until the end of the run
-        # Delete the folder to remove the old files.
-        [String] $BackupLocation = Join-Path -Path $env:Temp -ChildPath $DSCModuleName
-        $null = Copy-Item -Path $moduleRoot -Destination $BackupLocation -Recurse -Force
-        Remove-Item -Path $moduleRoot -Recurse -Force
-        $null = New-Item -Path $moduleRoot -ItemType Directory
-    }
-    
-    # Copy the module to be tested into the Module Root
-    $null = Copy-Item -Path $PSScriptRoot\..\* -Destination $moduleRoot -Recurse -Force -Exclude '.git'
-    
+    # The folder where this module is found
+    [String] $moduleRoot = $pwd
+
+    # The folder that all tests will find this module in
+    [string] $modulesFolder = Resolve-Path -Path (Join-Path -Path $pwd -Child '..')   
+        
     # Import the Module
     $Splat = @{
         Path = $moduleRoot
@@ -325,7 +308,7 @@ function Initialize-TestEnvironment
         Resolve = $true
         ErrorAction = 'Stop'
     }
-    $DSCModuleFile = Get-Item -Path (Join-Path @Splat)
+    $DSCModuleFile = Get-Item -Path (Join-Path @Splat)    
     
     # Remove all copies of the module from memory so an old one is not used.
     if (Get-Module -Name $DSCModuleFile.BaseName -All)
@@ -336,14 +319,16 @@ function Initialize-TestEnvironment
     # Import the Module to test.
     Import-Module -Name $DSCModuleFile.FullName -Force
     
-    # This is to fix a problem in AppVayor where we have multiple copies of the resource
-    # in two different folders. This should probably be adjusted to be smarter about how
-    # it finds the resources.
-    if (($env:PSModulePath).Split(';') -ccontains $pwd.Path)
+    # Set the PSModulePath environment variable because the LCM will use this path
+    # to try and locate modules when integration tests are called.
+    [String] $OldModulePath = $env:PSModulePath
+    [String] $NewModulePath = $OldModulePath
+    if (($NewModulePath).Split(';') -ccontains $modulesFolder)
     {
-        $OldModulePath = $env:PSModulePath
-        $env:PSModulePath = ($env:PSModulePath -split ';' | Where-Object {$_ -ne $pwd.path}) -join ';'
+        $NewModulePath = ($NewModulePath -split ';' | Where-Object {$_ -ne $modulesFolder}) -join ';'
     }
+    $env:PSModulePath = $NewModulePath
+    [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
     
     # Preserve and set the execution policy so that the DSC MOF can be created
     $OldExecutionPolicy = Get-ExecutionPolicy
@@ -359,9 +344,8 @@ function Initialize-TestEnvironment
         TestType = $TestType
         RelativeModulePath = $RelativeModulePath
         WorkingFolder = $WorkingFolder
-        BackupLocation = $BackupLocation
         OldModulePath = $OldModulePath
-        OldExecutionPolicy = $OldExecutionPolicy        
+        OldExecutionPolicy = $OldExecutionPolicy     
     }
     
     return $TestEnvironment  
@@ -401,9 +385,13 @@ function Restore-TestEnvironment
         'Cleaning up Test Environment after {0} testing of {1} in module {2}.' `
             -f $TestEnvironment.TestType,$TestEnvironment.DSCResourceName,$TestEnvironment.DSCModuleName)
     
-    # Set PSModulePath back to previous settings
-    $env:PSModulePath = $TestEnvironment.OldModulePath
-
+    # Restore PSModulePath
+    if ($TestEnvironment.OldModulePath -ne $env:PSModulePath)
+    {
+        $env:PSModulePath = $TestEnvironment.OldModulePath
+        [System.Environment]::SetEnvironmentVariable('PSModulePath',$env:PSModulePath,[System.EnvironmentVariableTarget]::Machine)
+    }
+    
     # Restore the Execution Policy
     if ($TestEnvironment.OldExecutionPolicy -ne (Get-ExecutionPolicy))
     {
@@ -415,16 +403,4 @@ function Restore-TestEnvironment
     {
         Remove-Item -Path $TestEnvironment.WorkingFolder -Recurse -Force
     }
-
-    # Clean up after the test completes.
-    [String] $moduleRoot = Join-Path -Path "${env:ProgramFiles}\WindowsPowerShell\Modules" -ChildPath $TestEnvironment.DSCModuleName
-    Remove-Item -Path $moduleRoot -Recurse -Force
-
-    # Restore previous versions, if it exists.
-    if ($TestEnvironment.BackupLocation)
-    {
-        $null = New-Item -Path $moduleRoot -ItemType Directory
-        $null = Copy-Item -Path $TestEnvironment.BackupLocation -Destination "${env:ProgramFiles}\WindowsPowerShell\Modules" -Recurse -Force
-        Remove-Item -Path $TestEnvironment.BackupLocation -Recurse -Force
-    }  
 }
