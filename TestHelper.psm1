@@ -1,9 +1,6 @@
 <#
     Script Constants used by *-ResourceDesigner Functions
 #>
-$Script:DesignerModuleName = 'xDscResourceDesigner'
-$Script:DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:DesignerModuleName}"
-$Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
 <#
     .SYNOPSIS Creates a new nuspec file for nuget package.
         Will create $packageName.nuspec in $destinationPath
@@ -161,11 +158,11 @@ function Install-ModuleFromPowerShellGallery {
                 "Download Nuget.exe from '{0}' to Temp folder" `
                     -f $NugetDownloadURL))
             {
-                Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
+                Invoke-WebRequest $NugetDownloadURL -OutFile $nugetPath
 
                 Write-Verbose -Verbose (`
                     "Nuget.exe was installed from '{0}' to Temp folder." `
-                        -f $Script:NugetDownloadURL
+                        -f $NugetDownloadURL
                 )
             }
             else
