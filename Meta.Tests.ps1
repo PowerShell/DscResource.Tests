@@ -54,7 +54,7 @@ else
 }
 
 # PSScriptAnalyzer requires PowerShell 5.0 or higher
-if ($PSVersion -ge 5)
+if ($PSVersion.Major -ge 5)
 {
     $PSScriptAnalyzerModuleName = "PSScriptAnalyzer"
     $PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
@@ -120,7 +120,7 @@ Describe 'Text files formatting' {
 Describe 'PowerShell DSC resource modules' {
     
     # PSScriptAnalyzer requires PowerShell 5.0 or higher
-    if ($PSVersion -ge 5)
+    if ($PSVersion.Major -ge 5)
     {
         Context 'PSScriptAnalyzer' {
             It "passes Invoke-ScriptAnalyzer" {
