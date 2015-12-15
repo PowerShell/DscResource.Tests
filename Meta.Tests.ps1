@@ -114,6 +114,20 @@ Describe 'Text files formatting' {
 
 Describe 'PowerShell DSC resource modules' {
     
+    Context 'PSScriptAnalyzer' 
+    {
+        It "passes Invoke-ScriptAnalyzer" 
+        {
+            $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse
+            if ($PSScriptAnalyzerErrors.Count -ne 0) 
+            {
+                Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
+                Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
+                $PSScriptAnalyzerErrors.Count | Should Be 0
+            }
+        }      
+    }
+
     # Force convert to array
     $psm1Files = @(
         Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
