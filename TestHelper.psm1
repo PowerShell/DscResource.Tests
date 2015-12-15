@@ -329,9 +329,10 @@ function Initialize-TestEnvironment
     [String] $NewModulePath = $OldModulePath
     if (($NewModulePath).Split(';') -ccontains $modulesFolder)
     {
+        # Remove the existing module from the module path if it exists
         $NewModulePath = ($NewModulePath -split ';' | Where-Object {$_ -ne $modulesFolder}) -join ';'
-        $NewModulePath = "$modulesFolder;$NewModulePath"
     }
+    $NewModulePath = "$modulesFolder;$NewModulePath"
     $env:PSModulePath = $NewModulePath
     [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
     
