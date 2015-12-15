@@ -212,12 +212,15 @@ function Install-ResourceDesigner
         on a DSC resource.
         
         This includes the following things:
-        1. Backing up any modules matching the name of the module being tested.
-        2. Copying this module to the PSModules folder.
-        3. Backing up any settings that need to be changed to accurately test
-           a resource.
-        4. Producing a test object containing any parameters that may be used
+        1. Creates a temporary working folder.
+        2. Updates the $env:PSModulePath to ensure the correct module is tested.
+        3. Backs up any settings that need to be changed to accurately test
+           the resource.
+        4. Produces a test object containing any parameters that may be used
            for testing as well as storing the backed up settings.
+           
+        The above changes are reverted by calling the Restore-TestEnvironment
+        function. This includes deleteing the temporary working folder.
     
     .PARAMETER DSCModuleName
         The name of the DSC Module containing the resource that the tests will be
@@ -308,7 +311,7 @@ function Initialize-TestEnvironment
         Resolve = $true
         ErrorAction = 'Stop'
     }
-    $DSCModuleFile = Get-Item -Path (Join-Path @Splat)    
+    $DSCModuleFile = Get-Item -Path (Join-Path @Splat)
     
     # Remove all copies of the module from memory so an old one is not used.
     if (Get-Module -Name $DSCModuleFile.BaseName -All)
@@ -319,13 +322,15 @@ function Initialize-TestEnvironment
     # Import the Module to test.
     Import-Module -Name $DSCModuleFile.FullName -Force
     
-    # Set the PSModulePath environment variable because the LCM will use this path
-    # to try and locate modules when integration tests are called.
+    # Set the PSModulePath environment variable so that the module path this module is in
+    # appears first because the LCM will use this path to try and locate modules when integration
+    # tests are called. This is to ensure the correct module is tested.
     [String] $OldModulePath = $env:PSModulePath
     [String] $NewModulePath = $OldModulePath
     if (($NewModulePath).Split(';') -ccontains $modulesFolder)
     {
         $NewModulePath = ($NewModulePath -split ';' | Where-Object {$_ -ne $modulesFolder}) -join ';'
+        $NewModulePath = "$modulesFolder;$NewModulePath"
     }
     $env:PSModulePath = $NewModulePath
     [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
@@ -356,9 +361,10 @@ function Initialize-TestEnvironment
         Restores the enviroment after running unit or integration tests
         on a DSC resource.
         
-        This restores the following things:
-        1. Restores any backed up any modules.
-        2. Deletes the Working folder.
+        This restores the following changes made by calling
+        Initialize-TestEnvironemt:
+        1. Deletes the Working folder.
+        2. Restores the $env:PSModulePath if it was changed.
         3. Restores any settings that were changed to test the resource.
     
     .PARAMETER TestEnvironment
