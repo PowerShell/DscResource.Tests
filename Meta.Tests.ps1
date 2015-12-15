@@ -54,7 +54,7 @@ else
 # PSScriptAnalyzer requires PowerShell 5.0 or higher
 if ($PSVersion.Major -ge 5)
 {
-    Write-Host "Installing PSScriptAnalyzer"
+    Write-Verbose -Verbose "Installing PSScriptAnalyzer"
     $PSScriptAnalyzerModuleName = "PSScriptAnalyzer"
     $PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
     $PSScriptAnalyzerModule = Install-ModuleFromPowerShellGallery -ModuleName $PSScriptAnalyzerModuleName -ModulePath $PSScriptAnalyzerModulePath @PSBoundParameters
@@ -75,7 +75,7 @@ if ($PSVersion.Major -ge 5)
 }
 else
 {
-    Write-Host "Skipping installation of PSScriptAnalyzer since it requires PSVersion 5.0 or greater. Used PSVersion: $($PSVersion)"
+    Write-Verbose -Verbose "Skipping installation of PSScriptAnalyzer since it requires PSVersion 5.0 or greater. Used PSVersion: $($PSVersion)"
 }
 
 # Modify PSModulePath of the current PowerShell session.

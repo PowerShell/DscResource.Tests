@@ -207,7 +207,7 @@ function Install-ModuleFromPowerShellGallery {
         }
         Write-Verbose -Verbose (`
             'The {0} module was installed using Nuget.' `
-                -f $Script:moduleName            
+                -f $moduleName            
         )
     }
     else
