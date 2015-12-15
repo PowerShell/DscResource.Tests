@@ -33,8 +33,6 @@ if ($env:APPVEYOR) {
     $PSBoundParameters.Force = $true
 }
 
-#TODO
-#$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
 $xDSCResourceDesignerModuleName = "xDscResourceDesigner"
 $xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
 $xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
@@ -130,10 +128,10 @@ Describe 'PowerShell DSC resource modules' {
                 # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
                 # Errors will still be returned as expected.
                 $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
-                if ($PSScriptAnalyzerErrors.Count -ne 0) {
+                if ($PSScriptAnalyzerErrors -ne $null) {
                     Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
                     Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
-                    $PSScriptAnalyzerErrors.Count | Should Be 0
+                    $PSScriptAnalyzerErrors.Count | Should Be $null
                 }
             }      
         }
