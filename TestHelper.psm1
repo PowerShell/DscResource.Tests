@@ -109,11 +109,6 @@ function New-Nuspec
         $xDSCResourceDesignerModuleName = "xDscResourceDesigner"
         $xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
         $xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
-
-<<<<<<< HEAD
-function Install-ResourceDesigner
-{
-=======
 #>
 function Install-ModuleFromPowerShellGallery {
     [OutputType([System.Management.Automation.PSModuleInfo])]
@@ -224,10 +219,9 @@ function Install-ModuleFromPowerShellGallery {
         return $null
     }
     
-<<<<<<< HEAD
-    return (Get-Module -Name $Script:DesignerModuleName -ListAvailable)
-}
 
+    return (Get-Module -Name $moduleName -ListAvailable)
+}
 
 <#
     .SYNOPSIS
@@ -435,7 +429,3 @@ function Restore-TestEnvironment
         Remove-Item -Path $TestEnvironment.WorkingFolder -Recurse -Force
     }
 }
-=======
-    return (Get-Module -Name $moduleName -ListAvailable)
-}
->>>>>>> upstream/master
