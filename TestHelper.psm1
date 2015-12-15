@@ -243,7 +243,8 @@ function Install-ResourceDesigner
     .EXAMPLE
         $TestEnvironment = Inialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
-            -DSCResourceName 'MSFT_xFirewall'
+            -DSCResourceName 'MSFT_xFirewall' `
+            -TestType Unit
             
         This command will initialize the test enviroment for Unit testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.      
@@ -251,7 +252,7 @@ function Install-ResourceDesigner
     .EXAMPLE
         $TestEnvironment = Inialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
-            -DSCResourceName 'MSFT_xFirewall'
+            -DSCResourceName 'MSFT_xFirewall' `
             -TestType Integration
             
         This command will initialize the test enviroment for Integration testing
@@ -299,10 +300,10 @@ function Initialize-TestEnvironment
     } 
     
     # The folder where this module is found
-    [String] $moduleRoot = $pwd
+    [String] $moduleRoot = $MyInvocation.MyCommand.Path
 
     # The folder that all tests will find this module in
-    [string] $modulesFolder = Resolve-Path -Path (Join-Path -Path $pwd -Child '..')   
+    [string] $modulesFolder = Split-Path -Parent $moduleRoot
         
     # Import the Module
     $Splat = @{
