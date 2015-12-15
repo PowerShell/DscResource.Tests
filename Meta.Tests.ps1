@@ -32,7 +32,12 @@ if ($env:APPVEYOR) {
     $PSBoundParameters.Force = $true
 }
 
-$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
+#TODO
+#$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
+$xDSCResourceDesignerModuleName = "xDscResourceDesigner"
+$xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
+$xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
+
 if ($xDSCResourceDesignerModule) {
     # Import the module if it is available
     $xDSCResourceDesignerModule | Import-Module -Force
@@ -42,6 +47,24 @@ else
     # Module could not/would not be installed - so warn user that tests will fail.
     Write-Warning -Message ( @(
         "The 'xDSCResourceDesigner' module is not installed. "
+        "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
+        'will fail until this module is installed.'
+        ) -Join '' )
+}
+
+$PSScriptAnalyzerModuleName = "PSScriptAnalyzer"
+$PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
+$PSScriptAnalyzerModule = Install-ModuleFromPowerShellGallery -ModuleName $PSScriptAnalyzerModuleName -ModulePath $PSScriptAnalyzerModulePath @PSBoundParameters
+
+if ($PSScriptAnalyzerModule) {
+    # Import the module if it is available
+    $PSScriptAnalyzerModule | Import-Module -Force
+}
+else
+{
+    # Module could not/would not be installed - so warn user that tests will fail.
+    Write-Warning -Message ( @(
+        "The 'PSScriptAnalyzer' module is not installed. "
         "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
         'will fail until this module is installed.'
         ) -Join '' )

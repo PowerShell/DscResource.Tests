@@ -3,8 +3,6 @@
 #>
 $Script:DesignerModuleName = 'xDscResourceDesigner'
 $Script:DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:DesignerModuleName}"
-$Script:PSScriptAnalyzerName = 'PSScriptAnalyzer'
-$Script:PSScriptAnalyzerPath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:PSScriptAnalyzerName}"
 $Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
 <#
     .SYNOPSIS Creates a new nuspec file for nuget package.
@@ -103,6 +101,16 @@ function New-Nuspec
 
     .EXAMPLE
         Install-ModuleFromPowerShellGallery
+
+    .EXAMPLE
+        if ($env:APPVEYOR) {
+            # Running in AppVeyor so force silent install of xDSCResourceDesigner
+            $PSBoundParameters.Force = $true
+        }
+
+        $xDSCResourceDesignerModuleName = "xDscResourceDesigner"
+        $xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
+        $xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
 
 #>
 function Install-ModuleFromPowerShellGallery {
@@ -231,6 +239,7 @@ function Install-ModuleFromPowerShellGallery {
         Install-ResourceDesigner
 
 #>
+<#TODO
 function Install-ResourceDesigner {
     [OutputType([System.Management.Automation.PSModuleInfo])]
     [CmdletBinding(
@@ -334,3 +343,4 @@ function Install-ResourceDesigner {
     
     return (Get-Module -Name $Script:DesignerModuleName -ListAvailable)
 }
+#>
