@@ -1,9 +1,6 @@
 <#
     Script Constants used by *-ResourceDesigner Functions
 #>
-$Script:DesignerModuleName = 'xDscResourceDesigner'
-$Script:DesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\${Script:DesignerModuleName}"
-$Script:NugetDownloadURL = 'http://nuget.org/nuget.exe'
 <#
     .SYNOPSIS Creates a new nuspec file for nuget package.
         Will create $packageName.nuspec in $destinationPath
@@ -82,7 +79,7 @@ function New-Nuspec
 
 <#
     .SYNOPSIS
-        Will attempt to download the xDSCResourceDesignerModule using
+        Will attempt to download the module from PowerShellGallery using
         Nuget package and return the module.
         
         If already installed will return the module without making changes.
@@ -93,37 +90,57 @@ function New-Nuspec
         Used to force any installations to occur without confirming with
         the user.
 
+    .PARAMETER moduleName
+        Name of the module to install
+
+    .PARAMETER modulePath
+        Path where module should be installed
+
     .EXAMPLE
-        Install-ResourceDesigner
+        Install-ModuleFromPowerShellGallery
+
+    .EXAMPLE
+        if ($env:APPVEYOR) {
+            # Running in AppVeyor so force silent install of xDSCResourceDesigner
+            $PSBoundParameters.Force = $true
+        }
+
+        $xDSCResourceDesignerModuleName = "xDscResourceDesigner"
+        $xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
+        $xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
 
 #>
-
-function Install-ResourceDesigner {
+function Install-ModuleFromPowerShellGallery {
     [OutputType([System.Management.Automation.PSModuleInfo])]
     [CmdletBinding(
         SupportsShouldProcess = $true,
         ConfirmImpact = 'High')]
     Param (
+        [Parameter(Mandatory=$true)]
+        [String] $moduleName,
+        [Parameter(Mandatory=$true)]
+        [String] $modulePath,
         [Boolean]$Force = $false
     )
-    $DesignerModule = Get-Module -Name $Script:DesignerModuleName -ListAvailable
-    if (@($DesignerModule).Count -ne 0)
+
+    $module = Get-Module -Name $moduleName -ListAvailable
+    if (@($module).Count -ne 0)
     {
-        # ResourceDesigner is already installed - report it.
+        # Module is already installed - report it.
         Write-Verbose -Verbose (`
             'Version {0} of the {1} module is already installed.' `
-                -f $DesignerModule.Version,$Script:DesignerModuleName            
+                -f $module.Version,$moduleName            
         )
         # Could check for a newer version available here in future and perform an update.
-        return $DesignerModule
+        return $module
     }
 
     Write-Verbose -Verbose (`
         'The {0} module is not installed.' `
-            -f $Script:DesignerModuleName            
+            -f $moduleName            
     )
    
-    $OutputDirectory = "$(Split-Path -Path $Script:DesignerModulePath -Parent)\"
+    $OutputDirectory = "$(Split-Path -Path $modulePath -Parent)\"
 
     # Use Nuget directly to download the module
     $nugetPath = 'nuget.exe'
@@ -141,11 +158,11 @@ function Install-ResourceDesigner {
                 "Download Nuget.exe from '{0}' to Temp folder" `
                     -f $NugetDownloadURL))
             {
-                Invoke-WebRequest $Script:NugetDownloadURL -OutFile $nugetPath
+                Invoke-WebRequest $NugetDownloadURL -OutFile $nugetPath
 
                 Write-Verbose -Verbose (`
                     "Nuget.exe was installed from '{0}' to Temp folder." `
-                        -f $Script:NugetDownloadURL
+                        -f $NugetDownloadURL
                 )
             }
             else
@@ -153,7 +170,7 @@ function Install-ResourceDesigner {
                 # Without Nuget.exe we can't continue
                 Write-Warning -Message (`
                     'Nuget.exe was not installed. {0} module can not be installed automatically.' `
-                        -f $Script:DesignerModuleName
+                        -f $moduleName
                 )
                 return $null    
             }
@@ -167,11 +184,11 @@ function Install-ResourceDesigner {
     $nugetSource = 'https://www.powershellgallery.com/api/v2'
     If ($Force -or $PSCmdlet.ShouldProcess(( `
         "Download and install the {0} module from '{1}' using Nuget" `
-            -f $Script:DesignerModuleName,$nugetSource)))
+            -f $moduleName,$nugetSource)))
     {
         # Use Nuget.exe to install the module
         $null = & "$nugetPath" @( `
-            'install', $Script:DesignerModuleName, `
+            'install', $moduleName, `
             '-source', $nugetSource, `
             '-outputDirectory', $OutputDirectory, `
             '-ExcludeVersion' `
@@ -182,22 +199,22 @@ function Install-ResourceDesigner {
         {
             throw (
                 'Installation of {0} module using Nuget failed with exit code {1}.' `
-                    -f $Script:DesignerModuleName,$ExitCode
+                    -f $moduleName,$ExitCode
                 )
         }
         Write-Verbose -Verbose (`
             'The {0} module was installed using Nuget.' `
-                -f $Script:DesignerModuleName            
+                -f $moduleName            
         )
     }
     else
     {
         Write-Warning -Message (`
             '{0} module was not installed automatically.' `
-                -f $Script:DesignerModuleName
+                -f $moduleName
         )
         return $null
     }
     
-    return (Get-Module -Name $Script:DesignerModuleName -ListAvailable)
+    return (Get-Module -Name $moduleName -ListAvailable)
 }

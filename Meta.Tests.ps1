@@ -25,6 +25,7 @@ $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
 
 $RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
+$PSVersion = $PSVersionTable.PSVersion
 
 # Install and/or Import xDSCResourceDesigner Module
 if ($env:APPVEYOR) {
@@ -32,7 +33,10 @@ if ($env:APPVEYOR) {
     $PSBoundParameters.Force = $true
 }
 
-$xDSCResourceDesignerModule = Install-ResourceDesigner @PSBoundParameters
+$xDSCResourceDesignerModuleName = "xDscResourceDesigner"
+$xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
+$xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
+
 if ($xDSCResourceDesignerModule) {
     # Import the module if it is available
     $xDSCResourceDesignerModule | Import-Module -Force
@@ -45,6 +49,33 @@ else
         "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
         'will fail until this module is installed.'
         ) -Join '' )
+}
+
+# PSScriptAnalyzer requires PowerShell 5.0 or higher
+if ($PSVersion.Major -ge 5)
+{
+    Write-Verbose -Verbose "Installing PSScriptAnalyzer"
+    $PSScriptAnalyzerModuleName = "PSScriptAnalyzer"
+    $PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
+    $PSScriptAnalyzerModule = Install-ModuleFromPowerShellGallery -ModuleName $PSScriptAnalyzerModuleName -ModulePath $PSScriptAnalyzerModulePath @PSBoundParameters
+
+    if ($PSScriptAnalyzerModule) {
+        # Import the module if it is available
+        $PSScriptAnalyzerModule | Import-Module -Force
+    }
+    else
+    {
+        # Module could not/would not be installed - so warn user that tests will fail.
+        Write-Warning -Message ( @(
+            "The 'PSScriptAnalyzer' module is not installed. "
+            "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
+            'will fail until this module is installed.'
+            ) -Join '' )
+    }
+}
+else
+{
+    Write-Verbose -Verbose "Skipping installation of PSScriptAnalyzer since it requires PSVersion 5.0 or greater. Used PSVersion: $($PSVersion)"
 }
 
 # Modify PSModulePath of the current PowerShell session.
@@ -91,6 +122,26 @@ Describe 'Text files formatting' {
 
 Describe 'PowerShell DSC resource modules' {
     
+    # PSScriptAnalyzer requires PowerShell 5.0 or higher
+    if ($PSVersion.Major -ge 5)
+    {
+        Context 'PSScriptAnalyzer' {
+            It "passes Invoke-ScriptAnalyzer" {
+
+                # Perform PSScriptAnalyzer scan.
+                # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
+                # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
+                # Errors will still be returned as expected.
+                $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
+                if ($PSScriptAnalyzerErrors -ne $null) {
+                    Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
+                    Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
+                    $PSScriptAnalyzerErrors.Count | Should Be $null
+                }
+            }      
+        }
+    }
+
     # Force convert to array
     $psm1Files = @(
         Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
