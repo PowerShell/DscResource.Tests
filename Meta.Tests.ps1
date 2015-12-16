@@ -78,142 +78,161 @@ else
     Write-Verbose -Verbose "Skipping installation of PSScriptAnalyzer since it requires PSVersion 5.0 or greater. Used PSVersion: $($PSVersion)"
 }
 
+# The folder where this module is found
+[String] $moduleRoot = Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
+
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource
 # in the current build directory.
-if (($env:PSModulePath.Split(';') | Select-Object -First 1) -ne $pwd)
+[String] $script:OldModulePath = $env:PSModulePath
+[String] $NewModulePath = $script:OldModulePath
+if (($NewModulePath.Split(';') | Select-Object -First 1) -ne $moduleRoot)
 {
-    $env:PSModulePath = "$pwd;$env:PSModulePath"
+    # Add the ModuleRoot to the beginning if it is not already at the front.
+    $env:PSModulePath = "$moduleRoot;$env:PSModulePath"
 }
 
-Describe 'Text files formatting' {
+# Wrap tests in a try so that if anything goes wrong or user terminates we roll back
+# any enviroment changes (e.g. $ENV:PSModulePath)
+try
+{
+    Describe 'Text files formatting' {
     
-    $allTextFiles = Get-TextFilesList $RepoRoot
+        $allTextFiles = Get-TextFilesList $RepoRoot
     
-    Context 'Files encoding' {
+        Context 'Files encoding' {
 
-        It "Doesn't use Unicode encoding" {
-            $unicodeFilesCount = 0
-            $allTextFiles | %{
-                if (Test-FileUnicode $_) {
-                    $unicodeFilesCount += 1
-                    Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to UTF-8. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
-                }
-            }
-            $unicodeFilesCount | Should Be 0
-        }
-    }
-
-    Context 'Indentations' {
-
-        It 'Uses spaces for indentation, not tabs' {
-            $totalTabsCount = 0
-            $allTextFiles | %{
-                $fileName = $_.FullName
-                $tabStrings = (Get-Content $_.FullName -Raw) | Select-String "`t" | % {
-                    Write-Warning "There are tab in $fileName. Use Fixer 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
-                    $totalTabsCount++
-                }
-            }
-            $totalTabsCount | Should Be 0
-        }
-    }
-}
-
-Describe 'PowerShell DSC resource modules' {
-    
-    # PSScriptAnalyzer requires PowerShell 5.0 or higher
-    if ($PSVersion.Major -ge 5)
-    {
-        Context 'PSScriptAnalyzer' {
-            It "passes Invoke-ScriptAnalyzer" {
-
-                # Perform PSScriptAnalyzer scan.
-                # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
-                # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
-                # Errors will still be returned as expected.
-                $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
-                if ($PSScriptAnalyzerErrors -ne $null) {
-                    Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
-                    Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
-                    $PSScriptAnalyzerErrors.Count | Should Be $null
-                }
-            }      
-        }
-    }
-
-    # Force convert to array
-    $psm1Files = @(
-        Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
-            Foreach-Object {
-                # Ignore Composite configurations
-                # They requires additional resources to be installed on the box
-                if (-not ($_.Name -like '*.schema.psm1'))
-                {
-                    $MofFileName = "$($_.BaseName).schema.mof"
-                    $MofFilePath = Join-Path -Path $_.DirectoryName -ChildPath $MofFileName
-                    if (Test-Path -Path $MofFilePath -ErrorAction SilentlyContinue)
-                    {
-                        Write-Output -InputObject $_
+            It "Doesn't use Unicode encoding" {
+                $unicodeFilesCount = 0
+                $allTextFiles | %{
+                    if (Test-FileUnicode $_) {
+                        $unicodeFilesCount += 1
+                        Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to UTF-8. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
                     }
                 }
-            }
-    )
-
-    if (-not $psm1Files) {
-        Write-Verbose -Verbose 'There are no resource files to analyze'
-    } else {
-
-        Write-Verbose -Verbose "Analyzing $($psm1Files.Count) resources"
-
-        Context 'Correctness' {
-
-            function Get-ParseErrors
-            {
-                param(
-                    [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
-                    [string]$fileName
-                )    
-
-                $tokens = $null 
-                $errors = $null
-                $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref] $tokens, [ref] $errors)
-                return $errors
-            }
-
-
-            It 'all .psm1 files don''t have parse errors' {
-                $errors = @()
-                $psm1Files | ForEach-Object { 
-                    $localErrors = Get-ParseErrors $_.FullName
-                    if ($localErrors) {
-                        Write-Warning "There are parsing errors in $($_.FullName)"
-                        Write-Warning ($localErrors | Format-List | Out-String)
-                    }
-                    $errors += $localErrors
-                }
-                $errors.Count | Should Be 0
+                $unicodeFilesCount | Should Be 0
             }
         }
 
-        foreach ($psm1file in $psm1Files) 
+        Context 'Indentations' {
+
+            It 'Uses spaces for indentation, not tabs' {
+                $totalTabsCount = 0
+                $allTextFiles | %{
+                    $fileName = $_.FullName
+                    $tabStrings = (Get-Content $_.FullName -Raw) | Select-String "`t" | % {
+                        Write-Warning "There are tab in $fileName. Use Fixer 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
+                        $totalTabsCount++
+                    }
+                }
+                $totalTabsCount | Should Be 0
+            }
+        }
+    }
+
+    Describe 'PowerShell DSC resource modules' {
+    
+        # PSScriptAnalyzer requires PowerShell 5.0 or higher
+        if ($PSVersion.Major -ge 5)
         {
-            Context "Schema Validation of $($psm1file.BaseName)" {
+            Context 'PSScriptAnalyzer' {
+                It "passes Invoke-ScriptAnalyzer" {
 
-                It 'should pass Test-xDscResource' {
-                    $result = Test-xDscResource -Name $psm1file.DirectoryName
-                    $result | Should Be $true
+                    # Perform PSScriptAnalyzer scan.
+                    # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
+                    # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
+                    # Errors will still be returned as expected.
+                    $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
+                    if ($PSScriptAnalyzerErrors -ne $null) {
+                        Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
+                        Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
+                        $PSScriptAnalyzerErrors.Count | Should Be $null
+                    }
+                }      
+            }
+        }
+
+        # Force convert to array
+        $psm1Files = @(
+            Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
+                Foreach-Object {
+                    # Ignore Composite configurations
+                    # They requires additional resources to be installed on the box
+                    if (-not ($_.Name -like '*.schema.psm1'))
+                    {
+                        $MofFileName = "$($_.BaseName).schema.mof"
+                        $MofFilePath = Join-Path -Path $_.DirectoryName -ChildPath $MofFileName
+                        if (Test-Path -Path $MofFilePath -ErrorAction SilentlyContinue)
+                        {
+                            Write-Output -InputObject $_
+                        }
+                    }
+                }
+        )
+
+        if (-not $psm1Files) {
+            Write-Verbose -Verbose 'There are no resource files to analyze'
+        } else {
+
+            Write-Verbose -Verbose "Analyzing $($psm1Files.Count) resources"
+
+            Context 'Correctness' {
+
+                function Get-ParseErrors
+                {
+                    param(
+                        [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
+                        [string]$fileName
+                    )    
+
+                    $tokens = $null 
+                    $errors = $null
+                    $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref] $tokens, [ref] $errors)
+                    return $errors
                 }
 
-                It 'should pass Test-xDscSchema' {
-                    $Splat = @{
-                        Path = $psm1file.DirectoryName
-                        ChildPath = "$($psm1file.BaseName).schema.mof"
+
+                It 'all .psm1 files don''t have parse errors' {
+                    $errors = @()
+                    $psm1Files | ForEach-Object { 
+                        $localErrors = Get-ParseErrors $_.FullName
+                        if ($localErrors) {
+                            Write-Warning "There are parsing errors in $($_.FullName)"
+                            Write-Warning ($localErrors | Format-List | Out-String)
+                        }
+                        $errors += $localErrors
                     }
-                    $result = Test-xDscSchema -Path (Join-Path @Splat -Resolve -ErrorAction Stop)
-                    $result | Should Be $true
+                    $errors.Count | Should Be 0
+                }
+            }
+
+            foreach ($psm1file in $psm1Files) 
+            {
+                Context "Schema Validation of $($psm1file.BaseName)" {
+
+                    It 'should pass Test-xDscResource' {
+                        $result = Test-xDscResource -Name $psm1file.DirectoryName
+                        $result | Should Be $true
+                    }
+
+                    It 'should pass Test-xDscSchema' {
+                        $Splat = @{
+                            Path = $psm1file.DirectoryName
+                            ChildPath = "$($psm1file.BaseName).schema.mof"
+                        }
+                        $result = Test-xDscSchema -Path (Join-Path @Splat -Resolve -ErrorAction Stop)
+                        $result | Should Be $true
+                    }
                 }
             }
         }
+    }
+}
+finally
+{
+    # Restore PSModulePath
+    if ($script:OldModulePath -ne $env:PSModulePath)
+    {
+        $env:PSModulePath = $OldModulePath
     }
 }
