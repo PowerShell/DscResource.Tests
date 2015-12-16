@@ -88,7 +88,7 @@ else
 [String] $NewModulePath = $script:OldModulePath
 if (($NewModulePath.Split(';') | Select-Object -First 1) -ne $moduleRoot)
 {
-    # Remove the existing module from the module path if it exists
+    # Add the ModuleRoot to the beginning if it is not already at the front.
     $env:PSModulePath = "$moduleRoot;$env:PSModulePath"
 }
 
