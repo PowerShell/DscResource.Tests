@@ -84,15 +84,13 @@ else
 # Modify PSModulePath of the current PowerShell session.
 # We want to make sure we always test the development version of the resource
 # in the current build directory.
-[String] $OldModulePath = $env:PSModulePath
-[String] $NewModulePath = $OldModulePath
-if (($NewModulePath).Split(';') -ccontains $moduleRoot)
+[String] $script:OldModulePath = $env:PSModulePath
+[String] $NewModulePath = $script:OldModulePath
+if (($NewModulePath.Split(';') | Select-Object -First 1) -ne $moduleRoot)
 {
     # Remove the existing module from the module path if it exists
-    $NewModulePath = ($NewModulePath -split ';' | Where-Object {$_ -ne $moduleRoot}) -join ';'
+    $env:PSModulePath = "$moduleRoot;$env:PSModulePath"
 }
-$NewModulePath = "$moduleRoot;$NewModulePath"
-$env:PSModulePath = $NewModulePath
 
 # Wrap tests in a try so that if anything goes wrong or user terminates we roll back
 # any enviroment changes (e.g. $ENV:PSModulePath)
@@ -233,7 +231,7 @@ try
 finally
 {
     # Restore PSModulePath
-    if ($OldModulePath -ne $env:PSModulePath)
+    if ($script:OldModulePath -ne $env:PSModulePath)
     {
         $env:PSModulePath = $OldModulePath
     }
