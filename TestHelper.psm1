@@ -218,7 +218,6 @@ function Install-ModuleFromPowerShellGallery {
         )
         return $null
     }
-    
 
     return (Get-Module -Name $moduleName -ListAvailable)
 }
