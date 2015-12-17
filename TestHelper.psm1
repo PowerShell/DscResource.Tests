@@ -130,7 +130,7 @@ function Install-ModuleFromPowerShellGallery {
     if (@($module).Count -ne 0)
     {
         # Module is already installed - report it.
-        Write-Verbose -Verbose (`
+        Write-Verbose -Message (`
             'Version {0} of the {1} module is already installed.' `
                 -f $($module.Version),$moduleName            
         )
@@ -138,9 +138,9 @@ function Install-ModuleFromPowerShellGallery {
         return $module
     }
 
-    Write-Verbose -Verbose (`
+    Write-Verbose -Message (`
         'The {0} module is not installed.' `
-            -f $moduleName            
+            -f $moduleName
     )
    
     $OutputDirectory = "$(Split-Path -Path $modulePath -Parent)\"
@@ -163,7 +163,7 @@ function Install-ModuleFromPowerShellGallery {
             {
                 Invoke-WebRequest $NugetDownloadURL -OutFile $nugetPath
 
-                Write-Verbose -Verbose (`
+                Write-Verbose -Message (`
                     "Nuget.exe was installed from '{0}' to Temp folder." `
                         -f $NugetDownloadURL
                 )
@@ -180,7 +180,7 @@ function Install-ModuleFromPowerShellGallery {
         }
         else
         {
-            Write-Verbose -Verbose 'Using Nuget.exe found in Temp folder.'
+            Write-Verbose -Message 'Using Nuget.exe found in Temp folder.'
         }
     }
         
@@ -205,7 +205,7 @@ function Install-ModuleFromPowerShellGallery {
                     -f $moduleName,$ExitCode
                 )
         }
-        Write-Verbose -Verbose (`
+        Write-Verbose -Message (`
             'The {0} module was installed using Nuget.' `
                 -f $moduleName            
         )
@@ -293,7 +293,7 @@ function Initialize-TestEnvironment
         [String] $TestType
     )
     
-    Write-Verbose -Verbose (`
+    Write-Verbose -Message (`
         'Initializing Test Environment for {0} testing of {1} in module {2}.' `
             -f $TestType,$DSCResourceName,$DSCModuleName)   
     if ($TestType -eq 'Unit')
@@ -405,7 +405,7 @@ function Restore-TestEnvironment
         [PSObject] $TestEnvironment
     )
 
-    Write-Verbose -Verbose (`
+    Write-Verbose -Message (`
         'Cleaning up Test Environment after {0} testing of {1} in module {2}.' `
             -f $TestEnvironment.TestType,$TestEnvironment.DSCResourceName,$TestEnvironment.DSCModuleName)
     
