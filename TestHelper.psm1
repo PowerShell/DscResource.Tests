@@ -132,7 +132,7 @@ function Install-ModuleFromPowerShellGallery {
         # Module is already installed - report it.
         Write-Verbose -Verbose (`
             'Version {0} of the {1} module is already installed.' `
-                -f $module.Version,$moduleName            
+                -f $($module.Version),$moduleName            
         )
         # Could check for a newer version available here in future and perform an update.
         return $module
