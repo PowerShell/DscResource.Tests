@@ -130,10 +130,10 @@ function Install-ModuleFromPowerShellGallery {
     if (@($module).Count -ne 0)
     {
         # Module is already installed - report it.
-        Write-Verbose -Message (`
+        Write-Host -Object (`
             'Version {0} of the {1} module is already installed.' `
                 -f $($module.Version),$moduleName            
-        )
+        ) -ForegroundColor:Yellow
         # Could check for a newer version available here in future and perform an update.
         return $module
     }
@@ -205,10 +205,10 @@ function Install-ModuleFromPowerShellGallery {
                     -f $moduleName,$ExitCode
                 )
         }
-        Write-Verbose -Message (`
+        Write-Host -Object (`
             'The {0} module was installed using Nuget.' `
                 -f $moduleName            
-        )
+        ) -ForegroundColor:Yellow
     }
     else
     {
@@ -293,9 +293,9 @@ function Initialize-TestEnvironment
         [String] $TestType
     )
     
-    Write-Verbose -Message (`
+    Write-Host -Object (`
         'Initializing Test Environment for {0} testing of {1} in module {2}.' `
-            -f $TestType,$DSCResourceName,$DSCModuleName)   
+            -f $TestType,$DSCResourceName,$DSCModuleName) -ForegroundColor:Yellow
     if ($TestType -eq 'Unit')
     {
         [String] $RelativeModulePath = "DSCResources\$DSCResourceName\$DSCResourceName.psm1"
