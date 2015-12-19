@@ -136,7 +136,7 @@ try
         if ($PSVersion.Major -ge 5)
         {
             Context 'PSScriptAnalyzer' {
-                It "passes Invoke-ScriptAnalyzer" {
+                It 'passes Invoke-ScriptAnalyzer' {
 
                     # Perform PSScriptAnalyzer scan.
                     # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
@@ -144,8 +144,9 @@ try
                     # Errors will still be returned as expected.
                     $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
                     if ($PSScriptAnalyzerErrors -ne $null) {
-                        Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
-                        Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
+                        Write-Error -Message 'There are PSScriptAnalyzer errors that need to be fixed:'
+                        @($PSScriptAnalyzerErrors).Foreach( { Write-Error -Message $_ } )
+                        Write-Error -Message 'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/'
                         $PSScriptAnalyzerErrors.Count | Should Be $null
                     }
                 }      
