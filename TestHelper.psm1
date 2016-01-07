@@ -132,10 +132,13 @@ function Install-ModuleFromPowerShellGallery {
         # Module is already installed - report it.
         Write-Host -Object (`
             'Version {0} of the {1} module is already installed.' `
-                -f $($module.Version),$moduleName            
+                -f $($module.Version -join ', '),$moduleName            
         ) -ForegroundColor:Yellow
         # Could check for a newer version available here in future and perform an update.
-        return $module
+        # Return only the latest version of the module
+        return $module `
+            | Sort-Object -Property Version -Descending `
+            | Select-Object -First 1        
     }
 
     Write-Verbose -Message (`
