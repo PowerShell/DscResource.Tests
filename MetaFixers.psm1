@@ -21,6 +21,22 @@ function ConvertTo-UTF8()
     }
 }
 
+function ConvertTo-ASCII()
+{
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
+        [System.IO.FileInfo]$fileInfo
+    )
+
+    process 
+    {
+        $content = Get-Content -Raw -Encoding Unicode -Path $fileInfo.FullName
+        [System.IO.File]::WriteAllText($fileInfo.FullName, $content, [System.Text.Encoding]::ASCII)
+    }
+}
+
 function ConvertTo-SpaceIndentation()
 {
     [CmdletBinding()]
