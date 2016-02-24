@@ -107,7 +107,14 @@ try
                 $allTextFiles | %{
                     if (Test-FileUnicode $_) {
                         $unicodeFilesCount += 1
-                        Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to UTF-8. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
+                        if($_.Extension -ieq '.mof')
+                        {
+                            Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to ASCII. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-ASCII'."
+                        }
+                        else
+                        {
+                            Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to UTF-8. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
+                        }
                     }
                 }
                 $unicodeFilesCount | Should Be 0
