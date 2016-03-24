@@ -97,3 +97,19 @@ function Get-UnicodeFilesList()
     Get-TextFilesList $root | ? { Test-FileUnicode $_ }
 }
 
+function Add-NewLine()
+{
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
+        [System.IO.FileInfo]$fileInfo
+    )
+
+    process 
+    {
+        $content = Get-Content -Raw -Path $fileInfo.FullName
+        $content += "`r`n"
+        [System.IO.File]::WriteAllText($fileInfo.FullName, $content)
+    }
+}
