@@ -135,6 +135,34 @@ try
                 $totalTabsCount | Should Be 0
             }
         }
+
+        Context 'New Lines' {
+
+            It 'Should end with a new line' {
+                $noNewLineCount = 0
+
+                foreach($file in $allTextFiles)
+                {
+                    $content = Get-Content $file.FullName -Raw
+
+                    if($content[-1] -ne "`n")
+                    {
+                        if($noNewLineCount -eq 0)
+                        {
+                            Write-Warning "To improve consistency across multiple environments and editors each text file is required to end with a new line."
+                        }
+
+                        Write-Warning "$($file.FullName) does not end with a new line. Use Fixer 'Add-NewLine'"
+                        $noNewLineCount++
+                    }
+                }
+
+                if(!$env:AppVeyor)
+                {
+                    $noNewLineCount | should be 0
+                }
+            }
+        }
     }
 
     Describe 'PowerShell DSC resource modules' {
