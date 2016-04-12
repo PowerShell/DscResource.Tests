@@ -145,7 +145,7 @@ try
                 {
                     $content = Get-Content $file.FullName -Raw
 
-                    if(($content[-1] -ne "`n") -and ($content[-2] -ne "`r"))
+                    if($content[-1] -ne "`n")
                     {
                         if($noNewLineCount -eq 0)
                         {
@@ -157,7 +157,10 @@ try
                     }
                 }
 
-                $noNewLineCount | should be 0
+                if(!$env:AppVeyor)
+                {
+                    $noNewLineCount | should be 0
+                }
             }
         }
     }
