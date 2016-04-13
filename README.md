@@ -67,9 +67,9 @@ The test helper module (TestHelper.psm1) contains the following functions:
 
 ## Templates for Creating Tests
 
-The Template files that are used for creating Unit and Integration tests for a DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources)
+The Template files that are used for creating Unit and Integration tests for a DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources) in the [Tests.Template folder](https://github.com/PowerShell/DscResources/tree/master/Tests.Template)
 
-To use these files, see the [Testing.md](https://github.com/PowerShell/DscResources/blob/dev/Testing.md) document and the instructions at the top of each template file.
+To use these files, see the [test guidelines](https://github.com/PowerShell/DscResources/blob/master/TestsGuidelines.md) document and the instructions at the top of each template file.
 
 The resource files are:
 **[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/dev/Tests.Template/Unit_Template.ps1)**: Use to create a set of Unit Pester tests for a single DSC Resource.
