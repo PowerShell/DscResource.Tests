@@ -19,7 +19,9 @@ if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
 # Load the TestHelper module which contains the *-ResourceDesigner functions
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+$Parent = Split-Path $Script:MyInvocation.MyCommand.Path -Parent
+$TestHelper = Join-Path $Parent "DscResourceTestHelper"
+Import-Module -Name (Join-Path -Path $TestHelper -ChildPath 'TestHelper.psm1') -Force 
 
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
