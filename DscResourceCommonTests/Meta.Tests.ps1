@@ -16,10 +16,12 @@ if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
     $PSScriptRoot = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)
 }
 # Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
+$Parent = Split-Path -parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
+$TestHelper = Join-Path $Parent "DscResourceTestHelper"
+Import-Module -Name (Join-Path -Path $TestHelper -ChildPath 'MetaFixers.psm1') -Force
 
 # Load the TestHelper module which contains the *-ResourceDesigner functions
-$Parent = Split-Path $Script:MyInvocation.MyCommand.Path -Parent
+$Parent = Split-Path -parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
 $TestHelper = Join-Path $Parent "DscResourceTestHelper"
 Import-Module -Name (Join-Path -Path $TestHelper -ChildPath 'TestHelper.psm1') -Force 
 
