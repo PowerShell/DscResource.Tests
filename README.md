@@ -1,6 +1,24 @@
 # DscResource.Tests
 Common meta tests for PowerShell DSC resources repositories.
 
+## DscResourceCommonTests
+### Unreleased
+
+### 0.2.0.0
+* Fixed unicode and path bugs in tests
+
+### 0.1.0.0
+* Initial release
+
+## DscResourceTestHelper
+### Unreleased
+
+### 0.2.0.0
+* Fixed unicode and path bugs in tests
+
+### 0.1.0.0
+* Initial release
+
 ## Goals
 
 1. Consistency in encoding and indentations. 
