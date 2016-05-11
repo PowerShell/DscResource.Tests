@@ -12,7 +12,7 @@
 RootModule = 'TestHelper.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.0.0'
+ModuleVersion = '0.2.0.0'
 
 # ID used to uniquely identify this module
 GUID = '4281cb20-a423-489d-a2a9-00ec62d7c5f3'
