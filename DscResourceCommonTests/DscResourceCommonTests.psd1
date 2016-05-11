@@ -12,7 +12,7 @@
 RootModule = 'MetaFixers.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.0.0'
+ModuleVersion = '0.2.0.0'
 
 # ID used to uniquely identify this module
 GUID = '9fa27604-fb89-4897-a054-faee592d6a18'
