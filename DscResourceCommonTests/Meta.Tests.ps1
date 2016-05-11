@@ -21,8 +21,6 @@ $TestHelper = Join-Path $Parent "DscResourceTestHelper"
 Import-Module -Name (Join-Path -Path $TestHelper -ChildPath 'MetaFixers.psm1') -Force
 
 # Load the TestHelper module which contains the *-ResourceDesigner functions
-$Parent = Split-Path -parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
-$TestHelper = Join-Path $Parent "DscResourceTestHelper"
 Import-Module -Name (Join-Path -Path $TestHelper -ChildPath 'TestHelper.psm1') -Force 
 
 $ErrorActionPreference = 'stop'
