@@ -326,7 +326,7 @@ function Initialize-TestEnvironment
         
     # Import the Module
     $Splat = @{
-        Path = $moduleRoot
+        Path = (Join-Path -Path $moduleRoot -ChildPath '\DscResourceTestHelper\')
         ChildPath = $RelativeModulePath
         Resolve = $true
         ErrorAction = 'Stop'
