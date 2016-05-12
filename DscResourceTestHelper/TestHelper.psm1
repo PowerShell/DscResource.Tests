@@ -319,7 +319,7 @@ function Initialize-TestEnvironment
     } 
     
     # The folder where this module is found
-    [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
+    [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
     
     # The folder that all tests will find this module in
     [string] $modulesFolder = Split-Path -Parent $moduleRoot
