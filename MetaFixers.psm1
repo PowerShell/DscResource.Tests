@@ -61,7 +61,7 @@ function Get-TextFilesList
         [Parameter(Mandatory=$true)]
         [string]$root
     )
-    ls -File -Recurse $root | ? { @('.gitignore', '.gitattributes', '.ps1', '.psm1', '.psd1', '.json', '.xml', '.cmd', '.mof') -contains $_.Extension } 
+    Get-ChildItem -File -Recurse $root | Where-Object { @('.gitignore', '.gitattributes', '.ps1', '.psm1', '.psd1', '.json', '.xml', '.cmd', '.mof') -contains $_.Extension } 
 }
 
 function Test-FileUnicode
@@ -94,7 +94,7 @@ function Get-UnicodeFilesList()
         [string]$root
     )
 
-    Get-TextFilesList $root | ? { Test-FileUnicode $_ }
+    Get-TextFilesList $root | Where-Object { Test-FileUnicode $_ }
 }
 
 function Add-NewLine()
