@@ -3,6 +3,7 @@ Common meta tests for PowerShell DSC resources repositories.
 
 ## DscResourceCommonTests
 ### Unreleased
+* Fixed Aliases in files
 
 ### 0.2.0.0
 * Fixed unicode and path bugs in tests
