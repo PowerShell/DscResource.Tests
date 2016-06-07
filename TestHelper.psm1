@@ -318,8 +318,30 @@ function Initialize-TestEnvironment
         New-Item -Path $WorkingFolder -ItemType Directory
     }
 
-    # The folder where this module is found
-    [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
+    # Determine the root folder of this module by stepping up the path until the disk root is found
+    # or the DSC Module Manifest is found.
+    [String] $Path = $Script:MyInvocation.MyCommand.Path
+    [String] $DiskRoot = [System.IO.Path]::GetPathRoot($Path)
+    while (($Path -ne $DiskRoot) -and (-not [String]::IsNullOrEmpty($Path)))
+    {
+        # Does the Path contain the Resource Module?
+        if (Test-Path -Path (Join-Path -Path $Path -ChildPath "$DSCModuleName.psd1"))
+        {
+            # The Module Root folder has been found
+            [String] $moduleRoot = $Path
+            break
+        }
+        $Path = Split-Path -Path $Path -Parent
+    } # while
+
+    # Check that the Module Root was found
+    if (-not $ModuleRoot)
+    {
+        Throw "The DSC Module Manifest '$DSCModuleName.psd1' could not be found or it was found in the root folder on the disk."
+    } # if
+    Write-Host -Object (`
+        "DSC Module Manifest '{0}.psd1' detected in folder '{1}'." `
+            -f $DSCModuleName,$ModuleRoot) -ForegroundColor:Yellow
 
     # The folder that all tests will find this module in
     [string] $modulesFolder = Split-Path -Parent $moduleRoot
