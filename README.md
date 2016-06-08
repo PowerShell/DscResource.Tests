@@ -3,6 +3,9 @@ Common meta tests for PowerShell DSC resources repositories.
 
 ## DscResourceCommonTests
 ### Unreleased
+* Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
+* Removed code to Remove-Module from Initialize-TestEnvironment because not required: Import-Module -force should do the same thing.
+* Initialize-TestEnvironment changed to import module being tested into Global scope so that InModuleScope not required in tests.
 * Fixed Aliases in files
 
 ### 0.2.0.0
@@ -22,19 +25,19 @@ Common meta tests for PowerShell DSC resources repositories.
 
 ## Goals
 
-1. Consistency in encoding and indentations. 
+1. Consistency in encoding and indentations.
 Consistency is good by itself. But more important it allows us to:
-2. Avoid big diffs with cosmetic changes in Pull Requests. 
+2. Avoid big diffs with cosmetic changes in Pull Requests.
 Cosmetic changes (like formatting) make reviews harder.
-If you want to include formatting changes (like replacing `"` by `'`), 
-please make it a **separate commit**. 
+If you want to include formatting changes (like replacing `"` by `'`),
+please make it a **separate commit**.
 This will give reviewers an option to review meaningful changes separately from formatting changes.
 
 
 ## Git and Unicode
 
 By default git treats [unicode files as binary files](http://stackoverflow.com/questions/6855712/why-does-git-treat-this-text-file-as-a-binary-file).
-You may not notice it if your client (like VS or GitHub for Windows) takes care of such conversion. 
+You may not notice it if your client (like VS or GitHub for Windows) takes care of such conversion.
 History with Unicode files is hardly usable from command line `git`.
 
 ```
@@ -53,15 +56,15 @@ With forced `--text` option it would look like this:
  --- a/xActiveDirectory.psd1
  +++ b/xActiveDirectory.psd1
 @@ -30,4 +30,4 @@
-   C m d l e t s T o E x p o r t   =   ' * ' 
-  
-   } 
-  
-   
-  
- - 
+   C m d l e t s T o E x p o r t   =   ' * '
+
+   }
+
+
+
+ -
  \ No newline at end of file
- + #   h e l l o 
+ + #   h e l l o
  \ No newline at end of file
 ```
 
@@ -96,7 +99,7 @@ The resource files are:
 **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**: Use to create a DSC Configuration file for a single DSC Resource. Used in conjunction with Integration_Template.ps1.
 
 
-## Example Test Usage 
+## Example Test Usage
 
 To see examples of the Unit/Integration tests in practice, see the xNetworking MSFT_xFirewall resource:
 [Unit Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Unit/MSFT_xFirewall.Tests.ps1)

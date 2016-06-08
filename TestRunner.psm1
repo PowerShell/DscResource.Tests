@@ -17,7 +17,7 @@ function Start-DscResourceTests
         $module = $_.Name
         Write-Host "Copying common tests from $testsPath to $resourcesPath\$module" -ForegroundColor Yellow
         Copy-Item $testsPath "$resourcesPath\$module" -recurse -force 
-        Set-Location $module
+        Set-Location -Path $module
         Write-Host "Running tests for $module" -ForegroundColor Yellow
         Invoke-Pester
         Set-Location ..
