@@ -370,7 +370,11 @@ function Initialize-TestEnvironment
     }
     $NewModulePath = "$modulesFolder;$NewModulePath"
     $env:PSModulePath = $NewModulePath
-    [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
+    if ($TestType -eq 'integration') {
+        # For integration tests we have to set the Machine PSModulePath because otherwise the DSC
+        # LCM won't be able to find the Resource module being tested and may use the wrong one.
+        [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
+    }
 
     # Preserve and set the execution policy so that the DSC MOF can be created
     $OldExecutionPolicy = Get-ExecutionPolicy
@@ -432,7 +436,10 @@ function Restore-TestEnvironment
     if ($TestEnvironment.OldModulePath -ne $env:PSModulePath)
     {
         $env:PSModulePath = $TestEnvironment.OldModulePath
-        [System.Environment]::SetEnvironmentVariable('PSModulePath',$env:PSModulePath,[System.EnvironmentVariableTarget]::Machine)
+        if ($TestType -eq 'integration') {
+            # Restore the machine PSModulePath for integration tests.
+            [System.Environment]::SetEnvironmentVariable('PSModulePath',$env:PSModulePath,[System.EnvironmentVariableTarget]::Machine)
+        }
     }
 
     # Restore the Execution Policy
