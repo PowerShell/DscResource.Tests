@@ -9,6 +9,7 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 * Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
 * Removed code to Remove-Module from Initialize-TestEnvironment because not required: Import-Module -force should do the same thing.
 * Initialize-TestEnvironment changed to import module being tested into Global scope so that InModuleScope not required in tests.
+* Fixed aliases in files
 
 ### 0.2.0.0
 * Fixed unicode and path bugs in tests

@@ -12,14 +12,14 @@ function Start-DscResourceTests
     )
     
     $testsPath = $pwd
-    cd $resourcesPath
-    ls | % {
+    Set-Location $resourcesPath
+    Get-ChildItem | ForEach-Object {
         $module = $_.Name
         Write-Host "Copying common tests from $testsPath to $resourcesPath\$module" -ForegroundColor Yellow
         Copy-Item $testsPath "$resourcesPath\$module" -recurse -force 
-        cd $module
+        Set-Location -Path $module
         Write-Host "Running tests for $module" -ForegroundColor Yellow
         Invoke-Pester
-        cd ..
+        Set-Location ..
     }
 }

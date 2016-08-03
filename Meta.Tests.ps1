@@ -33,7 +33,7 @@ if ($env:APPVEYOR) {
     $PSBoundParameters.Force = $true
 }
 
-$xDSCResourceDesignerModuleName = "xDscResourceDesigner"
+$xDSCResourceDesignerModuleName = 'xDscResourceDesigner'
 $xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
 $xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
 
@@ -54,8 +54,8 @@ else
 # PSScriptAnalyzer requires PowerShell 5.0 or higher
 if ($PSVersion.Major -ge 5)
 {
-    Write-Verbose -Verbose "Installing PSScriptAnalyzer"
-    $PSScriptAnalyzerModuleName = "PSScriptAnalyzer"
+    Write-Verbose -Verbose 'Installing PSScriptAnalyzer'
+    $PSScriptAnalyzerModuleName = 'PSScriptAnalyzer'
     $PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
     $PSScriptAnalyzerModule = Install-ModuleFromPowerShellGallery -ModuleName $PSScriptAnalyzerModuleName -ModulePath $PSScriptAnalyzerModulePath @PSBoundParameters
 
@@ -104,7 +104,7 @@ try
 
             It "Doesn't use Unicode encoding" {
                 $unicodeFilesCount = 0
-                $allTextFiles | %{
+                $allTextFiles |  ForEach-Object {
                     if (Test-FileUnicode $_) {
                         $unicodeFilesCount += 1
                         if($_.Extension -ieq '.mof')
@@ -125,9 +125,9 @@ try
 
             It 'Uses spaces for indentation, not tabs' {
                 $totalTabsCount = 0
-                $allTextFiles | %{
+                $allTextFiles |  ForEach-Object {
                     $fileName = $_.FullName
-                    $tabStrings = (Get-Content $_.FullName -Raw) | Select-String "`t" | % {
+                    $tabStrings = (Get-Content $_.FullName -Raw) | Select-String "`t" |  ForEach-Object {
                         Write-Warning "There are tab in $fileName. Use Fixer 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
                         $totalTabsCount++
                     }
@@ -149,7 +149,7 @@ try
                     {
                         if($noNewLineCount -eq 0)
                         {
-                            Write-Warning "To improve consistency across multiple environments and editors each text file is required to end with a new line."
+                            Write-Warning 'To improve consistency across multiple environments and editors each text file is required to end with a new line.'
                         }
 
                         Write-Warning "$($file.FullName) does not end with a new line. Use Fixer 'Add-NewLine'"
