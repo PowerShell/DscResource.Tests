@@ -370,10 +370,14 @@ function Initialize-TestEnvironment
     }
     $NewModulePath = "$modulesFolder;$NewModulePath"
     $env:PSModulePath = $NewModulePath
-    if ($TestType -eq 'integration') {
+    if ($TestType -eq 'integration')
+    {
         # For integration tests we have to set the Machine PSModulePath because otherwise the DSC
         # LCM won't be able to find the Resource module being tested and may use the wrong one.
         [System.Environment]::SetEnvironmentVariable('PSModulePath',$NewModulePath,[System.EnvironmentVariableTarget]::Machine)
+
+        # Reset the DSC LCM
+        Reset-DSC
     }
 
     # Preserve and set the execution policy so that the DSC MOF can be created
@@ -432,11 +436,18 @@ function Restore-TestEnvironment
         'Cleaning up Test Environment after {0} testing of {1} in module {2}.' `
             -f $TestEnvironment.TestType,$TestEnvironment.DSCResourceName,$TestEnvironment.DSCModuleName)
 
+    if ($TestEnvironment.TestType -eq 'integration')
+    {
+        # Reset the DSC LCM
+        Reset-DSC
+    }
+
     # Restore PSModulePath
     if ($TestEnvironment.OldModulePath -ne $env:PSModulePath)
     {
         $env:PSModulePath = $TestEnvironment.OldModulePath
-        if ($TestType -eq 'integration') {
+        if ($TestEnvironment.TestType -eq 'integration')
+        {
             # Restore the machine PSModulePath for integration tests.
             [System.Environment]::SetEnvironmentVariable('PSModulePath',$env:PSModulePath,[System.EnvironmentVariableTarget]::Machine)
         }
@@ -454,3 +465,43 @@ function Restore-TestEnvironment
         Remove-Item -Path $TestEnvironment.WorkingFolder -Recurse -Force
     }
 }
+
+<#
+    .SYNOPSIS
+        Resets the DSC LCM by performing the following functions:
+        1. Cancel any currently executing DSC LCM operations
+        2. Remove any DSC configurations that:
+            - are currently applied
+            - are pending application
+            - have been previously applied
+
+        The purpose of this function is to ensure the DSC LCM is in a known
+        and idle state before an integration test is performed that will
+        apply a configuration.
+
+        This is to prevent an integration test from being performed but failing
+        because the DSC LCM is applying a previous configuration.
+
+        This function should be called after each Describe block in an integration
+        test to ensure the DSC LCM is reset before another test DSC configuration
+        is applied.
+    .EXAMPLE
+        Reset-DSC
+
+        This command will reset the DSC LCM and clear out any DSC configurations.
+#>
+function Reset-DSC
+{
+    [CmdletBinding()]
+    Param
+    (
+    )
+
+    Write-Verbose -Message 'Resetting DSC LCM.'
+
+    Stop-DscConfiguration -Force -ErrorAction SilentlyContinue
+    Remove-DscConfigurationDocument -Stage Current -Force
+    Remove-DscConfigurationDocument -Stage Pending -Force
+    Remove-DscConfigurationDocument -Stage Previous -Force
+}
+
