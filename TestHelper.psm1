@@ -384,7 +384,7 @@ function Initialize-TestEnvironment
     $OldExecutionPolicy = Get-ExecutionPolicy
     if ($OldExecutionPolicy -ne 'Unrestricted')
     {
-        Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
+        Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
     }
 
     # Generate the test environment object that will be returned
@@ -456,7 +456,7 @@ function Restore-TestEnvironment
     # Restore the Execution Policy
     if ($TestEnvironment.OldExecutionPolicy -ne (Get-ExecutionPolicy))
     {
-        Set-ExecutionPolicy -ExecutionPolicy $TestEnvironment.OldExecutionPolicy -Force
+        Set-ExecutionPolicy -ExecutionPolicy $TestEnvironment.OldExecutionPolicy -Scope Process -Force
     }
 
     # Cleanup Working Folder

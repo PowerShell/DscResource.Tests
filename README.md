@@ -10,6 +10,8 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 * Removed code to Remove-Module from Initialize-TestEnvironment because not required: Import-Module -force should do the same thing.
 * Initialize-TestEnvironment changed to import module being tested into Global scope so that InModuleScope not required in tests.
 * Fixed aliases in files
+* Initialize-TestEnvironment changed to update the execution policy for the current process only
+* Restore-TestEnvironment changed to update the execution policy for the current process only.
 
 ### 0.2.0.0
 * Fixed unicode and path bugs in tests
