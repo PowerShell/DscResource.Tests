@@ -505,3 +505,41 @@ function Reset-DSC
     Remove-DscConfigurationDocument -Stage Previous -Force
 }
 
+<#
+    .SYNOPSIS
+        Test if a PowerShell module (psm1) file contains DSC Class
+        Resources.
+
+    .PARAMETER fileName
+        This is the full path of the psm1 file.
+
+    .EXAMPLE
+        Test-ClassResource -fileName 'c:\mymodule\myclassmodule.psm1'
+
+        This command will test myclassmodule for the presence of Class
+        based DSC resources
+#>
+function Test-ClassResource
+{
+    param(
+        [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
+        [string]$fileName
+    )
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref]$null, [ref]$null)
+
+    $result = foreach ($item in $ast.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $false))
+    {
+        if ($item.Extent.Text -eq '[DscResource()]')
+        {
+            $true
+        }
+    }
+    if ($result)
+    {
+        $true
+    }
+    else
+    {
+        $false
+    }
+}
