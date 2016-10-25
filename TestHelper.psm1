@@ -510,11 +510,11 @@ function Reset-DSC
         Test if a PowerShell module (psm1) file contains DSC Class
         Resources.
 
-    .PARAMETER fileName
+    .PARAMETER Path
         This is the full path of the psm1 file.
 
     .EXAMPLE
-        Test-ClassResource -fileName 'c:\mymodule\myclassmodule.psm1'
+        Test-ClassResource -Path 'c:\mymodule\myclassmodule.psm1'
 
         This command will test myclassmodule for the presence of Class
         based DSC resources
@@ -523,8 +523,8 @@ function Test-ClassResource
 {
     param
     (
-        [Parameter(ValueFromPipeline=$True, Mandatory=$True)]
-        [string] $Path
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [String] $Path
     )
     $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
     $result = $false
