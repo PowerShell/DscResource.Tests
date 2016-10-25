@@ -202,6 +202,10 @@ try
                         {
                             Write-Output -InputObject $_
                         }
+                        elseif (Test-ClassResource -Path $_.FullName)
+                        {
+                            Write-Output -InputObject $_
+                        }
                     }
                 }
         )
@@ -244,20 +248,22 @@ try
 
             foreach ($psm1file in $psm1Files) 
             {
-                Context "Schema Validation of $($psm1file.BaseName)" {
+                if (-not (Test-ClassResource -Path $psm1file.FullName)) {
+                    Context "Schema Validation of $($psm1file.BaseName)" {
 
-                    It 'should pass Test-xDscResource' {
-                        $result = Test-xDscResource -Name $psm1file.DirectoryName
-                        $result | Should Be $true
-                    }
-
-                    It 'should pass Test-xDscSchema' {
-                        $Splat = @{
-                            Path = $psm1file.DirectoryName
-                            ChildPath = "$($psm1file.BaseName).schema.mof"
+                        It 'should pass Test-xDscResource' {
+                            $result = Test-xDscResource -Name $psm1file.DirectoryName
+                            $result | Should Be $true
                         }
-                        $result = Test-xDscSchema -Path (Join-Path @Splat -Resolve -ErrorAction Stop)
-                        $result | Should Be $true
+
+                        It 'should pass Test-xDscSchema' {
+                            $Splat = @{
+                                Path = $psm1file.DirectoryName
+                                ChildPath = "$($psm1file.BaseName).schema.mof"
+                            }
+                            $result = Test-xDscSchema -Path (Join-Path @Splat -Resolve -ErrorAction Stop)
+                            $result | Should Be $true
+                        }
                     }
                 }
             }
