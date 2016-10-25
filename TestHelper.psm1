@@ -521,25 +521,19 @@ function Reset-DSC
 #>
 function Test-ClassResource
 {
-    param(
-        [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
-        [string]$fileName
+    param
+    (
+        [Parameter(ValueFromPipeline=$True, Mandatory=$True)]
+        [string] $Path
     )
-    $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref]$null, [ref]$null)
-
-    $result = foreach ($item in $ast.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $false))
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+    $result = $false
+    foreach ($item in $ast.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $false))
     {
         if ($item.Extent.Text -eq '[DscResource()]')
         {
-            $true
+            $result = $true
         }
     }
-    if ($result)
-    {
-        $true
-    }
-    else
-    {
-        $false
-    }
+    return $result
 }

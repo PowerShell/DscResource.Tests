@@ -202,7 +202,7 @@ try
                         {
                             Write-Output -InputObject $_
                         }
-                        elseif (Test-ClassResource -fileName $_.FullName)
+                        elseif (Test-ClassResource -Path $_.FullName)
                         {
                             Write-Output -InputObject $_
                         }
@@ -248,7 +248,7 @@ try
 
             foreach ($psm1file in $psm1Files) 
             {
-                if (-not (Test-ClassResource -fileName $psm1file.FullName)) {
+                if (-not (Test-ClassResource -Path $psm1file.FullName)) {
                     Context "Schema Validation of $($psm1file.BaseName)" {
 
                         It 'should pass Test-xDscResource' {
