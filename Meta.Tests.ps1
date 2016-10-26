@@ -188,6 +188,10 @@ try
             }
         }
 
+        # Declare resource type detection variables
+        $ScriptResource = $false
+        $ClassResource = $false
+
         # Force convert to array
         $psm1Files = @(
             Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
@@ -200,10 +204,12 @@ try
                         $MofFilePath = Join-Path -Path $_.DirectoryName -ChildPath $MofFileName
                         if (Test-Path -Path $MofFilePath -ErrorAction SilentlyContinue)
                         {
+                            $ScriptResource = $true
                             Write-Output -InputObject $_
                         }
                         elseif (Test-ClassResource -Path $_.FullName)
                         {
+                            $ClassResource = $true
                             Write-Output -InputObject $_
                         }
                     }
@@ -213,6 +219,50 @@ try
         if (-not $psm1Files) {
             Write-Verbose -Verbose 'There are no resource files to analyze'
         } else {
+
+            # Set MinimumPSVersion variable based on resource types detected
+            if ($ClassResource -and $ScriptResource)
+            {
+                #Mixed module
+                $MinimumPSVersion = [Version]'5.1'
+            }
+            elseif ($null -ne $ClassResource)
+            {
+                $MinimumPSVersion = [Version]'5.0'
+            }
+            else
+            {
+                $MinimumPSVersion = [Version]'4.0'
+            }
+
+            Context 'Root Manifest' {
+
+                $RootManifest = Resolve-Path -Path $moduleRoot\*.psd1
+                $ModuleManifest = Test-ModuleManifest -Path $RootManifest
+
+                it "Minimum PowerShell version $MinimumPSVersion based on resource types" {
+                    
+                    $ModuleManifest.PowerShellVersion -ge $MinimumPSVersion | Should Be $true 
+                }
+
+                if ($ClassResource)
+                {
+                    foreach ($psm1file in $psm1Files)
+                    {
+                        $ClassResourceName = Get-ClassResource -Path $psm1file.FullName
+                        if ($null -ne $ClassResourceName)
+                        {
+                            It "DscResourcesToExport key should contain: $ClassResourceName" {
+                                $ModuleManifest.ExportedDscResources -contains $ClassResourceName | Should Be $true
+                            }
+
+                            It "NestedModules key should contain path to: $ClassResourceName" {
+                                $ModuleManifest.NestedModules.Name -contains $ClassResourceName | Should Be $true
+                            }
+                        }
+                    }
+                }
+            }
 
             Write-Verbose -Verbose "Analyzing $($psm1Files.Count) resources"
 

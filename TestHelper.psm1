@@ -537,3 +537,24 @@ function Test-ClassResource
     }
     return $result
 }
+
+function Get-ClassResource
+{
+    param
+    (
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [String] $Path
+    )
+    if (Test-ClassResource -Path $Path)
+    {
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$null, [ref]$null)
+        $Result = $ast.FindAll({$args[0] -is [System.Management.Automation.Language.TypeDefinitionAst]}, $false)
+        foreach ($Item in $Result)
+        {
+            if ($Item.Attributes.TypeName.Name -eq 'DscResource')
+            {
+                $Item.Name
+            }
+        }
+    }
+}
