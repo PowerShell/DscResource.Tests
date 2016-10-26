@@ -226,7 +226,7 @@ try
                 #Mixed module
                 $MinimumPSVersion = [Version]'5.1'
             }
-            elseif ($null -ne $ClassResource)
+            elseif ($ClassResource)
             {
                 $MinimumPSVersion = [Version]'5.0'
             }
