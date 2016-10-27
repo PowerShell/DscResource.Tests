@@ -538,6 +538,18 @@ function Test-ClassResource
     return $result
 }
 
+<#
+    .SYNOPSIS
+        Get DSC Class resource names from a PowerShell module (psm1) file.
+
+    .PARAMETER Path
+        This is the full path of the psm1 file.
+
+    .EXAMPLE
+        Get-ClassResource -Path 'c:\mymodule\myclassmodule.psm1'
+
+        This command will get DSC Class resource names from the myclassmodule module.
+#>
 function Get-ClassResource
 {
     param
