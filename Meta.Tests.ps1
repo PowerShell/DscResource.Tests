@@ -136,6 +136,25 @@ try
             }
         }
 
+        Context 'Empty Files' {
+            It 'Should not be an empty file' {
+                
+                $EmptyFiles = 0
+                foreach($file in $allTextFiles)
+                {
+                    $content = Get-Content $file.FullName -Raw
+
+                    if(-not ($content -match '[^\r\n\t\f ]'))
+                    {
+                        Write-Warning "File $($file.FullName) is empty! Please add content or remove this file!"
+                        $EmptyFiles++
+                    }
+                }
+
+                $EmptyFiles | Should Be 0
+            }
+        }
+
         Context 'New Lines' {
 
             It 'Should end with a new line' {
@@ -144,6 +163,12 @@ try
                 foreach($file in $allTextFiles)
                 {
                     $content = Get-Content $file.FullName -Raw
+
+                    if(-not ($content -match '[^\r\n\t\f ]'))
+                    {
+                        # This is dealt with above. Avoiding empty array error
+                        continue
+                    }
 
                     if($content[-1] -ne "`n")
                     {
