@@ -12,6 +12,12 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 * Fixed aliases in files
 * Initialize-TestEnvironment changed to update the execution policy for the current process only
 * Restore-TestEnvironment changed to update the execution policy for the current process only.
+* Cleaned all common tests
+    * Added tests for PS Script Analyzer
+* Cleaned TestHelper
+    * Removed Force parameter from Install-ModuleFromPowerShellGallery
+    * Added more test helper functions
+* Cleaned MetaFixers and TestRunner
 
 ### 0.2.0.0
 * Fixed unicode and path bugs in tests

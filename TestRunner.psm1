@@ -1,25 +1,42 @@
 ﻿<#
-    .SYNOPSIS Runs tests on all DSC resources in given folder (including common tests)
-    .PARAM
-        resourcesPath Path where DSC resource modules have been cloned (tests will run for all modules in that path)
+    .SYNOPSIS
+        Runs all tests (including common tests) on all DSC resources in the given folder.
+
+    .PARAMETER ResourcesPath
+        The path to the folder containing the resources to be tested.
+
     .EXAMPLE
-        Start-DscResourceTests -resourcesPath C:\DscResources\xDscResources
+        Start-DscResourceTests -ResourcesPath C:\DscResources\DscResources
 #>
 function Start-DscResourceTests
 {
-    param(
-    [String] $resourcesPath
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $ResourcesPath
     )
     
     $testsPath = $pwd
-    Set-Location $resourcesPath
+    Push-Location -Path $ResourcesPath
+
     Get-ChildItem | ForEach-Object {
-        $module = $_.Name
-        Write-Host "Copying common tests from $testsPath to $resourcesPath\$module" -ForegroundColor Yellow
-        Copy-Item $testsPath "$resourcesPath\$module" -recurse -force 
-        Set-Location -Path $module
-        Write-Host "Running tests for $module" -ForegroundColor Yellow
+        $moduleName = $_.Name
+        $destinationPath = Join-Path -Path $ResourcesPath -ChildPath $moduleName
+
+        Write-Verbose -Message "Copying common tests from $testsPath to $destinationPath"
+        Copy-Item -Path $testsPath -Destination $destinationPath -Recurse -Force 
+
+        Push-Location -Path $moduleName
+        
+        Write-Verbose "Running tests for $moduleName"
         Invoke-Pester
-        Set-Location ..
+
+        Pop-Location
     }
+
+    Pop-Location
 }
+
+Export-ModuleMember -Function @( 'Start-DscResourceTests' )
