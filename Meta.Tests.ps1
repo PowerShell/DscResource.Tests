@@ -1,355 +1,381 @@
 <# 
-    .summary
-        Test that describes code.
-
-    .PARAMETER Force
-        Used to force any installations to occur without confirming with
-        the user.
+    .SYNOPSIS
+        Common tests for all resource modules in the DSC Resource Kit.
 #>
-[CmdletBinding()]
-Param (
-    [Boolean]$Force = $false
-)
 
-if (!$PSScriptRoot) # $PSScriptRoot is not defined in 2.0
-{
-    $PSScriptRoot = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)
+Set-StrictMode -Version 'Latest'
+$errorActionPreference = 'Stop'
+
+$testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
+Import-Module -Name $testHelperModulePath
+
+$moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
+$dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
+
+Describe 'Common Tests - File Formatting' {
+    $allTextFiles = Get-TextFilesList $moduleRootFilePath
+    
+    It "Should not contain any files with Unicode file encoding" {
+        $containsUnicodeFile = $false
+
+        foreach ($textFile in $allTextFiles)
+        {
+            if (Test-FileInUnicode $textFile) {
+                if($textFile.Extension -ieq '.mof')
+                {
+                    Write-Warning -Message "File $($textFile.FullName) should be converted to ASCII. Use fixer function 'Get-UnicodeFilesList `$pwd | ConvertTo-ASCII'."
+                }
+                else
+                {
+                    Write-Warning -Message "File $($textFile.FullName) should be converted to UTF-8. Use fixer function 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
+                }
+
+                $containsUnicodeFile = $true
+            }
+        }
+
+        $containsUnicodeFile | Should Be $false
+    }
+
+    It 'Should not contain any files with tab characters' {
+        $containsFileWithTab = $false
+
+        foreach ($textFile in $allTextFiles)
+        {
+            $fileName = $textFile.FullName
+            $fileContent = Get-Content -Path $fileName -Raw
+
+            $tabCharacterMatches = $fileContent | Select-String "`t"
+
+            if ($null -ne $tabCharacterMatches)
+            {
+                Write-Warning -Message "Found tab character(s) in $fileName. Use fixer function 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
+                $containsFileWithTab = $true
+            }
+        }
+
+        $containsFileWithTab | Should Be $false
+    }
+
+    It 'Should not contain empty files' {
+        $containsEmptyFile = $false
+
+        foreach ($textFile in $allTextFiles)
+        {
+            $fileContent = Get-Content -Path $textFile.FullName -Raw
+
+            if([String]::IsNullOrWhiteSpace($fileContent))
+            {
+                Write-Warning -Message "File $($textFile.FullName) is empty. Please remove this file."
+                $containsEmptyFile = $true
+            }
+        }
+
+        $containsEmptyFile | Should Be $false
+    }
+
+    It 'Should not contain files without a newline at the end' {
+        $containsFileWithoutNewLine = $false
+
+        foreach ($textFile in $allTextFiles)
+        {
+            $fileContent = Get-Content -Path $textFile.FullName -Raw
+
+            if(-not [String]::IsNullOrWhiteSpace($fileContent) -and $fileContent[-1] -ne "`n")
+            {
+                if (-not $containsFileWithoutNewLine)
+                {
+                    Write-Warning -Message 'Each file must end with a new line.'
+                }
+
+                Write-Warning -Message "$($textFile.FullName) does not end with a new line. Use fixer function 'Add-NewLine'"
+                
+                $containsFileWithoutNewLine = $true
+            }
+        }
+
+                
+        $containsFileWithoutNewLine | Should Be $false
+    }
 }
-# Make sure MetaFixers.psm1 is loaded - it contains Get-TextFilesList
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MetaFixers.psm1') -Force
 
-# Load the TestHelper module which contains the *-ResourceDesigner functions
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+Describe 'Common Tests - .psm1 File Parsing' {
+    $psm1Files = Get-ModulePsm1Files -ModulePath $moduleRootFilePath
+    Write-Verbose -Message "Analyzing $($psm1Files.Count) .psm1 files..."
+        
+    It 'Should not contain parse errors' {
+        $containsParseErrors = $false
 
-$ErrorActionPreference = 'stop'
-Set-StrictMode -Version latest
+        foreach ($psm1File in $psm1Files)
+        {
+            $parseErrors = Get-FileParseErrors -FilePath $psm1File.FullName
 
-$RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
-$PSVersion = $PSVersionTable.PSVersion
+            if ($null -ne $parseErrors)
+            {
+                Write-Warning -Message "There are parse errors in $($_.FullName):"
+                Write-Warning -Message ($parseErrors | Format-List | Out-String)
 
-# Install and/or Import xDSCResourceDesigner Module
-if ($env:APPVEYOR) {
-    # Running in AppVeyor so force silent install of xDSCResourceDesigner
-    $PSBoundParameters.Force = $true
+                $containsParseErrors = $true
+            }
+        }
+
+        $containsParseErrors | Should Be $false
+    }
 }
 
-$xDSCResourceDesignerModuleName = 'xDscResourceDesigner'
-$xDSCResourceDesignerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$xDSCResourceDesignerModuleName"
-$xDSCResourceDesignerModule = Install-ModuleFromPowerShellGallery -ModuleName $xDSCResourceDesignerModuleName -ModulePath $xDSCResourceDesignerModulePath @PSBoundParameters
+Describe 'Common Tests - Module Manifest' {
+    $containsClassResource = Test-ModuleContainsClassResource -ModulePath $moduleRootFilePath
 
-if ($xDSCResourceDesignerModule) {
-    # Import the module if it is available
-    $xDSCResourceDesignerModule | Import-Module -Force
-}
-else
-{
-    # Module could not/would not be installed - so warn user that tests will fail.
-    Write-Warning -Message ( @(
-        "The 'xDSCResourceDesigner' module is not installed. "
-        "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
-        'will fail until this module is installed.'
-        ) -Join '' )
-}
-
-# PSScriptAnalyzer requires PowerShell 5.0 or higher
-if ($PSVersion.Major -ge 5)
-{
-    Write-Verbose -Verbose 'Installing PSScriptAnalyzer'
-    $PSScriptAnalyzerModuleName = 'PSScriptAnalyzer'
-    $PSScriptAnalyzerModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\$PSScriptAnalyzerModuleName"
-    $PSScriptAnalyzerModule = Install-ModuleFromPowerShellGallery -ModuleName $PSScriptAnalyzerModuleName -ModulePath $PSScriptAnalyzerModulePath @PSBoundParameters
-
-    if ($PSScriptAnalyzerModule) {
-        # Import the module if it is available
-        $PSScriptAnalyzerModule | Import-Module -Force
+    if ($containsClassResource)
+    {
+        $minimumPSVersion = [Version]'5.0'
     }
     else
     {
-        # Module could not/would not be installed - so warn user that tests will fail.
-        Write-Warning -Message ( @(
-            "The 'PSScriptAnalyzer' module is not installed. "
-            "The 'PowerShell DSC resource modules' Pester Tests in Meta.Tests.ps1 "
-            'will fail until this module is installed.'
-            ) -Join '' )
+        $minimumPSVersion = [Version]'4.0'
     }
-}
-else
-{
-    Write-Verbose -Verbose "Skipping installation of PSScriptAnalyzer since it requires PSVersion 5.0 or greater. Used PSVersion: $($PSVersion)"
-}
 
-# The folder where this module is found
-[String] $moduleRoot = Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path)
+    $moduleName = (Get-Item -Path $moduleRootFilePath).Name
+    $moduleManifestPath = Join-Path -Path $moduleRootFilePath -ChildPath "$moduleName.psd1"
 
-# Modify PSModulePath of the current PowerShell session.
-# We want to make sure we always test the development version of the resource
-# in the current build directory.
-[String] $script:OldModulePath = $env:PSModulePath
-[String] $NewModulePath = $script:OldModulePath
-if (($NewModulePath.Split(';') | Select-Object -First 1) -ne $moduleRoot)
-{
-    # Add the ModuleRoot to the beginning if it is not already at the front.
-    $env:PSModulePath = "$moduleRoot;$env:PSModulePath"
-}
+    <#
+        ErrorAction specified as SilentelyContinue because this call will throw an error
+        on machines with an older PS version than the manifest requires. WMF 5.1 machines
+        are not yet available on AppVeyor, so modules that require 5.1 (PSDscResources)
+        would always crash this test.
+    #>
+    $moduleManifestProperties = Test-ModuleManifest -Path $moduleManifestPath -ErrorAction 'SilentlyContinue'
 
-# Wrap tests in a try so that if anything goes wrong or user terminates we roll back
-# any enviroment changes (e.g. $ENV:PSModulePath)
-try
-{
-    Describe 'Text files formatting' {
-    
-        $allTextFiles = Get-TextFilesList $RepoRoot
-    
-        Context 'Files encoding' {
+    It "Should contain a PowerShellVersion property of at least $minimumPSVersion based on resource types" {
+        $moduleManifestProperties.PowerShellVersion -ge $minimumPSVersion | Should Be $true 
+    }
 
-            It "Doesn't use Unicode encoding" {
-                $unicodeFilesCount = 0
-                $allTextFiles |  ForEach-Object {
-                    if (Test-FileUnicode $_) {
-                        $unicodeFilesCount += 1
-                        if($_.Extension -ieq '.mof')
-                        {
-                            Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to ASCII. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-ASCII'."
-                        }
-                        else
-                        {
-                            Write-Warning "File $($_.FullName) contains 0x00 bytes. It's probably uses Unicode and need to be converted to UTF-8. Use Fixer 'Get-UnicodeFilesList `$pwd | ConvertTo-UTF8'."
-                        }
-                    }
-                }
-                $unicodeFilesCount | Should Be 0
-            }
-        }
+    if ($containsClassResource)
+    {
+        $classResourcesInModule = Get-ClassResourceNames -ModulePath $moduleRootFilePath
 
-        Context 'Indentations' {
-
-            It 'Uses spaces for indentation, not tabs' {
-                $totalTabsCount = 0
-                $allTextFiles |  ForEach-Object {
-                    $fileName = $_.FullName
-                    $tabStrings = (Get-Content $_.FullName -Raw) | Select-String "`t" |  ForEach-Object {
-                        Write-Warning "There are tab in $fileName. Use Fixer 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
-                        $totalTabsCount++
-                    }
-                }
-                $totalTabsCount | Should Be 0
-            }
-        }
-
-        Context 'Empty Files' {
-            It 'Should not be an empty file' {
-                
-                $EmptyFiles = 0
-                foreach($file in $allTextFiles)
-                {
-                    $content = Get-Content $file.FullName -Raw
-
-                    if(-not ($content -match '[^\r\n\t\f ]'))
-                    {
-                        Write-Warning "File $($file.FullName) is empty! Please add content or remove this file!"
-                        $EmptyFiles++
-                    }
+        Context 'Requirements for manifest of module with class-based resources' {
+            foreach ($classResourceInModule in $classResourcesInModule)
+            {
+                It "Should explicitly export $classResourceInModule in DscResourcesToExport" {
+                    $moduleManifestProperties.ExportedDscResources -contains $classResourceInModule | Should Be $true
                 }
 
-                $EmptyFiles | Should Be 0
-            }
-        }
-
-        Context 'New Lines' {
-
-            It 'Should end with a new line' {
-                $noNewLineCount = 0
-
-                foreach($file in $allTextFiles)
-                {
-                    $content = Get-Content $file.FullName -Raw
-
-                    if(-not ($content -match '[^\r\n\t\f ]'))
-                    {
-                        # This is dealt with above. Avoiding empty array error
-                        continue
-                    }
-
-                    if($content[-1] -ne "`n")
-                    {
-                        if($noNewLineCount -eq 0)
-                        {
-                            Write-Warning 'To improve consistency across multiple environments and editors each text file is required to end with a new line.'
-                        }
-
-                        Write-Warning "$($file.FullName) does not end with a new line. Use Fixer 'Add-NewLine'"
-                        $noNewLineCount++
-                    }
-                }
-
-                if(!$env:AppVeyor)
-                {
-                    $noNewLineCount | should be 0
+                It "Should include class module $classResourceInModule.psm1 in NestedModules" {
+                    $moduleManifestProperties.NestedModules.Name -contains $classResourceInModule | Should Be $true
                 }
             }
         }
     }
+}
 
-    Describe 'PowerShell DSC resource modules' {
-    
-        # PSScriptAnalyzer requires PowerShell 5.0 or higher
-        if ($PSVersion.Major -ge 5)
-        {
-            Context 'PSScriptAnalyzer' {
-                It 'passes Invoke-ScriptAnalyzer' {
+Describe 'Common Tests - Script Resource Schema Validation' {
+    Import-xDscResourceDesigner
 
-                    # Perform PSScriptAnalyzer scan.
-                    # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
-                    # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
-                    # Errors will still be returned as expected.
-                    $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
-                    if ($PSScriptAnalyzerErrors -ne $null) {
-                        Write-Warning -Message 'There are PSScriptAnalyzer errors that need to be fixed:'
-                        @($PSScriptAnalyzerErrors).Foreach( { Write-Warning -Message "$($_.Scriptname) (Line $($_.Line)): $($_.Message)" } )
-                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/'
-                        @($PSScriptAnalyzerErrors).Count | Should Be 0
-                    }
-                }      
+    $scriptResourceNames = Get-ModuleScriptResourceNames -ModulePath $moduleRootFilePath
+    foreach ($scriptResourceName in $scriptResourceNames)
+    {
+        Context $scriptResourceName {
+            $scriptResourcePath = Join-Path -Path $dscResourcesFolderFilePath -ChildPath $scriptResourceName
+
+            It 'Should pass Test-xDscResource' {
+                Test-xDscResource -Name $scriptResourcePath | Should Be $true
+            }
+
+            It 'Should pass Test-xDscSchema' {
+                $mofSchemaFilePath = Join-Path -Path $scriptResourcePath -ChildPath "$scriptResourceName.schema.mof"
+                Test-xDscSchema -Path $mofSchemaFilePath | Should Be $true
             }
         }
+    }
+}
 
-        # Declare resource type detection variables
-        $ScriptResource = $false
-        $ClassResource = $false
+<#
+    PSSA = PS Script Analyzer
+    Only the first and last tests here will pass/fail correctly at the moment. The other 3 tests
+    will currently always pass, but print warnings based on the problems they find.
+    These automatic passes are here to give contributors time to fix the PSSA
+    problems before we turn on these tests. These 'automatic passes' should be removed
+    along with the first test (which is replaced by the following 3) around Jan-Feb
+    2017.
+#>
+Describe 'Common Tests - PS Script Analyzer (takes some time)' {
 
-        # Force convert to array
-        $psm1Files = @(
-            Get-ChildItem -Path $RepoRoot\DscResources -Recurse -Filter '*.psm1' -File |
-                Foreach-Object {
-                    # Ignore Composite configurations
-                    # They requires additional resources to be installed on the box
-                    if (-not ($_.Name -like '*.schema.psm1'))
-                    {
-                        $MofFileName = "$($_.BaseName).schema.mof"
-                        $MofFilePath = Join-Path -Path $_.DirectoryName -ChildPath $MofFileName
-                        if (Test-Path -Path $MofFilePath -ErrorAction SilentlyContinue)
-                        {
-                            $ScriptResource = $true
-                            Write-Output -InputObject $_
-                        }
-                        elseif (Test-ClassResource -Path $_.FullName)
-                        {
-                            $ClassResource = $true
-                            Write-Output -InputObject $_
-                        }
-                    }
-                }
+    # PSScriptAnalyzer requires PowerShell 5.0 or higher
+    if ($PSVersionTable.PSVersion.Major -ge 5)
+    {
+        Import-PSScriptAnalyzer
+
+        $requiredPssaRuleNames = @(
+            'PSAvoidDefaultValueForMandatoryParameter',
+            'PSAvoidDefaultValueSwitchParameter',
+            'PSAvoidInvokingEmptyMembers',
+            'PSAvoidNullOrEmptyHelpMessageAttribute',
+            'PSAvoidUsingCmdletAliases',
+            'PSAvoidUsingComputerNameHardcoded',
+            'PSAvoidUsingDeprecatedManifestFields',
+            'PSAvoidUsingEmptyCatchBlock',
+            'PSAvoidUsingInvokeExpression',
+            'PSAvoidUsingPositionalParameters',
+            'PSAvoidShouldContinueWithoutForce',
+            'PSAvoidUsingWMICmdlet',
+            'PSAvoidUsingWriteHost',
+            'PSDSCReturnCorrectTypesForDSCFunctions',
+            'PSDSCStandardDSCFunctionsInResource',
+            'PSDSCUseIdenticalMandatoryParametersForDSC',
+            'PSDSCUseIdenticalParametersForDSC',
+            'PSMissingModuleManifestField',
+            'PSPossibleIncorrectComparisonWithNull',
+            'PSProvideCommentHelp',
+            'PSReservedCmdletChar',
+            'PSReservedParams',
+            'PSUseApprovedVerbs',
+            'PSUseCmdletCorrectly',
+            'PSUseOutputTypeCorrectly'
         )
 
-        if (-not $psm1Files) {
-            Write-Verbose -Verbose 'There are no resource files to analyze'
-        } else {
+        $flaggedPssaRuleNames = @(
+            'PSAvoidGlobalVars',
+            'PSAvoidUsingConvertToSecureStringWithPlainText',
+            'PSAvoidUsingPlainTextForPassword',
+            'PSAvoidUsingUsernameAndPasswordParams',
+            'PSDSCUseVerboseMessageInDSCResource',
+            'PSShouldProcess',
+            'PSUseDeclaredVarsMoreThanAssigments',
+            'PSUsePSCredentialType'
+        )
 
-            # Set MinimumPSVersion variable based on resource types detected
-            if ($ClassResource -and $ScriptResource)
-            {
-                #Mixed module
-                $MinimumPSVersion = [Version]'5.1'
-            }
-            elseif ($ClassResource)
-            {
-                $MinimumPSVersion = [Version]'5.0'
-            }
-            else
-            {
-                $MinimumPSVersion = [Version]'4.0'
-            }
+        $ignorePssaRuleNames = @(
+            'PSDSCDscExamplesPresent',
+            'PSDSCDscTestsPresent',
+            'PSUseBOMForUnicodeEncodedFile',
+            'PSUseShouldProcessForStateChangingFunctions',
+            'PSUseSingularNouns',
+            'PSUseToExportFieldsInManifest',
+            'PSUseUTF8EncodingForHelpFile'
+        )
 
-            Context 'Root Manifest' {
+        $invokeScriptAnalyzerParameters = @{
+            Path = $dscResourcesFolderFilePath
+            ErrorAction = 'SilentlyContinue'
+            Recurse = $true
+        }
 
-                $RootManifest = Resolve-Path -Path $moduleRoot\*.psd1
-                $ModuleManifest = Test-ModuleManifest -Path $RootManifest
+        It 'Should pass all error-level PS Script Analyzer rules' {
+            $errorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -Severity 'Error'
 
-                it "Minimum PowerShell version $MinimumPSVersion based on resource types" {
-                    
-                    $ModuleManifest.PowerShellVersion -ge $MinimumPSVersion | Should Be $true 
+            if ($null -ne $errorPssaRulesOutput) {
+                Write-Warning -Message 'Error-level PSSA rule(s) did not pass.'
+                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
+
+                foreach ($errorPssaRuleOutput in $errorPssaRulesOutput)
+                {
+                    Write-Warning -Message "$($errorPssaRuleOutput.ScriptName) (Line $($errorPssaRuleOutput.Line)): $($errorPssaRuleOutput.Message)"
                 }
 
-                if ($ClassResource)
+                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+            }
+
+            $errorPssaRulesOutput | Should Be $null
+        }
+
+        It 'Should pass all required PS Script Analyzer rules' {
+            $requiredPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $requiredPssaRuleNames
+
+            if ($null -ne $requiredPssaRulesOutput) {
+                Write-Warning -Message 'Required PSSA rule(s) did not pass.'
+                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
+
+                foreach ($requiredPssaRuleOutput in $requiredPssaRulesOutput)
                 {
-                    foreach ($psm1file in $psm1Files)
+                    Write-Warning -Message "$($requiredPssaRuleOutput.ScriptName) (Line $($requiredPssaRuleOutput.Line)): $($requiredPssaRuleOutput.Message)"
+                }
+
+                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+            }
+
+            <#
+                Automatically passing this test since it may break several resource modules at the moment.
+                Automatic pass to be removed Jan-Feb 2017.
+            #>
+            $requiredPssaRulesOutput = $null
+            $requiredPssaRulesOutput | Should Be $null
+        }
+
+        It 'Should pass all flagged PS Script Analyzer rules' {
+            $flaggedPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $flaggedPssaRuleNames
+
+            if ($null -ne $flaggedPssaRulesOutput) {
+                Write-Warning -Message 'Flagged PSSA rule(s) did not pass.'
+                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
+
+                foreach ($flaggedPssaRuleOutput in $flaggedPssaRulesOutput)
+                {
+                    Write-Warning -Message "$($flaggedPssaRuleOutput.ScriptName) (Line $($flaggedPssaRuleOutput.Line)): $($flaggedPssaRuleOutput.Message)"
+                }
+
+                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+            }
+
+            <#
+                Automatically passing this test since it may break several resource modules at the moment.
+                Automatic pass to be removed Jan-Feb 2017.
+            #>
+            $flaggedPssaRulesOutput = $null
+            $flaggedPssaRulesOutput | Should Be $null
+        }
+
+        It 'Should pass any recently-added, error-level PS Script Analyzer rules' {
+            $knownPssaRuleNames = $requiredPssaRuleNames + $flaggedPssaRuleNames + $ignorePssaRuleNames
+
+            $newErrorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -ExcludeRule $knownPssaRuleNames -Severity 'Error'
+
+            if ($null -ne $newErrorPssaRulesOutput) {
+                Write-Warning -Message 'Recently-added, error-level PSSA rule(s) did not pass.'
+                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
+
+                foreach ($newErrorPssaRuleOutput in $newErrorPssaRulesOutput)
+                {
+                    Write-Warning -Message "$($newErrorPssaRuleOutput.ScriptName) (Line $($newErrorPssaRuleOutput.Line)): $($newErrorPssaRuleOutput.Message)"
+                }
+
+                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+            }
+
+            <#
+                Automatically passing this test since it may break several resource modules at the moment.
+                Automatic pass to be removed Jan-Feb 2017.
+            #>
+            $newErrorPssaRulesOutput = $null
+            $newErrorPssaRulesOutput | Should Be $null
+        }
+
+        It 'Should not suppress any required PS Script Analyzer rules' {
+            $requiredRuleIsSuppressed = $false
+
+            $psm1Files = Get-ModulePsm1Files -ModulePath $moduleRootFilePath
+
+            foreach ($psm1File in $psm1Files)
+            {
+                $suppressedRuleNames = Get-SuppressedPSSARuleNameList -FilePath $psm1File.FullName
+
+                foreach ($suppressedRuleName in $suppressedRuleNames)
+                {
+                    $suppressedRuleNameNoQuotes = $suppressedRuleName.Replace("'", '')
+
+                    if ($requiredPssaRuleNames -icontains $suppressedRuleNameNoQuotes)
                     {
-                        $ClassResourceName = Get-ClassResource -Path $psm1file.FullName
-                        if ($null -ne $ClassResourceName)
-                        {
-                            It "DscResourcesToExport key should contain: $ClassResourceName" {
-                                $ModuleManifest.ExportedDscResources -contains $ClassResourceName | Should Be $true
-                            }
-
-                            It "NestedModules key should contain path to: $ClassResourceName" {
-                                $ModuleManifest.NestedModules.Name -contains $ClassResourceName | Should Be $true
-                            }
-                        }
+                        Write-Warning -Message "The file $($psm1File.Name) contains a suppression of the required PS Script Analyser rule $suppressedRuleNameNoQuotes. Please remove the rule suppression."
+                        $requiredRuleIsSuppressed = $true
                     }
                 }
             }
 
-            Write-Verbose -Verbose "Analyzing $($psm1Files.Count) resources"
-
-            Context 'Correctness' {
-
-                function Get-ParseErrors
-                {
-                    param(
-                        [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
-                        [string]$fileName
-                    )    
-
-                    $tokens = $null 
-                    $errors = $null
-                    $ast = [System.Management.Automation.Language.Parser]::ParseFile($fileName, [ref] $tokens, [ref] $errors)
-                    return $errors
-                }
-
-
-                It 'all .psm1 files don''t have parse errors' {
-                    $errors = @()
-                    $psm1Files | ForEach-Object { 
-                        $localErrors = Get-ParseErrors $_.FullName
-                        if ($localErrors) {
-                            Write-Warning "There are parsing errors in $($_.FullName)"
-                            Write-Warning ($localErrors | Format-List | Out-String)
-                        }
-                        $errors += $localErrors
-                    }
-                    $errors.Count | Should Be 0
-                }
-            }
-
-            foreach ($psm1file in $psm1Files) 
-            {
-                if (-not (Test-ClassResource -Path $psm1file.FullName)) {
-                    Context "Schema Validation of $($psm1file.BaseName)" {
-
-                        It 'should pass Test-xDscResource' {
-                            $result = Test-xDscResource -Name $psm1file.DirectoryName
-                            $result | Should Be $true
-                        }
-
-                        It 'should pass Test-xDscSchema' {
-                            $Splat = @{
-                                Path = $psm1file.DirectoryName
-                                ChildPath = "$($psm1file.BaseName).schema.mof"
-                            }
-                            $result = Test-xDscSchema -Path (Join-Path @Splat -Resolve -ErrorAction Stop)
-                            $result | Should Be $true
-                        }
-                    }
-                }
-            }
+            $requiredRuleIsSuppressed | Should Be $false
         }
     }
-}
-finally
-{
-    # Restore PSModulePath
-    if ($script:OldModulePath -ne $env:PSModulePath)
+    else
     {
-        $env:PSModulePath = $OldModulePath
+        Write-Warning -Message 'PS Script Analyzer could not run on this machine. Please run tests on a machine with WMF 5.0+.'
     }
 }
