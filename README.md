@@ -18,6 +18,7 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
     * Removed Force parameter from Install-ModuleFromPowerShellGallery
     * Added more test helper functions
 * Cleaned MetaFixers and TestRunner
+* Updated common test output format
 
 ### 0.2.0.0
 * Fixed unicode and path bugs in tests
