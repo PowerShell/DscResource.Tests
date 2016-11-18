@@ -13,12 +13,12 @@ $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
 Describe 'Common Tests - File Formatting' {
-    $allTextFiles = Get-TextFilesList $moduleRootFilePath
+    $textFiles = Get-TextFilesList $moduleRootFilePath
     
     It "Should not contain any files with Unicode file encoding" {
         $containsUnicodeFile = $false
 
-        foreach ($textFile in $allTextFiles)
+        foreach ($textFile in $textFiles)
         {
             if (Test-FileInUnicode $textFile) {
                 if($textFile.Extension -ieq '.mof')
@@ -40,7 +40,7 @@ Describe 'Common Tests - File Formatting' {
     It 'Should not contain any files with tab characters' {
         $containsFileWithTab = $false
 
-        foreach ($textFile in $allTextFiles)
+        foreach ($textFile in $textFiles)
         {
             $fileName = $textFile.FullName
             $fileContent = Get-Content -Path $fileName -Raw
@@ -60,7 +60,7 @@ Describe 'Common Tests - File Formatting' {
     It 'Should not contain empty files' {
         $containsEmptyFile = $false
 
-        foreach ($textFile in $allTextFiles)
+        foreach ($textFile in $textFiles)
         {
             $fileContent = Get-Content -Path $textFile.FullName -Raw
 
@@ -77,7 +77,7 @@ Describe 'Common Tests - File Formatting' {
     It 'Should not contain files without a newline at the end' {
         $containsFileWithoutNewLine = $false
 
-        foreach ($textFile in $allTextFiles)
+        foreach ($textFile in $textFiles)
         {
             $fileContent = Get-Content -Path $textFile.FullName -Raw
 
@@ -100,26 +100,27 @@ Describe 'Common Tests - File Formatting' {
 }
 
 Describe 'Common Tests - .psm1 File Parsing' {
-    $psm1Files = Get-ModulePsm1Files -ModulePath $moduleRootFilePath
-    Write-Verbose -Message "Analyzing $($psm1Files.Count) .psm1 files..."
-        
-    It 'Should not contain parse errors' {
-        $containsParseErrors = $false
+    $psm1Files = Get-Psm1FileList -FilePath $moduleRootFilePath
 
-        foreach ($psm1File in $psm1Files)
-        {
-            $parseErrors = Get-FileParseErrors -FilePath $psm1File.FullName
+    foreach ($psm1File in $psm1Files)
+    {
+        Context $psm1File.Name {   
+            It 'Should not contain parse errors' {
+                $containsParseErrors = $false
 
-            if ($null -ne $parseErrors)
-            {
-                Write-Warning -Message "There are parse errors in $($_.FullName):"
-                Write-Warning -Message ($parseErrors | Format-List | Out-String)
+                $parseErrors = Get-FileParseErrors -FilePath $psm1File.FullName
 
-                $containsParseErrors = $true
+                if ($null -ne $parseErrors)
+                {
+                    Write-Warning -Message "There are parse errors in $($psm1File.FullName):"
+                    Write-Warning -Message ($parseErrors | Format-List | Out-String)
+
+                    $containsParseErrors = $true
+                }
+
+                $containsParseErrors | Should Be $false
             }
         }
-
-        $containsParseErrors | Should Be $false
     }
 }
 
@@ -199,7 +200,7 @@ Describe 'Common Tests - Script Resource Schema Validation' {
     along with the first test (which is replaced by the following 3) around Jan-Feb
     2017.
 #>
-Describe 'Common Tests - PS Script Analyzer (takes some time)' {
+Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 
     # PSScriptAnalyzer requires PowerShell 5.0 or higher
     if ($PSVersionTable.PSVersion.Major -ge 5)
@@ -255,123 +256,125 @@ Describe 'Common Tests - PS Script Analyzer (takes some time)' {
             'PSUseUTF8EncodingForHelpFile'
         )
 
-        $invokeScriptAnalyzerParameters = @{
-            Path = $dscResourcesFolderFilePath
-            ErrorAction = 'SilentlyContinue'
-            Recurse = $true
-        }
+        $dscResourcesPsm1Files = Get-Psm1FileList -FilePath $dscResourcesFolderFilePath
 
-        It 'Should pass all error-level PS Script Analyzer rules' {
-            $errorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -Severity 'Error'
-
-            if ($null -ne $errorPssaRulesOutput) {
-                Write-Warning -Message 'Error-level PSSA rule(s) did not pass.'
-                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
-
-                foreach ($errorPssaRuleOutput in $errorPssaRulesOutput)
-                {
-                    Write-Warning -Message "$($errorPssaRuleOutput.ScriptName) (Line $($errorPssaRuleOutput.Line)): $($errorPssaRuleOutput.Message)"
-                }
-
-                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+        foreach ($dscResourcesPsm1File in $dscResourcesPsm1Files)
+        {
+            $invokeScriptAnalyzerParameters = @{
+                Path = $dscResourcesPsm1File.FullName
+                ErrorAction = 'SilentlyContinue'
+                Recurse = $true
             }
 
-            $errorPssaRulesOutput | Should Be $null
-        }
+            Context $dscResourcesPsm1File.Name {
+                It 'Should pass all error-level PS Script Analyzer rules' {
+                    $errorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -Severity 'Error'
 
-        It 'Should pass all required PS Script Analyzer rules' {
-            $requiredPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $requiredPssaRuleNames
+                    if ($null -ne $errorPssaRulesOutput) {
+                        Write-Warning -Message 'Error-level PSSA rule(s) did not pass.'
+                        Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
 
-            if ($null -ne $requiredPssaRulesOutput) {
-                Write-Warning -Message 'Required PSSA rule(s) did not pass.'
-                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
+                        foreach ($errorPssaRuleOutput in $errorPssaRulesOutput)
+                        {
+                            Write-Warning -Message "$($errorPssaRuleOutput.ScriptName) (Line $($errorPssaRuleOutput.Line)): $($errorPssaRuleOutput.Message)"
+                        }
 
-                foreach ($requiredPssaRuleOutput in $requiredPssaRulesOutput)
-                {
-                    Write-Warning -Message "$($requiredPssaRuleOutput.ScriptName) (Line $($requiredPssaRuleOutput.Line)): $($requiredPssaRuleOutput.Message)"
-                }
-
-                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
-            }
-
-            <#
-                Automatically passing this test since it may break several resource modules at the moment.
-                Automatic pass to be removed Jan-Feb 2017.
-            #>
-            $requiredPssaRulesOutput = $null
-            $requiredPssaRulesOutput | Should Be $null
-        }
-
-        It 'Should pass all flagged PS Script Analyzer rules' {
-            $flaggedPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $flaggedPssaRuleNames
-
-            if ($null -ne $flaggedPssaRulesOutput) {
-                Write-Warning -Message 'Flagged PSSA rule(s) did not pass.'
-                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
-
-                foreach ($flaggedPssaRuleOutput in $flaggedPssaRulesOutput)
-                {
-                    Write-Warning -Message "$($flaggedPssaRuleOutput.ScriptName) (Line $($flaggedPssaRuleOutput.Line)): $($flaggedPssaRuleOutput.Message)"
-                }
-
-                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
-            }
-
-            <#
-                Automatically passing this test since it may break several resource modules at the moment.
-                Automatic pass to be removed Jan-Feb 2017.
-            #>
-            $flaggedPssaRulesOutput = $null
-            $flaggedPssaRulesOutput | Should Be $null
-        }
-
-        It 'Should pass any recently-added, error-level PS Script Analyzer rules' {
-            $knownPssaRuleNames = $requiredPssaRuleNames + $flaggedPssaRuleNames + $ignorePssaRuleNames
-
-            $newErrorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -ExcludeRule $knownPssaRuleNames -Severity 'Error'
-
-            if ($null -ne $newErrorPssaRulesOutput) {
-                Write-Warning -Message 'Recently-added, error-level PSSA rule(s) did not pass.'
-                Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
-
-                foreach ($newErrorPssaRuleOutput in $newErrorPssaRulesOutput)
-                {
-                    Write-Warning -Message "$($newErrorPssaRuleOutput.ScriptName) (Line $($newErrorPssaRuleOutput.Line)): $($newErrorPssaRuleOutput.Message)"
-                }
-
-                Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
-            }
-
-            <#
-                Automatically passing this test since it may break several resource modules at the moment.
-                Automatic pass to be removed Jan-Feb 2017.
-            #>
-            $newErrorPssaRulesOutput = $null
-            $newErrorPssaRulesOutput | Should Be $null
-        }
-
-        It 'Should not suppress any required PS Script Analyzer rules' {
-            $requiredRuleIsSuppressed = $false
-
-            $psm1Files = Get-ModulePsm1Files -ModulePath $moduleRootFilePath
-
-            foreach ($psm1File in $psm1Files)
-            {
-                $suppressedRuleNames = Get-SuppressedPSSARuleNameList -FilePath $psm1File.FullName
-
-                foreach ($suppressedRuleName in $suppressedRuleNames)
-                {
-                    $suppressedRuleNameNoQuotes = $suppressedRuleName.Replace("'", '')
-
-                    if ($requiredPssaRuleNames -icontains $suppressedRuleNameNoQuotes)
-                    {
-                        Write-Warning -Message "The file $($psm1File.Name) contains a suppression of the required PS Script Analyser rule $suppressedRuleNameNoQuotes. Please remove the rule suppression."
-                        $requiredRuleIsSuppressed = $true
+                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
+
+                    $errorPssaRulesOutput | Should Be $null
+                }
+
+                It 'Should pass all required PS Script Analyzer rules' {
+                    $requiredPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $requiredPssaRuleNames
+
+                    if ($null -ne $requiredPssaRulesOutput) {
+                        Write-Warning -Message 'Required PSSA rule(s) did not pass.'
+                        Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
+
+                        foreach ($requiredPssaRuleOutput in $requiredPssaRulesOutput)
+                        {
+                            Write-Warning -Message "$($requiredPssaRuleOutput.ScriptName) (Line $($requiredPssaRuleOutput.Line)): $($requiredPssaRuleOutput.Message)"
+                        }
+
+                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+                    }
+
+                    <#
+                        Automatically passing this test since it may break several resource modules at the moment.
+                        Automatic pass to be removed Jan-Feb 2017.
+                    #>
+                    $requiredPssaRulesOutput = $null
+                    $requiredPssaRulesOutput | Should Be $null
+                }
+
+                It 'Should pass all flagged PS Script Analyzer rules' {
+                    $flaggedPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $flaggedPssaRuleNames
+
+                    if ($null -ne $flaggedPssaRulesOutput) {
+                        Write-Warning -Message 'Flagged PSSA rule(s) did not pass.'
+                        Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
+
+                        foreach ($flaggedPssaRuleOutput in $flaggedPssaRulesOutput)
+                        {
+                            Write-Warning -Message "$($flaggedPssaRuleOutput.ScriptName) (Line $($flaggedPssaRuleOutput.Line)): $($flaggedPssaRuleOutput.Message)"
+                        }
+
+                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+                    }
+
+                    <#
+                        Automatically passing this test since it may break several resource modules at the moment.
+                        Automatic pass to be removed Jan-Feb 2017.
+                    #>
+                    $flaggedPssaRulesOutput = $null
+                    $flaggedPssaRulesOutput | Should Be $null
+                }
+
+                It 'Should pass any recently-added, error-level PS Script Analyzer rules' {
+                    $knownPssaRuleNames = $requiredPssaRuleNames + $flaggedPssaRuleNames + $ignorePssaRuleNames
+
+                    $newErrorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -ExcludeRule $knownPssaRuleNames -Severity 'Error'
+
+                    if ($null -ne $newErrorPssaRulesOutput) {
+                        Write-Warning -Message 'Recently-added, error-level PSSA rule(s) did not pass.'
+                        Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
+
+                        foreach ($newErrorPssaRuleOutput in $newErrorPssaRulesOutput)
+                        {
+                            Write-Warning -Message "$($newErrorPssaRuleOutput.ScriptName) (Line $($newErrorPssaRuleOutput.Line)): $($newErrorPssaRuleOutput.Message)"
+                        }
+
+                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+                    }
+
+                    <#
+                        Automatically passing this test since it may break several resource modules at the moment.
+                        Automatic pass to be removed Jan-Feb 2017.
+                    #>
+                    $newErrorPssaRulesOutput = $null
+                    $newErrorPssaRulesOutput | Should Be $null
+                }
+
+                It 'Should not suppress any required PS Script Analyzer rules' {
+                    $requiredRuleIsSuppressed = $false
+
+                    $suppressedRuleNames = Get-SuppressedPSSARuleNameList -FilePath $dscResourcesPsm1File.FullName
+
+                    foreach ($suppressedRuleName in $suppressedRuleNames)
+                    {
+                        $suppressedRuleNameNoQuotes = $suppressedRuleName.Replace("'", '')
+
+                        if ($requiredPssaRuleNames -icontains $suppressedRuleNameNoQuotes)
+                        {
+                            Write-Warning -Message "The file $($dscResourcesPsm1File.Name) contains a suppression of the required PS Script Analyser rule $suppressedRuleNameNoQuotes. Please remove the rule suppression."
+                            $requiredRuleIsSuppressed = $true
+                        }
+                    }
+
+                    $requiredRuleIsSuppressed | Should Be $false
                 }
             }
-
-            $requiredRuleIsSuppressed | Should Be $false
         }
     }
     else

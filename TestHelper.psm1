@@ -562,7 +562,7 @@ function Test-ModuleContainsClassResource
         $ModulePath
     )
 
-    $psm1Files = Get-ModulePsm1Files -ModulePath $ModulePath
+    $psm1Files = Get-Psm1FileList -FilePath $ModulePath
 
     foreach ($psm1File in $psm1Files)
     {
@@ -577,12 +577,12 @@ function Test-ModuleContainsClassResource
 
 <#
     .SYNOPSIS
-        Retrieves all .psm1 files under the given module path.
+        Retrieves all .psm1 files under the given file path.
 
-    .PARAMETER ModulePath
-        The root path of the module to gather the .psm1 files from. 
+    .PARAMETER FilePath
+        The root file path to gather the .psm1 files from. 
 #>
-function Get-ModulePsm1Files
+function Get-Psm1FileList
 {
     [OutputType([Object[]])]
     [CmdletBinding()]
@@ -590,12 +590,10 @@ function Get-ModulePsm1Files
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [String]
-        $ModulePath
+        $FilePath
     )
 
-    $dscResourcesFolderFilePath = Join-Path -Path $ModulePath -ChildPath 'DscResources'
-
-    return Get-ChildItem -Path $dscResourcesFolderFilePath -Filter '*.psm1' -File -Recurse
+    return Get-ChildItem -Path $FilePath -Filter '*.psm1' -File -Recurse
 }
 
 <#
@@ -798,7 +796,7 @@ Export-ModuleMember -Function @(
     'Get-ClassResourceName', `
     'Test-ModuleContainsScriptResource', `
     'Test-ModuleContainsClassResource', `
-    'Get-ModulePsm1Files', `
+    'Get-Psm1FileList', `
     'Get-FileParseErrors', `
     'Get-TextFilesList', `
     'Test-FileInUnicode', `
