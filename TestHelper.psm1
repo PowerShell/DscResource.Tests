@@ -805,5 +805,6 @@ Export-ModuleMember -Function @(
     'Get-ModuleScriptResourceNames', `
     'Import-PSScriptAnalyzer', `
     'Import-xDscResourceDesigner', `
-    'Get-SuppressedPSSARuleNameList'
+    'Get-SuppressedPSSARuleNameList',
+    'Reset-DSC'
 )
