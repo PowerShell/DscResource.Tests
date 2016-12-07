@@ -30,11 +30,11 @@ function New-Nuspec
         [Parameter(Mandatory = $true)]
         [String]
         $Version,
-        
+
         [Parameter(Mandatory = $true)]
         [String]
         $Author,
-        
+
         [Parameter(Mandatory=$true)]
         [String]
         $Owners,
@@ -42,25 +42,25 @@ function New-Nuspec
         [Parameter(Mandatory=$true)]
         [String]
         $DestinationPath,
-        
+
         [String]
         $LicenseUrl,
-        
+
         [String]
         $ProjectUrl,
-        
+
         [String]
         $IconUrl,
-        
+
         [String]
         $PackageDescription,
-        
+
         [String]
         $ReleaseNotes,
-        
+
         [String]
         $Tags
-        
+
     )
 
     $currentYear = (Get-Date).Year
@@ -113,7 +113,7 @@ function New-Nuspec
 
     $nuspecFilePath = Join-Path -Path $DestinationPath -ChildPath "$PackageName.nuspec"
     $null = New-Item -Path $nuspecFilePath -ItemType 'File' -Force
-    
+
     $null = Set-Content -Path $nuspecFilePath -Value $nuspecFileContent
 }
 
@@ -303,7 +303,7 @@ function Initialize-TestEnvironment
     {
         $oldPSModulePathSplit = $null
     }
-    
+
     if ($oldPSModulePathSplit -ccontains $moduleParentFilePath)
     {
         # Remove the existing module path from the new PSModulePath
@@ -316,7 +316,7 @@ function Initialize-TestEnvironment
     }
 
     $newPSModulePath = "$moduleParentFilePath;$newPSModulePath"
-    
+
     $env:PSModulePath = $newPSModulePath
 
     if ($TestType -ieq 'Integration')
@@ -464,9 +464,9 @@ function Test-FileContainsClassResource
         [String]
         $FilePath
     )
-    
+
     $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
-    
+
     foreach ($fileAttributeAst in $fileAst.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $false))
     {
         if ($fileAttributeAst.Extent.Text -ieq '[DscResource()]')
@@ -580,7 +580,7 @@ function Test-ModuleContainsClassResource
         Retrieves all .psm1 files under the given file path.
 
     .PARAMETER FilePath
-        The root file path to gather the .psm1 files from. 
+        The root file path to gather the .psm1 files from.
 #>
 function Get-Psm1FileList
 {
@@ -612,7 +612,7 @@ function Get-FileParseErrors
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [String]
         $FilePath
-    )    
+    )
 
     $parseErrors = $null
     $null = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref] $null, [ref] $parseErrors)
@@ -644,7 +644,7 @@ function Get-TextFilesList
 
     $textFileExtensions = @('.gitignore', '.gitattributes', '.ps1', '.psm1', '.psd1', '.json', '.xml', '.cmd', '.mof')
 
-    return Get-ChildItem -Path $Root -File -Recurse | Where-Object { $textFileExtensions -contains $_.Extension } 
+    return Get-ChildItem -Path $Root -File -Recurse | Where-Object { $textFileExtensions -contains $_.Extension }
 }
 
 <#
@@ -697,7 +697,7 @@ function Get-ModuleScriptResourceNames
 
     foreach ($mofSchemaFile in $mofSchemaFiles)
     {
-        $scriptResourceName = $mofSchemaFile.BaseName.Replace('.schema', '')
+        $scriptResourceName = $mofSchemaFile.BaseName -replace '.schema',''
         $scriptResourceNames += $scriptResourceName
     }
 
@@ -773,7 +773,7 @@ function Get-SuppressedPSSARuleNameList
     $suppressedPSSARuleNames = [String[]]@()
 
     $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
-    
+
     # Overall file attrbutes
     $attributeAsts = $fileAst.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $true)
 
