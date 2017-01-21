@@ -788,6 +788,43 @@ function Get-SuppressedPSSARuleNameList
     return $suppressedPSSARuleNames
 }
 
+<#
+    .SYNOPSIS
+        Downloads and installs a specific version of Nuget.exe to be used to produce
+        DSC Resouce NUPKG files.
+
+        This allows control over the version of Nuget.exe that is used. This helps
+        resolve an issue with different versions of Nuget.exe formatting the version
+        number in the filename of a produced NUPKG file.
+
+        See https://github.com/PowerShell/xNetworking/issues/177 for more information.
+
+    .PARAMETER OutFile
+        The path to the download Nuget.exe to.
+
+    .PARAMETER URI
+        The URI to use to dowload Nuget.exe from.
+#>
+function Install-NugetExe
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $OutFile,
+
+        [String]
+        $URI = 'https://dist.nuget.org/win-x86-commandline/v3.4.4/NuGet.exe'
+    )
+
+    if (Test-Path -Path $OutFile)
+    {
+        Remove-Item -Path $OutFile -Force
+    }
+    Invoke-WebRequest @PSBoundParameters
+} # Install-NugetExe
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -804,5 +841,6 @@ Export-ModuleMember -Function @(
     'Import-PSScriptAnalyzer', `
     'Import-xDscResourceDesigner', `
     'Get-SuppressedPSSARuleNameList',
-    'Reset-DSC'
+    'Reset-DSC',
+    'Install-NugetExe'
 )

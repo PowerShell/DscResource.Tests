@@ -1,11 +1,15 @@
 # DscResource.Tests
+
 Common meta tests for PowerShell DSC resources repositories.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+
 ## DscResourceCommonTests
+
 ### Unreleased
+
 * Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
 * Removed code to Remove-Module from Initialize-TestEnvironment because not required: Import-Module -force should do the same thing.
 * Initialize-TestEnvironment changed to import module being tested into Global scope so that InModuleScope not required in tests.
@@ -13,37 +17,35 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 * Initialize-TestEnvironment changed to update the execution policy for the current process only
 * Restore-TestEnvironment changed to update the execution policy for the current process only.
 * Cleaned all common tests
-    * Added tests for PS Script Analyzer
+  * Added tests for PS Script Analyzer
 * Cleaned TestHelper
-    * Removed Force parameter from Install-ModuleFromPowerShellGallery
-    * Added more test helper functions
+  * Removed Force parameter from Install-ModuleFromPowerShellGallery
+  * Added more test helper functions
 * Cleaned MetaFixers and TestRunner
 * Updated common test output format
+* Added ```Install-NugetExe``` to TestHelper.psm1
+* Fixed up Readme.md to remove markdown violaions and resolve duplicate information.
+* Added AppVeyor.psm1 module
 
 ### 0.2.0.0
+
 * Fixed unicode and path bugs in tests
 
 ### 0.1.0.0
+
 * Initial release
 
-## DscResourceTestHelper
-### Unreleased
-
-### 0.2.0.0
-* Fixed unicode and path bugs in tests
-
-### 0.1.0.0
-* Initial release
 
 ## Goals
 
 1. Consistency in encoding and indentations.
-Consistency is good by itself. But more important it allows us to:
-2. Avoid big diffs with cosmetic changes in Pull Requests.
-Cosmetic changes (like formatting) make reviews harder.
-If you want to include formatting changes (like replacing `"` by `'`),
-please make it a **separate commit**.
-This will give reviewers an option to review meaningful changes separately from formatting changes.
+  Consistency is good by itself. But more important it allows us to:
+
+1. Avoid big diffs with cosmetic changes in Pull Requests.
+  Cosmetic changes (like formatting) make reviews harder.
+  If you want to include formatting changes (like replacing `"` by `'`),
+  please make it a **separate commit**.
+  This will give reviewers an option to review meaningful changes separately from formatting changes.
 
 
 ## Git and Unicode
@@ -52,7 +54,7 @@ By default git treats [unicode files as binary files](http://stackoverflow.com/q
 You may not notice it if your client (like VS or GitHub for Windows) takes care of such conversion.
 History with Unicode files is hardly usable from command line `git`.
 
-```
+```dos
 > git diff
  diff --git a/xActiveDirectory.psd1 b/xActiveDirectory.psd1
  index 0fc1914..55fdb85 100644
@@ -61,7 +63,7 @@ Binary files a/xActiveDirectory.psd1 and b/xActiveDirectory.psd1 differ
 
 With forced `--text` option it would look like this:
 
-```
+```dos
 > git diff --text
  diff --git a/xActiveDirectory.psd1 b/xActiveDirectory.psd1
  index 0fc1914..55fdb85 100644
@@ -123,3 +125,9 @@ To see examples of the Unit/Integration tests in practice, see the xNetworking M
 
 To automatically download and install the DscResource.Tests in an AppVeyor.yml file, please see the following sample AppVeyor.yml.
 [https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml)
+
+## AppVeyor Module
+
+This module provides functions for building and testing DSC Resources in AppVeyor.
+
+These functions will only work if called within an AppVeyor CI build task.
