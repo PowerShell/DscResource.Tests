@@ -44,7 +44,7 @@ function Start-AppveyorInstallTask
     Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
     # Install Nuget.exe to enable package creation
-    $nugetExePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
+    $nugetExePath = Join-Path -Path $env:TEMP `
                               -ChildPath 'nuget.exe'
     Install-NugetExe -OutFile $nugetExePath
 
@@ -73,7 +73,7 @@ function Start-AppveyorInstallTask
         leave empty to use default value 'Default'.
 
     .PARAMETER MainModulePath
-        This is the path of the folder that contains the module manifest.
+        This is the relative path of the folder that contains the module manifest.
         If not specified it will default to the root folder of the repository.
 
     .PARAMETER HarnessModulePath
@@ -87,12 +87,17 @@ function Start-AppveyorTestScriptTask
     [CmdletBinding(DefaultParametersetName = 'Default')]
     param
     (
-        [ParameterSet('Default','Harness')]
+        [ValidateSet('Default','Harness')]
         [String]
         $Type = 'Default',
 
+        [ValidateNotNullOrEmpty()]
         [String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter(ParameterSetName = 'Default')]
+        [Switch]
+        $CodeCoverage,
 
         [Parameter(ParameterSetName = 'Harness',
                    Mandatory = $true)]
@@ -105,17 +110,46 @@ function Start-AppveyorTestScriptTask
         $HarnessFunctionName
     )
 
+    # Convert the Main Module path into an absolute path if it is relative
+    if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
+    {
+        $MainModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
+                                    -ChildPath $MainModulePath
+    }
+
     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                  -ChildPath 'TestsResults.xml'
 
-    switch ($PsCmdlet.ParameterSetName)
+    # Execute custom test task if defined
+    if ($customTaskModuleLoaded `
+        -and (Get-Command -Module $CustomAppVeyorTasks `
+                          -Name Start-CustomAppveyorTestTask `
+                          -ErrorAction SilentlyContinue))
+    {
+        Start-CustomAppveyorTestTask
+    }
+
+    switch ($Type)
     {
         'Default'
         {
             # Execute the standard tests using Pester.
-            $result = Invoke-Pester -OutputFormat NUnitXml `
-                                    -OutputFile $testResultsFile `
-                                    -PassThru
+            $pesterParameters = @{
+                OutputFormat = 'NUnitXML'
+                OutputFile   = $testResultsFile
+                PassThru     = $True
+            }
+            if ($CodeCoverage)
+            {
+                Write-Warning -Message 'Code coverage statistics are being calculated. This will slow the start of the tests while the code matrix is built. Please be patient.'
+                $pesterParameters += @{
+                    CodeCoverage = @(
+                        "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
+                        "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
+                    )
+                }
+            }
+            $result = Invoke-Pester @pesterParameters
             break
         }
         'Harness'
@@ -123,7 +157,7 @@ function Start-AppveyorTestScriptTask
             # Copy the DSCResource.Tests folder into the folder containing the resource PSD1 file.
             $dscTestsPath = Join-Path -Path $MainModulePath `
                                       -ChildPath 'DSCResource.Tests'
-            Copy-Item -Path $PSScriptRoot -Destination $MainModulePath
+            Copy-Item -Path $PSScriptRoot -Destination $MainModulePath -Recurse
             $testHarnessPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                          -ChildPath $HarnessModulePath
 
@@ -138,18 +172,9 @@ function Start-AppveyorTestScriptTask
         }
     }
 
-    # Execute custom test task if defined
-    if ($customTaskModuleLoaded `
-        -and (Get-Command -Module $CustomAppVeyorTasks `
-                          -Name Start-CustomAppveyorTestTask `
-                          -ErrorAction SilentlyContinue))
-    {
-        Start-CustomAppveyorTestTask
-    }
-
     $webClient = New-Object -TypeName "System.Net.WebClient"
     $webClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-                          $testResultsFilePath)
+                          $testResultsFile)
 
     if ($result.FailedCount -gt 0)
     {
@@ -177,7 +202,7 @@ function Start-AppveyorTestScriptTask
         default value 'Default'.
 
     .PARAMETER MainModulePath
-        This is the path of the folder that contains the module manifest.
+        This is the relative path of the folder that contains the module manifest.
         If not specified it will default to the root folder of the repository.
 
     .PARAMETER ResourceModuleName
@@ -198,10 +223,11 @@ function Start-AppveyorAfterTestTask
     [CmdletBinding(DefaultParametersetName = 'Default')]
     param
     (
-        [ParameterSet('Default','Wiki')]
+        [ValidateSet('Default','Wiki')]
         [String]
         $Type = 'Default',
 
+        [ValidateNotNullOrEmpty()]
         [String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
 
@@ -215,10 +241,14 @@ function Start-AppveyorAfterTestTask
         $Owners = 'Microsoft'
     )
 
-    # Import so we can create zip files
-    Add-Type -assemblyname System.IO.Compression.FileSystem
+    # Convert the Main Module path into an absolute path if it is relative
+    if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
+    {
+        $MainModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
+                                    -ChildPath $MainModulePath
+    }
 
-    if ($PsCmdlet.ParameterSetName -eq 'Wiki')
+    if ($Type -eq 'Wiki')
     {
         # Write the PowerShell help files
         $docoPath = Join-Path -Path $MainModuleFolder `
@@ -245,7 +275,8 @@ function Start-AppveyorAfterTestTask
 
         $zipFileName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                  -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION)_wikicontent.zip"
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($wikiContentPath,$zipFileName)
+        Compress-Archive -Path (Join-Path -Path $wikiContentPath -ChildPath '*') `
+                         -DestinationPath $zipFileName
         Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
             Push-AppveyorArtifact $_.FullName -FileName $_.Name
         }
@@ -257,8 +288,8 @@ function Start-AppveyorAfterTestTask
     }
 
     # Set the Module Version in the Manifest to the AppVeyor build version
-    $manifestPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                              -ChildPath "$MainModulePath\$ResourceModuleName.psd1"
+    $manifestPath = Join-Path -Path $MainModulePath `
+                              -ChildPath "$ResourceModuleName.psd1"
     $manifestContent = Get-Content -Path $ManifestPath -Raw
     $regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
     $manifestContent = $manifestContent -replace $regex,"ModuleVersion = '$env:APPVEYOR_BUILD_VERSION'"
@@ -267,7 +298,8 @@ function Start-AppveyorAfterTestTask
     # Zip and Publish the Main Module Folder content
     $zipFileName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                              -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION).zip"
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($MainModulePath, $zipFileName)
+    Compress-Archive -Path (Join-Path -Path $MainModulePath -ChildPath '*') `
+                     -DestinationPath $zipFileName
     New-DscChecksum -Path $env:APPVEYOR_BUILD_FOLDER -Outpath $env:APPVEYOR_BUILD_FOLDER
     Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
         Push-AppveyorArtifact $_.FullName -FileName $_.Name
@@ -276,15 +308,12 @@ function Start-AppveyorAfterTestTask
         Push-AppveyorArtifact $_.FullName -FileName $_.Name
     }
 
-    Push-Location
-    Set-Location -Path $MainModulePath
-
     # Create the Nuspec file for the Nuget Package in the Main Module Folder
     $nuspecPath = Join-Path -Path $MainModulePath `
                             -ChildPath "$ResourceModuleName.nuspec"
     $nuspecParams = @{
         packageName = $ResourceModuleName
-        destinationPath = $nuspecPath
+        destinationPath = $MainModulePath
         version = $env:APPVEYOR_BUILD_VERSION
         author = $Author
         owners = $Owners
@@ -296,12 +325,12 @@ function Start-AppveyorAfterTestTask
     New-Nuspec @nuspecParams
 
     # Create the Nuget Package
-    $nugetExePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
+    $nugetExePath = Join-Path -Path $env:TEMP `
                               -ChildPath 'nuget.exe'
     Start-Process -FilePath $nugetExePath -Wait -ArgumentList @(
-        "pack",
-        $nuspecPath,
-        "-outputdirectory $env:APPVEYOR_BUILD_FOLDER"
+        'Pack',$nuspecPath
+        '-OutputDirectory',$env:APPVEYOR_BUILD_FOLDER
+        '-BasePath',$MainModulePath
     )
 
     # Push the Nuget Package up to AppVeyor
@@ -310,8 +339,6 @@ function Start-AppveyorAfterTestTask
     Get-ChildItem $nugetPackageName | ForEach-Object -Process {
         Push-AppveyorArtifact $_.FullName -FileName $_.Name
     }
-
-    Pop-Location
 
     # Execute custom after test task if defined
     if ($customTaskModuleLoaded `
