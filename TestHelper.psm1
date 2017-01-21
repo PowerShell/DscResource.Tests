@@ -802,7 +802,7 @@ function Get-SuppressedPSSARuleNameList
     .PARAMETER OutFile
         The path to the download Nuget.exe to.
 
-    .PARAMETER URI
+    .PARAMETER Uri
         The URI to use to dowload Nuget.exe from.
 #>
 function Install-NugetExe
@@ -815,14 +815,14 @@ function Install-NugetExe
         $OutFile,
 
         [String]
-        $URI = 'https://dist.nuget.org/win-x86-commandline/v3.4.4/NuGet.exe'
+        $Uri = 'https://dist.nuget.org/win-x86-commandline/v3.4.4/NuGet.exe'
     )
 
     if (Test-Path -Path $OutFile)
     {
         Remove-Item -Path $OutFile -Force
     }
-    Invoke-WebRequest @PSBoundParameters
+    Invoke-WebRequest -Uri $Uri -OutFile $OutFile
 } # Install-NugetExe
 
 Export-ModuleMember -Function @(
