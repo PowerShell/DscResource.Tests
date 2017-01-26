@@ -1,4 +1,4 @@
-<# 
+<#
     .SYNOPSIS
         Common tests for all resource modules in the DSC Resource Kit.
 #>
@@ -12,9 +12,33 @@ Import-Module -Name $testHelperModulePath
 $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
+# Identify the repository root path of the resource module
+$repoRootPath = $moduleRootFilePath
+$repoRootPathFound = $false
+while (-not $repoRootPathFound `
+    -and -not ([String]::IsNullOrEmpty((Split-Path -Path $repoRootPath -Parent))))
+{
+    if (Get-ChildItem -Path $repoRootPath -Filter '.git' -Directory)
+    {
+        $repoRootPathFound = $true
+        break
+    }
+    else
+    {
+        $repoRootPath = Split-Path -Path $repoRootPath -Parent
+    }
+}
+if (-not $repoRootPathFound)
+{
+    Write-Warning -Message ('The root folder of the DSC Resource repository could ' + `
+        'not be located. This may prevent some markdown files from being checked for ' + `
+        'errors. Please ensure this repository has been cloned using Git.')
+    $repoRootPath = $moduleRootFilePath
+}
+
 Describe 'Common Tests - File Formatting' {
     $textFiles = Get-TextFilesList $moduleRootFilePath
-    
+
     It "Should not contain any files with Unicode file encoding" {
         $containsUnicodeFile = $false
 
@@ -89,12 +113,12 @@ Describe 'Common Tests - File Formatting' {
                 }
 
                 Write-Warning -Message "$($textFile.FullName) does not end with a new line. Use fixer function 'Add-NewLine'"
-                
+
                 $containsFileWithoutNewLine = $true
             }
         }
 
-                
+
         $containsFileWithoutNewLine | Should Be $false
     }
 }
@@ -104,7 +128,7 @@ Describe 'Common Tests - .psm1 File Parsing' {
 
     foreach ($psm1File in $psm1Files)
     {
-        Context $psm1File.Name {   
+        Context $psm1File.Name {
             It 'Should not contain parse errors' {
                 $containsParseErrors = $false
 
@@ -148,7 +172,7 @@ Describe 'Common Tests - Module Manifest' {
     $moduleManifestProperties = Test-ModuleManifest -Path $moduleManifestPath -ErrorAction 'SilentlyContinue'
 
     It "Should contain a PowerShellVersion property of at least $minimumPSVersion based on resource types" {
-        $moduleManifestProperties.PowerShellVersion -ge $minimumPSVersion | Should Be $true 
+        $moduleManifestProperties.PowerShellVersion -ge $minimumPSVersion | Should Be $true
     }
 
     if ($containsClassResource)
@@ -381,4 +405,111 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
     {
         Write-Warning -Message 'PS Script Analyzer could not run on this machine. Please run tests on a machine with WMF 5.0+.'
     }
+}
+
+$examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
+if (Test-Path -Path $examplesPath)
+{
+    Describe 'Common Tests - Validate Example Files' {
+
+        ## For Appveyor builds copy the module to the system modules directory so it falls
+        ## in to a PSModulePath folder and is picked up correctly.
+        if ($env:APPVEYOR -eq $true)
+        {
+            Copy-item -Path $moduleRootFilePath `
+                        -Destination 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
+                        -Recurse
+        }
+
+        $exampleFiles = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter "*.ps1" -Recurse
+        foreach ($exampleFile in $exampleFiles) {
+            Context -Name $exampleFile.Name {
+
+                try
+                {
+                    $exampleError = $false
+                    $path = $exampleFile.FullName
+                    . $path
+
+                    $command = Get-Command Example
+                    $params = @{}
+                    $command.Parameters.Keys | Where-Object { $_ -like "*Account" -or $_ -eq "Passphrase" } | ForEach-Object -Process {
+                        $params.Add($exampleFile, $mockCredential)
+                    }
+                    $null = Example @params -OutputPath "TestDrive:\" -ErrorAction Continue -WarningAction SilentlyContinue
+                }
+                catch
+                {
+                    Write-Warning -Message "Unable to compile MOF for example '$path'"
+                    Write-Warning $_.Exception.Message
+                    $exampleError = $true
+                }
+
+                It "Should compile MOFs for example correctly" {
+                    $exampleError | Should Be $false
+                }
+            }
+        }
+
+        if ($env:APPVEYOR -eq $true)
+        {
+            Remove-item -Path 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
+                        -Recurse -Force -Confirm:$false
+        }
+    }
+}
+
+if (Get-Command -Name 'npm.exe' -ErrorAction SilentlyContinue)
+{
+    Write-Warning -Message "NPM is checking Gulp is installed. This may take a few moments."
+
+    $null = Start-Process -FilePath "npm.exe" -ArgumentList @('install','--silent') -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
+    $null = Start-Process -FilePath "npm.exe" -ArgumentList @('install','-g','gulp','--silent') -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
+
+    Describe 'Common Tests - Validate Markdown Files' {
+
+        It "Should not have errors in any markdown files" {
+
+            $mdErrors = 0
+            try
+            {
+                Start-Process -FilePath "gulp" -ArgumentList @(
+                        'test-mdsyntax',
+                        '--silent',
+                        '--rootpath',
+                        'C:/Users/Daniel/Source/GitHub/xNetworking',
+                        '--dscresourcespath',
+                        $dscResourcesFolderFilePath) `
+                    -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
+                Start-Sleep -Seconds 3
+                $mdIssuesPath = Join-Path -Path $PSScriptRoot -ChildPath "markdownissues.txt"
+
+                if ((Test-Path -Path $mdIssuesPath) -eq $true)
+                {
+                    Get-Content -Path $mdIssuesPath | ForEach-Object -Process {
+                        if ([string]::IsNullOrEmpty($_) -eq $false)
+                        {
+                            Write-Warning -Message $_
+                            $mdErrors ++
+                        }
+                    }
+                }
+            }
+            catch [System.Exception]
+            {
+                Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
+                                        "be sure that you have installed nodejs and have " + `
+                                        "run 'npm install -g gulp' in order to have this " + `
+                                        "text execute.")
+            }
+            Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
+            $mdErrors | Should Be 0
+        }
+    }
+}
+else
+{
+    Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
+                            "be sure that you have installed nodejs and npm in order " + `
+                            "to have this text execute.")
 }

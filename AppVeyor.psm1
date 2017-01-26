@@ -256,15 +256,8 @@ function Start-AppveyorAfterTestTask
         New-Item -Path $docoPath -ItemType Directory
 
         # Clone the DSCResources Module to the repository folder
-        Start-Process -Wait -FilePath "git" -ArgumentList @(
-            "clone",
-            "-q",
-            "https://github.com/PowerShell/DscResources",
-            (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath "DscResources")
-        )
-
-        $docoHelperPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                    -ChildPath "DscResources\DscResource.DocumentationHelper"
+        $docoHelperPath = Join-Path -Path $PSScriptRoot `
+                                    -ChildPath 'DocumentationHelper.psd1'
         Import-Module -Name $docoHelperPath
         Write-DscResourcePowerShellHelp -OutputPath $docoPath -ModulePath $MainModulePath -Verbose
 
