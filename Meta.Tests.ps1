@@ -35,6 +35,7 @@ if (-not $repoRootPathFound)
         'errors. Please ensure this repository has been cloned using Git.')
     $repoRootPath = $moduleRootFilePath
 }
+$repoName = Split-Path -Path $repoRootPath -Leaf
 
 Describe 'Common Tests - File Formatting' {
     $textFiles = Get-TextFilesList $moduleRootFilePath
@@ -407,18 +408,19 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
     }
 }
 
-$examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
-if (Test-Path -Path $examplesPath)
-{
-    Describe 'Common Tests - Validate Example Files' {
+Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
+
+    $examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
+    if (Test-Path -Path $examplesPath)
+    {
 
         ## For Appveyor builds copy the module to the system modules directory so it falls
         ## in to a PSModulePath folder and is picked up correctly.
         if ($env:APPVEYOR -eq $true)
         {
             Copy-item -Path $moduleRootFilePath `
-                        -Destination 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
-                        -Recurse
+                      -Destination 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
+                      -Recurse
         }
 
         $exampleFiles = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter "*.ps1" -Recurse
@@ -453,20 +455,39 @@ if (Test-Path -Path $examplesPath)
 
         if ($env:APPVEYOR -eq $true)
         {
-            Remove-item -Path 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
-                        -Recurse -Force -Confirm:$false
+            Remove-item -Path (Join-Path -Path 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
+                                         -ChildPath $repoName) `
+                        -Recurse `
+                        -Force `
+                        -Confirm:$false
+            # Restore the load of the module to ensure future tests have access to it
+            Import-Module -Name (Join-Path -Path $moduleRootFilePath `
+                                           -ChildPath "$repoName.psd1") `
+                          -Global
         }
     }
 }
 
-if (Get-Command -Name 'npm.exe' -ErrorAction SilentlyContinue)
-{
-    Write-Warning -Message "NPM is checking Gulp is installed. This may take a few moments."
+Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
 
-    $null = Start-Process -FilePath "npm.exe" -ArgumentList @('install','--silent') -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
-    $null = Start-Process -FilePath "npm.exe" -ArgumentList @('install','-g','gulp','--silent') -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
+    if (Get-Command -Name 'npm' -ErrorAction SilentlyContinue)
+    {
+        Write-Warning -Message "NPM is checking Gulp is installed. This may take a few moments."
 
-    Describe 'Common Tests - Validate Markdown Files' {
+        $null = Start-Process `
+            -FilePath "npm" `
+            -ArgumentList @('install','--silent') `
+            -Wait `
+            -WorkingDirectory $PSScriptRoot `
+            -PassThru `
+            -NoNewWindow
+        $null = Start-Process `
+            -FilePath "npm" `
+            -ArgumentList @('install','-g','gulp','--silent') `
+            -Wait `
+            -WorkingDirectory $PSScriptRoot `
+            -PassThru `
+            -NoNewWindow
 
         It "Should not have errors in any markdown files" {
 
@@ -477,7 +498,7 @@ if (Get-Command -Name 'npm.exe' -ErrorAction SilentlyContinue)
                         'test-mdsyntax',
                         '--silent',
                         '--rootpath',
-                        'C:/Users/Daniel/Source/GitHub/xNetworking',
+                        $repoRootPath,
                         '--dscresourcespath',
                         $dscResourcesFolderFilePath) `
                     -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
@@ -505,11 +526,28 @@ if (Get-Command -Name 'npm.exe' -ErrorAction SilentlyContinue)
             Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
             $mdErrors | Should Be 0
         }
+
+        # We're using this tool to clean out the node_modules folder because it gets too long
+        # for PowerShell to remove
+        $null = Start-Process `
+            -FilePath "npm" `
+            -ArgumentList @('install','rimraf','-g','--silent') `
+            -Wait `
+            -WorkingDirectory $PSScriptRoot `
+            -PassThru `
+            -NoNewWindow
+        $null = Start-Process `
+            -FilePath "rimraf" `
+            -ArgumentList @(Join-Path -Path $PSScriptRoot -ChildPath 'node_modules') `
+            -Wait `
+            -WorkingDirectory $PSScriptRoot `
+            -PassThru `
+            -NoNewWindow
     }
-}
-else
-{
-    Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
-                            "be sure that you have installed nodejs and npm in order " + `
-                            "to have this text execute.")
+    else
+    {
+        Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
+                                "be sure that you have installed nodejs and npm in order " + `
+                                "to have this text execute.")
+    }
 }

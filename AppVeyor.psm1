@@ -76,6 +76,14 @@ function Start-AppveyorInstallTask
         This is the relative path of the folder that contains the module manifest.
         If not specified it will default to the root folder of the repository.
 
+    .PARAMETER CodeCoverage
+        This will switch on Code Coverage evaluation in Pester.
+
+    .PARAMETER ExcludeTag
+        This is the list of tags that will be used to prevent tests from being run if
+        the tag is set in the describe block of the test.
+        This wll default to 'Examples' and 'Markdown'.
+
     .PARAMETER HarnessModulePath
         This is the full path and filename of the test harness module.
 
@@ -98,6 +106,10 @@ function Start-AppveyorTestScriptTask
         [Parameter(ParameterSetName = 'Default')]
         [Switch]
         $CodeCoverage,
+
+        [Parameter(ParameterSetName = 'Default')]
+        [String[]]
+        $ExcludeTag = @('Examples','Markdown'),
 
         [Parameter(ParameterSetName = 'Harness',
                    Mandatory = $true)]
@@ -138,6 +150,12 @@ function Start-AppveyorTestScriptTask
                 OutputFormat = 'NUnitXML'
                 OutputFile   = $testResultsFile
                 PassThru     = $True
+            }
+            if ($ExcludeTag.Count -gt 0)
+            {
+                $pesterParameters += @{
+                    ExcludeTag = $ExcludeTag
+                }
             }
             if ($CodeCoverage)
             {
