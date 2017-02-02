@@ -1,57 +1,35 @@
 # DscResource.Tests
 
-Common meta tests for PowerShell DSC resources repositories.
+Common meta tests and other shared functions for PowerShell DSC resources repositories.
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/)
+or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any
+additional questions or comments.
 
 
-## DscResourceCommonTests
+## DSC Resource Common Meta Tests
 
-### Unreleased
+> Meta.Tests.ps1
 
-* Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
-* Removed code to Remove-Module from Initialize-TestEnvironment because not required: Import-Module -force should do the same thing.
-* Initialize-TestEnvironment changed to import module being tested into Global scope so that InModuleScope not required in tests.
-* Fixed aliases in files
-* Initialize-TestEnvironment changed to update the execution policy for the current process only
-* Restore-TestEnvironment changed to update the execution policy for the current process only.
-* Cleaned all common tests
-  * Added tests for PS Script Analyzer
-* Cleaned TestHelper
-  * Removed Force parameter from Install-ModuleFromPowerShellGallery
-  * Added more test helper functions
-* Cleaned MetaFixers and TestRunner
-* Updated common test output format
-* Added ```Install-NugetExe``` to TestHelper.psm1
-* Fixed up Readme.md to remove markdown violaions and resolve duplicate information.
-* Added AppVeyor.psm1 module
-
-### 0.2.0.0
-
-* Fixed unicode and path bugs in tests
-
-### 0.1.0.0
-
-* Initial release
-
-
-## Goals
+### Goals
 
 1. Consistency in encoding and indentations.
-  Consistency is good by itself. But more important it allows us to:
 
-1. Avoid big diffs with cosmetic changes in Pull Requests.
+  Consistency is good by itself. But more importantly it allows us to:
+2. Avoid big diffs with cosmetic changes in Pull Requests.
   Cosmetic changes (like formatting) make reviews harder.
   If you want to include formatting changes (like replacing `"` by `'`),
   please make it a **separate commit**.
-  This will give reviewers an option to review meaningful changes separately from formatting changes.
+  This will give reviewers an option to review meaningful changes separately
+  from formatting changes.
 
 
-## Git and Unicode
+### Git and Unicode
 
 By default git treats [unicode files as binary files](http://stackoverflow.com/questions/6855712/why-does-git-treat-this-text-file-as-a-binary-file).
-You may not notice it if your client (like VS or GitHub for Windows) takes care of such conversion.
+You may not notice it if your client (like VS or GitHub for Windows) takes care
+of such conversion.
 History with Unicode files is hardly usable from command line `git`.
 
 ```dos
@@ -85,37 +63,90 @@ With forced `--text` option it would look like this:
 Command line `git` version is a core component and should be used as a common denominator.
 
 
+### Markdown Testing
+
+> .markdownlint.json
+> gulpfile.js
+> package.json
+
+The DSC Resource Common Meta Tests contains tests for validating that any
+markdown files in a DSC Resource meet the standard markdown guidelines.
+
+These tests use NPM to download Gulp, which then uses a Gulp file to ensure
+that the markdown files are correct.
+
+The 'markdown' tests can be excluded when running pester by using:
+
+```PowerShell
+Invoke-Pester -ExcludeTag 'Markdown'
+```
+
+
+### Example Testing
+
+The DSC Resource Common Meta Tests contains tests for validating that any
+included Example files work correctly.
+These tests are performed by attempting to apply the example DSC Configurations
+to the machine running the tests.
+This causes them to behave as extra integration tests.
+
+The 'example' tests can be excluded when running pester by using:
+
+```PowerShell
+Invoke-Pester -ExcludeTag 'Example'
+```
+
+
 ## MetaFixers Module
 
-We are trying to provide automatic fixers where it's appropriate. A fixer corresponds to a particular test.
+> MetaFixers.psm1
 
-For example, if `Files encoding` test from [Meta.Tests.ps1](Meta.Tests.ps1) test fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixers.psm1).
+We are trying to provide automatic fixers where it's appropriate. A fixer
+corresponds to a particular test.
+
+For example, if `Files encoding` test from [Meta.Tests.ps1](Meta.Tests.ps1) test
+fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixers.psm1).
 
 
 ## TestHelper Module
 
+> TestHelper.psm1
+
 The test helper module (TestHelper.psm1) contains the following functions:
-**New-Nuspec**: Creates a new nuspec file for nuget package.
-**Install-ResourceDesigner**: Will attempt to download the xDSCResourceDesignerModule using Nuget package and return the module.
-**Initialize-TestEnvironment**: Initializes an environment for running unit or integration tests on a DSC resource.
-**Restore-TestEnvironment**: Restores the environment after running unit or integration tests on a DSC resource.
+
+* **New-Nuspec**: Creates a new nuspec file for nuget package.
+* **Install-ResourceDesigner**: Will attempt to download the
+  xDSCResourceDesignerModule using Nuget package and return the module.
+* **Initialize-TestEnvironment**: Initializes an environment for running unit or
+  integration tests on a DSC resource.
+* **Restore-TestEnvironment**: Restores the environment after running unit or
+  integration tests on a DSC resource.
 
 
 ## Templates for Creating Tests
 
-The Template files that are used for creating Unit and Integration tests for a DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources) in the [Tests.Template folder](https://github.com/PowerShell/DscResources/tree/master/Tests.Template)
+The Template files that are used for creating Unit and Integration tests for a
+DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources)
+in the [Tests.Template folder](https://github.com/PowerShell/DscResources/tree/master/Tests.Template)
 
-To use these files, see the [test guidelines](https://github.com/PowerShell/DscResources/blob/master/TestsGuidelines.md) document and the instructions at the top of each template file.
+To use these files, see the [test guidelines](https://github.com/PowerShell/DscResources/blob/master/TestsGuidelines.md)
+document and the instructions at the top of each template file.
 
 The resource files are:
-*[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**: Use to create a set of Unit Pester tests for a single DSC Resource.
-**[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/integration_template.ps1)**: Use to create a set of Integration Pester tests for a single DSC Resource.
-**[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**: Use to create a DSC Configuration file for a single DSC Resource. Used in conjunction with Integration_Template.ps1.
+
+* **[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+  Use to create a set of Unit Pester tests for a single DSC Resource.
+* **[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/integration_template.ps1)**:
+  Use to create a set of Integration Pester tests for a single DSC Resource.
+* **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+  Use to create a DSC Configuration file for a single DSC Resource. Used in
+  conjunction with Integration_Template.ps1.
 
 
 ## Example Test Usage
 
-To see examples of the Unit/Integration tests in practice, see the xNetworking MSFT_xFirewall resource:
+To see examples of the Unit/Integration tests in practice, see the xNetworking
+MSFT_xFirewall resource:
 [Unit Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Unit/MSFT_xFirewall.Tests.ps1)
 [Integration Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.Integration.Tests.ps1)
 [Resource DSC Configuration](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.config.ps1)
@@ -123,11 +154,151 @@ To see examples of the Unit/Integration tests in practice, see the xNetworking M
 
 ## Example Usage of DSCResource.Tests in AppVeyor.yml
 
-To automatically download and install the DscResource.Tests in an AppVeyor.yml file, please see the following sample AppVeyor.yml.
+To automatically download and install the DscResource.Tests in an AppVeyor.yml
+file, please see the following sample AppVeyor.yml.
 [https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml)
+
 
 ## AppVeyor Module
 
+> AppVeyor.psm1
+
 This module provides functions for building and testing DSC Resources in AppVeyor.
 
-These functions will only work if called within an AppVeyor CI build task.
+**Note: These functions will only work if called within an AppVeyor CI build task.**
+
+* **Start-AppveyorInstallTask**: This task is used to set up the environment in
+  preparation for the test and deploy tasks.
+  It should be called in the _install_ AppVeyor phase.
+* **Start-AppveyorTestScriptTask**: This task is used to execute the tests.
+  It should be called in the _test_script_ AppVeyor phase.
+* **Start-AppveyorAfterTestTask**: This task is used to perform the following tasks:
+  * Generate, zip and publish the Wiki content to AppVeyor (optional).
+  * Set the build number in the DSC Resource Module manifest.
+  * Publish the Test Results artefact to AppVeyor.
+  * Zip and publish the DSC Resource content to AppVeyor.
+  It should be called in the _test_script_ AppVeyor phase.
+
+
+### Using AppVeyor.psm1 with eXperiemental DSC Resources
+
+An example ```AppVeyor.yml``` file used in an 'experimental' DSC Resource where the
+AppVeyor.psm1 module is being used:
+
+```yml
+version: 4.0.{build}.0
+install:
+    - git clone https://github.com/PowerShell/DscResource.Tests
+
+    - ps: |
+        Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
+        Start-AppveyorInstallTask
+
+build: false
+
+test_script:
+    - ps: |
+        Start-AppveyorTestScriptTask -CodeCoverage
+
+deploy_script:
+    - ps: |
+        Start-AppveyorAfterTestTask
+```
+
+### Using AppVeyor.psm1 with HQRM DSC Resources
+
+An example ```AppVeyor.yml``` file used in an 'HQRM' DSC Resource where the
+AppVeyor.psm1 module is being used:
+
+```yml
+version: 3.1.{build}.0
+install:
+    - git clone https://github.com/PowerShell/DscResource.Tests
+
+    - ps: |
+        $moduleName = 'xNetworking'
+        $mainModuleFolder = "Modules\$moduleName"
+        $harnessModulePath = "Tests\$($moduleName).TestHarness.psm1"
+        $harnessFunctionName = "Invoke-$($moduleName)Test"
+        Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
+        Start-AppveyorInstallTask
+
+build: false
+
+test_script:
+    - ps: |
+        Start-AppveyorTestScriptTask `
+            -Type 'Harness' `
+            -MainModulePath $mainModuleFolder `
+            -HarnessModulePath $harnessModulePath `
+            -HarnessFunctionName $harnessFunctionName
+
+deploy_script:
+    - ps: |
+        Start-AppveyorAfterTestTask `
+            -Type 'Wiki' `
+            -MainModulePath $mainModuleFolder `
+            -ResourceModuleName $moduleName
+```
+
+
+## Documentation Helper Module
+
+> DscResource.DocumentationHelper.psd1
+> Modules\MofHelper.psm1
+> Modules\PowerShellHelp.psm1
+> Modules\WikiPages.psm1
+
+This module is used by some HQRM DSC Resource modules to produce Wiki Content to
+be distributed with the DSC Resource module as well as published in the Wiki
+section of the DSC Resource repo on GitHub.
+
+It is usually called by the ```Start-AppveyorAfterTestTask``` task in AppVeyor.psm1
+when the ```-type``` parameter is set to 'Wiki'. For example:
+
+```powershell
+Start-AppveyorAfterTestTask `
+    -Type 'Wiki' `
+    -MainModulePath '.\Modules\SharePointDsc\' `
+    -ResourceModuleName 'SharePointDsc'
+```
+
+
+## Versions
+
+### Unreleased
+
+* Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
+* Removed code to Remove-Module from Initialize-TestEnvironment because not
+  required: Import-Module -force should do the same thing.
+* Initialize-TestEnvironment changed to import module being tested into Global
+  scope so that InModuleScope not required in tests.
+* Fixed aliases in files
+* Initialize-TestEnvironment changed to update the execution policy for the
+  current process only
+* Restore-TestEnvironment changed to update the execution policy for the
+  current process only.
+* Cleaned all common tests
+  * Added tests for PS Script Analyzer
+* Cleaned TestHelper
+  * Removed Force parameter from Install-ModuleFromPowerShellGallery
+  * Added more test helper functions
+* Cleaned MetaFixers and TestRunner
+* Updated common test output format
+* Added ```Install-NugetExe``` to TestHelper.psm1
+* Fixed up Readme.md to remove markdown violaions and resolve duplicate information
+* Added ```AppVeyor.psm1``` module
+* Added ```DscResource.DocumentationHelper``` modules
+* Added new tests for testing Examples and Markdown (using Node/NPM/Gulp)
+* Clean up layout of Readme.md to be more logically structured and added more information
+  about the new tests and modules
+* Added documentation for new tests and features
+
+### 0.2.0.0
+
+* Fixed unicode and path bugs in tests
+
+### 0.1.0.0
+
+* Initial release
+

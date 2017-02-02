@@ -527,8 +527,8 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             $mdErrors | Should Be 0
         }
 
-        # We're using this tool to clean out the node_modules folder because it gets too long
-        # for PowerShell to remove
+        # We're using this tool to delete the node_modules folder because it gets too long
+        # for PowerShell to remove.
         $null = Start-Process `
             -FilePath "npm" `
             -ArgumentList @('install','rimraf','-g','--silent') `

@@ -275,7 +275,7 @@ function Start-AppveyorAfterTestTask
 
         # Clone the DSCResources Module to the repository folder
         $docoHelperPath = Join-Path -Path $PSScriptRoot `
-                                    -ChildPath 'DocumentationHelper.psd1'
+                                    -ChildPath 'DscResource.DocumentationHelper.psd1'
         Import-Module -Name $docoHelperPath
         Write-DscResourcePowerShellHelp -OutputPath $docoPath -ModulePath $MainModulePath -Verbose
 
