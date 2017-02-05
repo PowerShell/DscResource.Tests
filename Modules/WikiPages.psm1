@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
 
-Write-DscResourceWikiSite generates wiki pages that can be uploaded to GitHub to use as 
+New-DscResourceWikiSite generates wiki pages that can be uploaded to GitHub to use as
 public documentation for a module.
 
 .DESCRIPTION
 
-The Write-DscResourceWikiSite cmdlet will review all of the MOF based resources
-in a specified module directory and will output the Markdown files to the specified directory. 
-These help files include details on the property types for each resource, as well as a text 
+The New-DscResourceWikiSite cmdlet will review all of the MOF based resources
+in a specified module directory and will output the Markdown files to the specified directory.
+These help files include details on the property types for each resource, as well as a text
 description and examples where they exist.
 
 .PARAMETER OutputPath
@@ -20,63 +20,62 @@ Where should the files be saved to
 The path to the root of the DSC resource module (where the PSD1 file is found, not the folder for
 and individual DSC resource)
 
-.EXAMPLE 
+.EXAMPLE
 
 This example shows how to generate help for a specific module
 
-    Write-DscResourceWikiSite -ModulePath C:\repos\SharePointdsc -OutputPath C:\repos\SharePointDsc\en-US
+    New-DscResourceWikiSite -ModulePath C:\repos\SharePointdsc -OutputPath C:\repos\SharePointDsc\en-US
 
 #>
-function Write-DscResourceWikiSite {
+function New-DscResourceWikiSite
+{
+    [CmdletBinding()]
     param
     (
-        [parameter(Mandatory = $true)] 
-        [System.String] 
+        [parameter(Mandatory = $true)]
+        [System.String]
         $OutputPath,
 
-        [parameter(Mandatory = $true)] 
-        [System.String] 
+        [parameter(Mandatory = $true)]
+        [System.String]
         $ModulePath
     )
 
     Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "MofHelper.psm1")
-    
+
     $mofSearchPath = (Join-Path -Path $ModulePath -ChildPath "\**\*.schema.mof")
-    $mofSchemas = Get-ChildItem -Path $mofSearchPath -Recurse 
+    $mofSchemas = Get-ChildItem -Path $mofSearchPath -Recurse
     $mofSchemas | ForEach-Object {
         $mofFileObject = $_
-        $result = (Get-MofSchemaObject $_.FullName) | Where-Object { 
+        $result = (Get-MofSchemaObject $_.FullName) | Where-Object {
             ($_.ClassName -eq $mofFileObject.Name.Replace(".schema.mof", "")) `
-                -and ($null -ne $_.FriendlyName)  
+                -and ($null -ne $_.FriendlyName)
         }
 
         $descriptionPath = Join-Path -Path $_.DirectoryName -ChildPath "readme.md"
         if (Test-Path -Path $descriptionPath)
         {
-            Write-Output "Generating wiki page for $($result.FriendlyName)"
-            
-            $output = "**Parameters**" + [Environment]::NewLine + [Environment]::NewLine
-            $output += "| Parameter | Attribute | DataType | Description | Allowed Values |" 
-            $output += [Environment]::NewLine
-            $output += "| --- | --- | --- | --- | --- |" + [Environment]::NewLine
-            foreach ($property in $result.Attributes) 
+            Write-Verbose -Message "Generating wiki page for $($result.FriendlyName)"
+
+            $output = New-Object System.Text.StringBuilder
+            $null = $output.AppendLine('**Parameters**')
+            $null = $output.AppendLine('')
+            $null = $output.AppendLine('| Parameter | Attribute | DataType | Description | Allowed Values |')
+            $null = $output.AppendLine('| --- | --- | --- | --- | --- |')
+            foreach ($property in $result.Attributes)
             {
-                $output += ("| **$($property.Name)** | $($property.State) | " + `
+                $null = $output.Append("| **$($property.Name)** | $($property.State) | " + `
                             "$($property.DataType) | $($property.Description) | ")
-                if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true) 
+                if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
-                    $property.ValueMap | ForEach-Object {
-                        $output += $_ + ", "
-                    }
-                    $output = $output.TrimEnd(" ")
-                    $output = $output.TrimEnd(",")
+                    $null = $output.Append(($property.ValueMap -Join ", "))
                 }
-                $output += "|" + [Environment]::NewLine
+                $null = $output.AppendLine("|")
             }
 
-
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
-            $output += [Environment]::NewLine + $descriptionContent + [Environment]::NewLine
+            $null = $output.AppendLine()
+            $null = $output.AppendLine($descriptionContent)
 
             $exampleSearchPath = "\Examples\Resources\$($result.FriendlyName)\*.ps1"
             $examplesPath = (Join-Path -Path $ModulePath -ChildPath $exampleSearchPath)
@@ -84,7 +83,8 @@ function Write-DscResourceWikiSite {
 
             if ($null -ne $exampleFiles)
             {
-                $output += "**Examples**" + [Environment]::NewLine + [Environment]::NewLine
+                $null = $output.AppendLine('**Examples**')
+                $null = $output.AppendLine('')
                 $exampleCount = 1
                 foreach ($exampleFile in $exampleFiles)
                 {
@@ -102,13 +102,12 @@ function Write-DscResourceWikiSite {
                                                             "***Example $exampleCount***`n")
                     $exampleContent += '````'
 
-                    $output += $exampleContent 
-                    $output += [Environment]::NewLine
+                    $null = $output.AppendLine($exampleContent)
 
                     $exampleCount ++
                 }
             }
-            $output | Out-File -FilePath (Join-Path $OutputPath "$($result.FriendlyName).md") `
+            $output.ToString() | Out-File -FilePath (Join-Path $OutputPath "$($result.FriendlyName).md") `
                                -Encoding utf8 -Force
         }
     }

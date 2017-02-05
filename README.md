@@ -167,12 +167,12 @@ This module provides functions for building and testing DSC Resources in AppVeyo
 
 **Note: These functions will only work if called within an AppVeyor CI build task.**
 
-* **Start-AppveyorInstallTask**: This task is used to set up the environment in
+* **Invoke-AppveyorInstallTask**: This task is used to set up the environment in
   preparation for the test and deploy tasks.
   It should be called in the _install_ AppVeyor phase.
-* **Start-AppveyorTestScriptTask**: This task is used to execute the tests.
+* **Invoke-AppveyorTestScriptTask**: This task is used to execute the tests.
   It should be called in the _test_script_ AppVeyor phase.
-* **Start-AppveyorAfterTestTask**: This task is used to perform the following tasks:
+* **Invoke-AppveyorAfterTestTask**: This task is used to perform the following tasks:
   * Generate, zip and publish the Wiki content to AppVeyor (optional).
   * Set the build number in the DSC Resource Module manifest.
   * Publish the Test Results artefact to AppVeyor.
@@ -192,17 +192,17 @@ install:
 
     - ps: |
         Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
-        Start-AppveyorInstallTask
+        Invoke-AppveyorInstallTask
 
 build: false
 
 test_script:
     - ps: |
-        Start-AppveyorTestScriptTask -CodeCoverage
+        Invoke-AppveyorTestScriptTask -CodeCoverage
 
 deploy_script:
     - ps: |
-        Start-AppveyorAfterTestTask
+        Invoke-AppveyorAfterTestTask
 ```
 
 ### Using AppVeyor.psm1 with HQRM DSC Resources
@@ -221,13 +221,13 @@ install:
         $harnessModulePath = "Tests\$($moduleName).TestHarness.psm1"
         $harnessFunctionName = "Invoke-$($moduleName)Test"
         Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
-        Start-AppveyorInstallTask
+        Invoke-AppveyorInstallTask
 
 build: false
 
 test_script:
     - ps: |
-        Start-AppveyorTestScriptTask `
+        Invoke-AppveyorTestScriptTask `
             -Type 'Harness' `
             -MainModulePath $mainModuleFolder `
             -HarnessModulePath $harnessModulePath `
@@ -235,7 +235,7 @@ test_script:
 
 deploy_script:
     - ps: |
-        Start-AppveyorAfterTestTask `
+        Invoke-AppveyorAfterTestTask `
             -Type 'Wiki' `
             -MainModulePath $mainModuleFolder `
             -ResourceModuleName $moduleName
@@ -253,11 +253,11 @@ This module is used by some HQRM DSC Resource modules to produce Wiki Content to
 be distributed with the DSC Resource module as well as published in the Wiki
 section of the DSC Resource repo on GitHub.
 
-It is usually called by the ```Start-AppveyorAfterTestTask``` task in AppVeyor.psm1
+It is usually called by the ```Invoke-AppveyorAfterTestTask``` task in AppVeyor.psm1
 when the ```-type``` parameter is set to 'Wiki'. For example:
 
 ```powershell
-Start-AppveyorAfterTestTask `
+Invoke-AppveyorAfterTestTask `
     -Type 'Wiki' `
     -MainModulePath '.\Modules\SharePointDsc\' `
     -ResourceModuleName 'SharePointDsc'

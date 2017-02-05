@@ -26,10 +26,10 @@ else
         1. Installs Nuget Package Provider DLL.
         2. Installs Nuget.exe to the AppVeyor Build Folder.
         3. Installs the Pester PowerShell Module.
-        4. Executes Start-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
+        4. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
            in resource module repository.
 #>
-function Start-AppveyorInstallTask
+function Invoke-AppveyorInstallTask
 {
     [CmdletBinding(DefaultParametersetName='Default')]
     param
@@ -53,10 +53,10 @@ function Start-AppveyorInstallTask
     # Execute the custom install task if defined
     if ($customTaskModuleLoaded `
         -and (Get-Command -Module $CustomAppVeyorTasks `
-                          -Name Start-CustomAppveyorInstallTask `
+                          -Name Invoke-CustomAppveyorInstallTask `
                           -ErrorAction SilentlyContinue))
     {
-        Start-CustomAppveyorInstallTask
+        Invoke-CustomAppveyorInstallTask
     }
 }
 
@@ -90,7 +90,7 @@ function Start-AppveyorInstallTask
     .PARAMETER HarnessFunctionName
         This is the function name in the harness module to call to execute tests.
 #>
-function Start-AppveyorTestScriptTask
+function Invoke-AppveyorTestScriptTask
 {
     [CmdletBinding(DefaultParametersetName = 'Default')]
     param
@@ -112,12 +112,12 @@ function Start-AppveyorTestScriptTask
         $ExcludeTag = @('Examples','Markdown'),
 
         [Parameter(ParameterSetName = 'Harness',
-                   Mandatory = $true)]
+            Mandatory = $true)]
         [String]
         $HarnessModulePath,
 
         [Parameter(ParameterSetName = 'Harness',
-                   Mandatory = $true)]
+            Mandatory = $true)]
         [String]
         $HarnessFunctionName
     )
@@ -188,11 +188,15 @@ function Start-AppveyorTestScriptTask
             Remove-Item -Path $dscTestsPath -Force -Recurse
             break
         }
+        default
+        {
+            throw "An unhandled type '$Type' was specified."
+        }
     }
 
     $webClient = New-Object -TypeName "System.Net.WebClient"
     $webClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-                          $testResultsFile)
+        $testResultsFile)
 
     if ($result.FailedCount -gt 0)
     {
@@ -235,7 +239,7 @@ function Start-AppveyorTestScriptTask
         The Owners string to insert into the NUSPEC file for the package.
         If not specified will default to 'Microsoft'.
 #>
-function Start-AppveyorAfterTestTask
+function Invoke-AppveyorAfterTestTask
 {
 
     [CmdletBinding(DefaultParametersetName = 'Default')]
@@ -277,12 +281,12 @@ function Start-AppveyorAfterTestTask
         $docoHelperPath = Join-Path -Path $PSScriptRoot `
                                     -ChildPath 'DscResource.DocumentationHelper.psd1'
         Import-Module -Name $docoHelperPath
-        Write-DscResourcePowerShellHelp -OutputPath $docoPath -ModulePath $MainModulePath -Verbose
+        New-DscResourcePowerShellHelp -OutputPath $docoPath -ModulePath $MainModulePath -Verbose
 
         # Generate the wiki content for the release and zip/publish it to appveyor
         $wikiContentPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath "wikicontent"
         New-Item -Path $wikiContentPath -ItemType Directory
-        Write-DscResourceWikiSite -OutputPath $wikiContentPath -ModulePath $MainModulePath -Verbose
+        New-DscResourceWikiSite -OutputPath $wikiContentPath -ModulePath $MainModulePath -Verbose
 
         $zipFileName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                  -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION)_wikicontent.zip"
