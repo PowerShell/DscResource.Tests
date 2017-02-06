@@ -139,7 +139,7 @@ function Get-MofSchemaObject
 
             $nonMetadata = $textLine.Replace(";","").Substring($metadataEnd + 1)
 
-            $nonMetadataObjects =  $nonMetadata.Split(" ")
+            $nonMetadataObjects =  $nonMetadata -split '\s+'
             $attributeValue.DataType = $nonMetadataObjects[1]
             $attributeValue.Name = $nonMetadataObjects[2]
 
