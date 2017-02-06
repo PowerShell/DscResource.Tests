@@ -58,6 +58,8 @@ function Invoke-AppveyorInstallTask
     {
         Invoke-CustomAppveyorInstallTask
     }
+
+    Write-Info -Message 'Install Task Complete.'
 }
 
 <#
@@ -167,7 +169,7 @@ function Invoke-AppveyorTestScriptTask
                     )
                 }
             }
-            $result = Invoke-Pester @pesterParameters
+            $results = Invoke-Pester @pesterParameters
             break
         }
         'Harness'
@@ -181,7 +183,7 @@ function Invoke-AppveyorTestScriptTask
 
             # Execute the resource tests as well as the DSCResource.Tests\meta.tests.ps1
             Import-Module -Name $testHarnessPath
-            $result = & $HarnessFunctionName -TestResultsFile $testResultsFile `
+            $results = & $HarnessFunctionName -TestResultsFile $testResultsFile `
                                              -DscTestsPath $dscTestsPath
 
             # Delete the DSCResource.Tests folder because it is not needed
@@ -194,14 +196,31 @@ function Invoke-AppveyorTestScriptTask
         }
     }
 
-    $webClient = New-Object -TypeName "System.Net.WebClient"
-    $webClient.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-        $testResultsFile)
-
-    if ($result.FailedCount -gt 0)
+    foreach($result in $results.TestResult)
     {
-        throw "$($result.FailedCount) tests failed."
+        [string] $describeName = $result.Describe -replace '\\', '/'
+        [string] $contextName = $result.Context -replace '\\', '/'
+        $componentName = '{0}; Context: {1}' -f $describeName, $contextName
+
+        Add-AppveyorTest `
+            -Name $result.Name `
+            -Framework NUnit `
+            -Filename $componentName `
+            -Outcome $result.Result `
+            -Duration $result.Time.TotalMilliseconds
     }
+
+    Push-TestArtifact -Path $testResultsFile
+
+    Write-Info -Message 'Done running tests.'
+    Write-Info -Message "Test result Type: $($results.GetType().fullname)"
+
+    if ($results.FailedCount -gt 0)
+    {
+        throw "$($results.FailedCount) tests failed."
+    }
+
+    Write-Info -Message 'Test Script Task Complete.'
 }
 
 <#
@@ -362,6 +381,70 @@ function Invoke-AppveyorAfterTestTask
                           -ErrorAction SilentlyContinue))
     {
         Start-CustomAppveyorAfterTestTask
+    }
+
+    Write-Info -Message 'After Test Task Complete.'
+}
+
+<#
+    .SYNOPSIS
+        Writes information to the build log
+
+    .PARAMETER Message
+        The Message to write
+
+    .EXAMPLE
+        Write-Info -Message "Some build info"
+
+#>
+function Write-Info {
+    [CmdletBinding()]
+    param
+    (
+         [Parameter(Mandatory=$true, Position=0)]
+         [string]
+         $Message
+    )
+
+    Write-Host -ForegroundColor Yellow  "[Build Info] [$([datetime]::UtcNow)] $message"
+}
+
+<#
+    .SYNOPSIS
+        Uploads test artifacts
+
+    .PARAMETER Path
+        The path to the test artifacts
+
+    .EXAMPLE
+        Push-TestArtifact -Path .\TestArtifact.log
+
+#>
+function Push-TestArtifact
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]
+        $Path
+    )
+
+    $resolvedPath = (Resolve-Path $Path).ProviderPath
+    if(${env:APPVEYOR_JOB_ID})
+    {
+        <# does not work with Pester 4.0.2
+        $url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
+        Write-Info -Message "Uploading Test Results: $resolvedPath ; to: $url"
+        (New-Object 'System.Net.WebClient').UploadFile($url, $resolvedPath)
+        #>
+
+        Write-Info -Message "Uploading Test Artifact: $resolvedPath"
+        Push-AppveyorArtifact $resolvedPath
+    }
+    else
+    {
+        Write-Info -Message "Test Artifact: $resolvedPath"
     }
 }
 
