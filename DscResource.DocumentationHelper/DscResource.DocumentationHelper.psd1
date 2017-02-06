@@ -63,9 +63,9 @@
     # FormatsToProcess = @()
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-    NestedModules = @("Modules\MofHelper.psm1",
-        "Modules\PowerShellHelp.psm1",
-        "Modules\WikiPages.psm1")
+    NestedModules = @("MofHelper.psm1",
+        "PowerShellHelp.psm1",
+        "WikiPages.psm1")
 
     # Functions to export from this module
     #FunctionsToExport = '*'
@@ -101,10 +101,10 @@
             Tags = @('DesiredStateConfiguration', 'DSC', 'DSCResourceKit', 'DSCResource', 'preview')
 
             # A URL to the license for this module.
-            LicenseUri = 'https://github.com/PowerShell/SharePointDsc/blob/master/LICENSE'
+            LicenseUri = 'https://github.com/PowerShell/DscResource.Tests/blob/master/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri = 'https://github.com/PowerShell/SharePointDsc'
+            ProjectUri = 'https://github.com/PowerShell/DscResource.Tests'
 
             # A URL to an icon representing this module.
             # IconUri = ''
