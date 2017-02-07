@@ -79,7 +79,7 @@ function New-DscResourceWikiSite
 
             $exampleSearchPath = "\Examples\Resources\$($result.FriendlyName)\*.ps1"
             $examplesPath = (Join-Path -Path $ModulePath -ChildPath $exampleSearchPath)
-            $exampleFiles = Get-ChildItem -Path $examplesPath
+            $exampleFiles = Get-ChildItem -Path $examplesPath -ErrorAction SilentlyContinue
 
             if ($null -ne $exampleFiles)
             {
