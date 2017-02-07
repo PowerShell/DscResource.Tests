@@ -41,6 +41,7 @@ function Get-MofSchemaObject
 
     $currentComment = ""
     $currentlyInCommentBlock = $false
+    $partialLine = $null
     foreach($textLine in $contents)
     {
         if ($textLine.StartsWith("/*"))
@@ -96,8 +97,22 @@ function Get-MofSchemaObject
                 Documentation = $null
             }
         }
+        elseif (!$textLine.TrimEnd().EndsWith(';'))
+        {
+            $partialLine += $textLine
+        }
         else
         {
+            if($partialLine)
+            {
+                [string] $currentLine = $partialLine + $textLine
+                $partialLine = $null
+            }
+            else 
+            {
+                $currentLine = $textLine                
+            }
+
             $attributeValue = @{
                 State = $null
                 EmbeddedInstance = $null
@@ -108,42 +123,49 @@ function Get-MofSchemaObject
                 IsArray = $false
             }
 
-            $start = $textLine.IndexOf("[") + 1
-            $end = $textLine.IndexOf("]", $start)
+            $start = $currentLine.IndexOf("[") + 1
+            $end = $currentLine.IndexOf("]", $start)
             $metadataEnd = $end
-            $metadata = $textLine.Substring($start, $end - $start)
-            $metadataObjects = $metadata.Split(",")
-            $attributeValue.State = $metadataObjects[0]
+            $length = $end - $start
+            $metadataObjects = @()
+
+            # Does this assume that the metadata is on the same line?
+            if($length -gt 0)
+            {
+                $metadata = $currentLine.Substring($start, $end - $start)
+                $metadataObjects = $metadata.Split(",")
+                $attributeValue.State = $metadataObjects[0]
+            }
 
             $metadataObjects | ForEach-Object {
                 if ($_.Trim().StartsWith("EmbeddedInstance"))
                 {
-                    $start = $textLine.IndexOf("EmbeddedInstance(`"") + 18
-                    $end = $textLine.IndexOf("`")", $start)
-                    $attributeValue.EmbeddedInstance = $textLine.Substring($start, $end - $start)
+                    $start = $currentLine.IndexOf("EmbeddedInstance(`"") + 18
+                    $end = $currentLine.IndexOf("`")", $start)
+                    $attributeValue.EmbeddedInstance = $currentLine.Substring($start, $end - $start)
                 }
                 if ($_.Trim().StartsWith("ValueMap"))
                 {
-                    $start = $textLine.IndexOf("ValueMap{") + 9
-                    $end = $textLine.IndexOf("}", $start)
-                    $valueMap = $textLine.Substring($start, $end - $start)
+                    $start = $currentLine.IndexOf("ValueMap{") + 9
+                    $end = $currentLine.IndexOf("}", $start)
+                    $valueMap = $currentLine.Substring($start, $end - $start)
                     $attributeValue.ValueMap = $valueMap.Replace("`"", "").Split(",")
                 }
                 if ($_.Trim().StartsWith("Description"))
                 {
-                    $start = $textLine.IndexOf("Description(`"") + 13
-                    $end = $textLine.IndexOf("`")", $start)
-                    $attributeValue.Description = $textLine.Substring($start, $end - $start)
+                    $start = $currentLine.IndexOf("Description(`"") + 13
+                    $end = $currentLine.IndexOf("`")", $start)
+                    $attributeValue.Description = $currentLine.Substring($start, $end - $start)
                 }
             }
 
-            $nonMetadata = $textLine.Replace(";","").Substring($metadataEnd + 1)
+            $nonMetadata = $currentLine.Replace(";","").Substring($metadataEnd + 1)
 
             $nonMetadataObjects =  $nonMetadata -split '\s+'
             $attributeValue.DataType = $nonMetadataObjects[1]
             $attributeValue.Name = $nonMetadataObjects[2]
 
-            if ($attributeValue.Name.EndsWith("[]") -eq $true)
+            if ($attributeValue.Name -and $attributeValue.Name.EndsWith("[]") -eq $true)
             {
                 $attributeValue.Name = $attributeValue.Name.Replace("[]", "")
                 $attributeValue.IsArray = $true
