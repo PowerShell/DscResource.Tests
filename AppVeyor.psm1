@@ -212,7 +212,7 @@ function Invoke-AppveyorTestScriptTask
             -Name $result.Name `
             -Framework NUnit `
             -Filename $componentName `
-            -Outcome $result.Result `
+            -Outcome $appVeyorResult `
             -Duration $result.Time.TotalMilliseconds
     }
 
