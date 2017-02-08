@@ -201,6 +201,12 @@ function Invoke-AppveyorTestScriptTask
         [string] $describeName = $result.Describe -replace '\\', '/'
         [string] $contextName = $result.Context -replace '\\', '/'
         $componentName = '{0}; Context: {1}' -f $describeName, $contextName
+        $appVeyorResult = $result.Result
+        # Convert any result not know by AppVeyor to an AppVeyor Result
+        switch($result.Result)
+        {
+            'Pending' { $appVeyorResult = 'Skipped'}
+        }
 
         Add-AppveyorTest `
             -Name $result.Name `
