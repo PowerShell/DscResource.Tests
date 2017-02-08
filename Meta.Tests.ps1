@@ -36,6 +36,19 @@ if (-not $repoRootPathFound)
     $repoRootPath = $moduleRootFilePath
 }
 $repoName = Split-Path -Path $repoRootPath -Leaf
+$testOptInFilePath = Join-Path -Path $repoRootPath -ChildPath '.MetaTestOptIn.json'
+# .MetaTestOptIn.json should be in the following format
+# [
+#     "Common Tests - Validate Markdown Files",
+#     "Common Tests - Validate Example Files"
+# ]
+
+$optIns = @()
+if(Test-Path $testOptInFilePath)
+{
+    $optIns = Get-Content -LiteralPath $testOptInFilePath | ConvertFrom-Json
+}
+
 
 Describe 'Common Tests - File Formatting' {
     $textFiles = Get-TextFilesList $moduleRootFilePath
@@ -409,6 +422,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 }
 
 Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
+    $optin = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     $examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
     if (Test-Path -Path $examplesPath)
@@ -447,9 +461,8 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                     $exampleError = $true
                 }
 
-                It "Should compile MOFs for example correctly" {
-                    # Per issues #101
-                    # $exampleError | Should Be $false
+                It "Should compile MOFs for example correctly" -Skip:(!$optin)  {
+                    $exampleError | Should Be $false
                 }
             }
         }
@@ -470,6 +483,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 }
 
 Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
+    $optin = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     if (Get-Command -Name 'npm' -ErrorAction SilentlyContinue)
     {
@@ -525,8 +539,10 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                                         "text execute.")
             }
             Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
-            # Per issue #100
-            # $mdErrors | Should Be 0
+            if($optin)
+            {
+                $mdErrors | Should Be 0
+            }
         }
 
         # We're using this tool to delete the node_modules folder because it gets too long
