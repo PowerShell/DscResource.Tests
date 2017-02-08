@@ -16,7 +16,7 @@ $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'Ds
 $repoRootPath = $moduleRootFilePath
 $repoRootPathFound = $false
 while (-not $repoRootPathFound `
-    -and -not ([String]::IsNullOrEmpty((Split-Path -Path $repoRootPath -Parent))))
+    -and -not ([String]::IsNullOrEmpty((Split-Path -Path $repoRootPath -Parent -Force))))
 {
     if (Get-ChildItem -Path $repoRootPath -Filter '.git' -Directory)
     {
