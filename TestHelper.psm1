@@ -825,6 +825,69 @@ function Install-NugetExe
     Invoke-WebRequest -Uri $Uri -OutFile $OutFile
 } # Install-NugetExe
 
+<#
+    .SYNOPSIS
+        Gets the current Pester Describe block name
+#>
+function Get-PesterDescribeName
+{
+
+    return Get-CommandNameParameterValue -Command 'Describe'
+}
+
+<#
+    .SYNOPSIS
+        Gets the opt-in status of the current pester Describe 
+        block.  Writes a warning if the test is not opted-in.
+
+    .PARAMETER OptIns
+        An array of what is opted-in
+#>
+function Get-PesterDescribeOptInStatus
+{
+    param
+    (
+        [string[]]$OptIns
+    )
+
+    $describeName = Get-PesterDescribeName
+    $optIn = $OptIns -icontains $describeName
+    if(!$optIn)
+    {
+        $message = @"
+Describe $describeName will not fail unless you opt-in.
+To opt-in, create a '.MetaTestOptIn.json' at the root 
+of the repo in the following format:
+[
+     "$describeName"
+]
+"@
+        Write-Warning -Message $message
+    }
+
+    return $optIn
+}
+
+<#
+    .SYNOPSIS
+        Gets the value of the Name parameter for the specified command in the stack
+
+    .PARAMETER Command
+        The name of the command to find the Name parameter for
+#>
+function Get-CommandNameParameterValue
+{
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string] $Command
+    )
+
+    $commandStackItem = (Get-PSCallStack).Where{$_.Command -eq $Command}
+    $commandArgumentNameValues = $commandStackItem.Arguments.TrimStart('{',' ').TrimEnd('}',' ') -split '\s*,\s*'
+    $nameParameterValue = ($commandArgumentNameValues.Where{ $_ -like 'name=*'} -split '=')[-1]
+    return $nameParameterValue
+}
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -842,5 +905,6 @@ Export-ModuleMember -Function @(
     'Import-xDscResourceDesigner', `
     'Get-SuppressedPSSARuleNameList',
     'Reset-DSC',
-    'Install-NugetExe'
+    'Install-NugetExe',
+    'Get-PesterDescribeOptInStatus'
 )

@@ -179,6 +179,11 @@ This module provides functions for building and testing DSC Resources in AppVeyo
   * Zip and publish the DSC Resource content to AppVeyor.
   It should be called in the _test_script_ AppVeyor phase.
 
+### Phased Meta test Opt-Initial
+
+New tests may run but only produce errors.  Once you fix the test, please copy
+`.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
+any new problem in the area, this will cause the tests to fail, not just warn.
 
 ### Using AppVeyor.psm1 with eXperiemental DSC Resources
 
@@ -293,6 +298,7 @@ Invoke-AppveyorAfterTestTask `
 * Clean up layout of Readme.md to be more logically structured and added more information
   about the new tests and modules
 * Added documentation for new tests and features
+* Added phased Meta Test roll-out
 
 ### 0.2.0.0
 
