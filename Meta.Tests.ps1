@@ -516,12 +516,12 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             try
             {
                 Start-Process -FilePath "gulp" -ArgumentList @(
-                        'test-mdsyntax',
-                        '--silent',
-                        '--rootpath',
-                        $repoRootPath,
-                        '--dscresourcespath',
-                        $dscResourcesFolderFilePath) `
+                    'test-mdsyntax',
+                    '--silent',
+                    '--rootpath',
+                    $repoRootPath,
+                    '--dscresourcespath',
+                    $dscResourcesFolderFilePath) `
                     -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
                 Start-Sleep -Seconds 3
                 $mdIssuesPath = Join-Path -Path $PSScriptRoot -ChildPath "markdownissues.txt"
@@ -536,6 +536,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                         }
                     }
                 }
+                Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
             }
             catch [System.Exception]
             {
@@ -544,7 +545,6 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                                         "run 'npm install -g gulp' in order to have this " + `
                                         "text execute.")
             }
-            Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
             if($optin)
             {
                 $mdErrors | Should Be 0
