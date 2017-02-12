@@ -28,12 +28,17 @@ else
         3. Installs the Pester PowerShell Module.
         4. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
            in resource module repository.
+           
+    .EXAMPLE
+        Invoke-AppveyorInstallTask -PesterMaximumVersion 3.4.3
 #>
 function Invoke-AppveyorInstallTask
 {
     [CmdletBinding(DefaultParametersetName='Default')]
     param
     (
+        [Version]
+        $PesterMaximumVersion
     )
 
     # Load the test helper module
@@ -48,7 +53,14 @@ function Invoke-AppveyorInstallTask
                               -ChildPath 'nuget.exe'
     Install-NugetExe -OutFile $nugetExePath
 
-    Install-Module -Name Pester -Force
+    if ($PesterMaximumVersion)
+    {
+        Install-Module -Name Pester -MaximumVersion $PesterMaximumVersion -Force
+    }
+    else
+    {
+        Install-Module -Name Pester -Force
+    }
 
     # Execute the custom install task if defined
     if ($customTaskModuleLoaded `
@@ -205,7 +217,10 @@ function Invoke-AppveyorTestScriptTask
         # Convert any result not know by AppVeyor to an AppVeyor Result
         switch($result.Result)
         {
-            'Pending' { $appVeyorResult = 'Skipped'}
+            'Pending'
+            {
+                $appVeyorResult = 'Skipped'
+            }
         }
 
         Add-AppveyorTest `
@@ -403,13 +418,14 @@ function Invoke-AppveyorAfterTestTask
         Write-Info -Message "Some build info"
 
 #>
-function Write-Info {
+function Write-Info
+{
     [CmdletBinding()]
     param
     (
-         [Parameter(Mandatory=$true, Position=0)]
-         [string]
-         $Message
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]
+        $Message
     )
 
     Write-Host -ForegroundColor Yellow  "[Build Info] [$([datetime]::UtcNow)] $message"
