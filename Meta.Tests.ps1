@@ -58,7 +58,8 @@ Describe 'Common Tests - File Formatting' {
 
         foreach ($textFile in $textFiles)
         {
-            if (Test-FileInUnicode $textFile) {
+            if (Test-FileInUnicode $textFile)
+            {
                 if($textFile.Extension -ieq '.mof')
                 {
                     Write-Warning -Message "File $($textFile.FullName) should be converted to ASCII. Use fixer function 'Get-UnicodeFilesList `$pwd | ConvertTo-ASCII'."
@@ -308,7 +309,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                 It 'Should pass all error-level PS Script Analyzer rules' {
                     $errorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -Severity 'Error'
 
-                    if ($null -ne $errorPssaRulesOutput) {
+                    if ($null -ne $errorPssaRulesOutput)
+                    {
                         Write-Warning -Message 'Error-level PSSA rule(s) did not pass.'
                         Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
 
@@ -326,7 +328,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                 It 'Should pass all required PS Script Analyzer rules' {
                     $requiredPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $requiredPssaRuleNames
 
-                    if ($null -ne $requiredPssaRulesOutput) {
+                    if ($null -ne $requiredPssaRulesOutput)
+                    {
                         Write-Warning -Message 'Required PSSA rule(s) did not pass.'
                         Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
 
@@ -349,7 +352,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                 It 'Should pass all flagged PS Script Analyzer rules' {
                     $flaggedPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -IncludeRule $flaggedPssaRuleNames
 
-                    if ($null -ne $flaggedPssaRulesOutput) {
+                    if ($null -ne $flaggedPssaRulesOutput)
+                    {
                         Write-Warning -Message 'Flagged PSSA rule(s) did not pass.'
                         Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
 
@@ -374,7 +378,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 
                     $newErrorPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters -ExcludeRule $knownPssaRuleNames -Severity 'Error'
 
-                    if ($null -ne $newErrorPssaRulesOutput) {
+                    if ($null -ne $newErrorPssaRulesOutput)
+                    {
                         Write-Warning -Message 'Recently-added, error-level PSSA rule(s) did not pass.'
                         Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed or approved to be suppressed:'
 
@@ -438,7 +443,8 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         }
 
         $exampleFiles = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter "*.ps1" -Recurse
-        foreach ($exampleFile in $exampleFiles) {
+        foreach ($exampleFile in $exampleFiles)
+        {
             Context -Name $exampleFile.Name {
 
                 try

@@ -217,7 +217,10 @@ function Invoke-AppveyorTestScriptTask
         # Convert any result not know by AppVeyor to an AppVeyor Result
         switch($result.Result)
         {
-            'Pending' { $appVeyorResult = 'Skipped'}
+            'Pending'
+            {
+                $appVeyorResult = 'Skipped'
+            }
         }
 
         Add-AppveyorTest `
@@ -415,13 +418,14 @@ function Invoke-AppveyorAfterTestTask
         Write-Info -Message "Some build info"
 
 #>
-function Write-Info {
+function Write-Info
+{
     [CmdletBinding()]
     param
     (
-         [Parameter(Mandatory=$true, Position=0)]
-         [string]
-         $Message
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]
+        $Message
     )
 
     Write-Host -ForegroundColor Yellow  "[Build Info] [$([datetime]::UtcNow)] $message"
