@@ -179,7 +179,7 @@ This module provides functions for building and testing DSC Resources in AppVeyo
   * Zip and publish the DSC Resource content to AppVeyor.
   It should be called in the _test_script_ AppVeyor phase.
 
-### Phased Meta test Opt-Initial
+### Phased Meta test Opt-In
 
 New tests may run but only produce errors.  Once you fix the test, please copy
 `.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
@@ -246,6 +246,43 @@ deploy_script:
             -ResourceModuleName $moduleName
 ```
 
+## CodeCoverage reporting with CodeCov.io
+
+This is to enable code coverage reporting through
+[codecov.io](http://codecov.io) which allows you to report on pull
+request and project code coverage.  To use codecov.io, you must have enabled
+Pester code coverage, which the first two sections cover.
+
+### Ensure Code Coverage is enabled
+
+#### Repos using `-Type 'Default'` for `Invoke-AppveyorTestScriptTask`
+
+1. On the call to `Invoke-AppveyorTestScriptTask`, make sure you have
+    `-CodeCoverage` specified.  This will enable Pester code coverage.
+
+#### Repos using `-Type 'Harness'` for `Invoke-AppveyorTestScriptTask`
+
+1. Make sure you are properly generating pester code coverage in the repo's
+    harness code.
+
+### Enable reporting to CodeCove.io
+
+1. On the call to `Invoke-AppveyorTestScriptTask`, specify
+    `-CodeCovIo`.  This will enable reporting to [codecov.io](http://codecov.io)
+
+### Configure CodeCov.io
+
+1. Copy `.codecov.io` from the root of this repo to the root of your repo.
+1. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
+
+### Add the badge to the Readme
+
+Add the following code below the AppVeyor badge in the main repo `readme.md`,
+replacing `<reproName>` with the name of the repo
+
+```markdown
+[![codecov](https://codecov.io/gh/PowerShell/<reproName>/branch/master/graph/badge.svg)](https://codecov.io/gh/PowerShell/<reproName>)
+```
 
 ## Documentation Helper Module
 
@@ -299,6 +336,7 @@ Invoke-AppveyorAfterTestTask `
   about the new tests and modules
 * Added documentation for new tests and features
 * Added phased Meta Test roll-out
+* Added code coverage report with [codecov.io](http://codecove.io)
 
 ### 0.2.0.0
 
