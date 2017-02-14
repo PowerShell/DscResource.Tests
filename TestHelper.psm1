@@ -486,7 +486,7 @@ function Test-FileContainsClassResource
         The full path to the file to test.
 
     .EXAMPLE
-        Get-ClassResourceName -ModulePath 'c:\mymodule\myclassmodule.psm1'
+        Get-ClassResourceNameFromFile -FilePath 'c:\mymodule\myclassmodule.psm1'
 
         This command will get any DSC class resource names from the myclassmodule module.
 #>
@@ -503,7 +503,7 @@ function Get-ClassResourceNameFromFile
 
     $classResourceNames = [String[]]@()
 
-    if (Test-FileContainsClassResource -Path $FilePath)
+    if (Test-FileContainsClassResource -FilePath $FilePath)
     {
         $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
 
@@ -837,7 +837,7 @@ function Get-PesterDescribeName
 
 <#
     .SYNOPSIS
-        Gets the opt-in status of the current pester Describe 
+        Gets the opt-in status of the current pester Describe
         block.  Writes a warning if the test is not opted-in.
 
     .PARAMETER OptIns
@@ -856,7 +856,7 @@ function Get-PesterDescribeOptInStatus
     {
         $message = @"
 Describe $describeName will not fail unless you opt-in.
-To opt-in, create a '.MetaTestOptIn.json' at the root 
+To opt-in, create a '.MetaTestOptIn.json' at the root
 of the repo in the following format:
 [
      "$describeName"
@@ -893,7 +893,7 @@ Export-ModuleMember -Function @(
     'Install-ModuleFromPowerShellGallery', `
     'Initialize-TestEnvironment', `
     'Restore-TestEnvironment', `
-    'Get-ClassResourceName', `
+    'Get-ClassResourceNameFromFile', `
     'Test-ModuleContainsScriptResource', `
     'Test-ModuleContainsClassResource', `
     'Get-Psm1FileList', `

@@ -103,6 +103,9 @@ function Invoke-AppveyorInstallTask
 
     .PARAMETER HarnessFunctionName
         This is the function name in the harness module to call to execute tests.
+
+    .PARAMETER CodeCovIo
+        This will switch on reporting of code coverage to codecov.io.  Require -CodeCoverage when running with -type default.
 #>
 function Invoke-AppveyorTestScriptTask
 {
@@ -117,10 +120,16 @@ function Invoke-AppveyorTestScriptTask
         [String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
 
-        [Parameter(ParameterSetName = 'Default')]
+        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
         [Switch]
         $CodeCoverage,
 
+        [Parameter(ParameterSetName = 'Harness')]
+        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
+        [Switch]
+        $CodeCovIo,
+
+        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
         [Parameter(ParameterSetName = 'Default')]
         [String[]]
         $ExcludeTag = @('Examples','Markdown'),
@@ -233,8 +242,23 @@ function Invoke-AppveyorTestScriptTask
 
     Push-TestArtifact -Path $testResultsFile
 
+    if ($CodeCovIo.IsPresent)
+    {
+        if ($results.CodeCoverage)
+        {
+            Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
+            Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
+            $jsonPath = Export-CodeCovIoJson -CodeCoverage $results.CodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
+            Invoke-UploadCoveCoveIoReport -Path $jsonPath
+        }
+        else 
+        {
+            Write-Warning -Message 'Could not create CodeCov.io report because pester results object did not contain a CodeCoverage object'
+        }
+    }
+
     Write-Info -Message 'Done running tests.'
-    Write-Info -Message "Test result Type: $($results.GetType().fullname)"
+    Write-Info -Message "Test result Type: $($results.GetType().Fullname)"
 
     if ($results.FailedCount -gt 0)
     {
@@ -453,7 +477,7 @@ function Push-TestArtifact
     )
 
     $resolvedPath = (Resolve-Path $Path).ProviderPath
-    if(${env:APPVEYOR_JOB_ID})
+    if (${env:APPVEYOR_JOB_ID})
     {
         <# does not work with Pester 4.0.2
         $url = "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)"
