@@ -28,7 +28,7 @@ else
         3. Installs the Pester PowerShell Module.
         4. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
            in resource module repository.
-           
+
     .EXAMPLE
         Invoke-AppveyorInstallTask -PesterMaximumVersion 3.4.3
 #>
@@ -100,9 +100,11 @@ function Invoke-AppveyorInstallTask
 
     .PARAMETER HarnessModulePath
         This is the full path and filename of the test harness module.
+        If not specified it will default to 'Tests\TestHarness.psm1'.
 
     .PARAMETER HarnessFunctionName
         This is the function name in the harness module to call to execute tests.
+        If not specified it will default to 'Invoke-TestHarness'.
 
     .PARAMETER CodeCovIo
         This will switch on reporting of code coverage to codecov.io.  Require -CodeCoverage when running with -type default.
@@ -137,12 +139,12 @@ function Invoke-AppveyorTestScriptTask
         [Parameter(ParameterSetName = 'Harness',
             Mandatory = $true)]
         [String]
-        $HarnessModulePath,
+        $HarnessModulePath = 'Tests\TestHarness.psm1',
 
         [Parameter(ParameterSetName = 'Harness',
             Mandatory = $true)]
         [String]
-        $HarnessFunctionName
+        $HarnessFunctionName = 'Invoke-TestHarness'
     )
 
     # Convert the Main Module path into an absolute path if it is relative
@@ -251,7 +253,7 @@ function Invoke-AppveyorTestScriptTask
             $jsonPath = Export-CodeCovIoJson -CodeCoverage $results.CodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
             Invoke-UploadCoveCoveIoReport -Path $jsonPath
         }
-        else 
+        else
         {
             Write-Warning -Message 'Could not create CodeCov.io report because pester results object did not contain a CodeCoverage object'
         }
