@@ -337,6 +337,7 @@ Invoke-AppveyorAfterTestTask `
 * Added documentation for new tests and features
 * Added phased Meta Test roll-out
 * Added code coverage report with [codecov.io](http://codecove.io)
+* Added default parameter values for HarnessFunctionName and HarnessModulePath in AppVeyor\Invoke-AppveyorTestScriptTask cmdlet
 
 ### 0.2.0.0
 
