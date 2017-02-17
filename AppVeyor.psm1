@@ -144,7 +144,11 @@ function Invoke-AppveyorTestScriptTask
         [Parameter(ParameterSetName = 'Harness',
             Mandatory = $true)]
         [String]
-        $HarnessFunctionName = 'Invoke-TestHarness'
+        $HarnessFunctionName = 'Invoke-TestHarness',
+
+        [Parameter()]
+        [Switch]
+        $DisableConsistency 
     )
 
     # Convert the Main Module path into an absolute path if it is relative
@@ -164,6 +168,28 @@ function Invoke-AppveyorTestScriptTask
                           -ErrorAction SilentlyContinue))
     {
         Start-CustomAppveyorTestTask
+    }
+
+    if ($DisableConsistency.IsPresent)
+    {
+        $disableConsistencyMofPath = Join-Path -Path $env:temp -ChildPath 'DisableConsistency'
+        if ( -not (Test-Path -Path $disableConsistencyMofPath))
+        {
+            $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force 
+        }
+
+        # have LCM Apply only once.
+        Configuration Meta
+        {
+            LocalConfigurationManager 
+            {
+                ConfigurationMode = 'ApplyOnly'
+            }
+        }
+        meta -outputPath $disableConsistencyMofPath
+
+        Set-DscLocalConfigurationManager -Path $disableConsistencyMofPath -Force -Verbose
+        $null = Remove-Item -LiteralPath $disableConsistencyMofPath -Recurse -Force -Confirm:$false 
     }
 
     switch ($Type)
