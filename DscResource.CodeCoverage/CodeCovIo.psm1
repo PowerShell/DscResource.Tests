@@ -38,30 +38,60 @@ function Add-UniqueFileLineToTable
         $TableName
     )
 
-    # Populate the sub-table
-    foreach ($command in $Command)
+    # file paths need to be relative to repo root when querying GIT
+    Push-Location -LiteralPath $RepoRoot
+    try {
+        Write-Verbose -Message "running git ls-files" -Verbose
+
+        # Get the list of files as Git sees them
+        $fileKeys = & git.exe ls-files
+
+        # Populate the sub-table
+        foreach ($command in $Command)
+        {
+            #Find the file as Git sees it
+            $file = $command.File
+            $fileKey = $file.replace($RepoRoot,'').TrimStart('\').replace('\','/')
+            $fileKey = $fileKeys.where{$_ -like $fileKey}
+            
+            if ($null -eq $fileKey)
+            {
+                Write-Warning -Message "Unexpected error filekey was null"
+                continue
+            }
+            elseif ($fileKey.Count -ne 1) 
+            {
+                Write-Warning -Message "Unexpected error, more than one git file matched file ($file): $($fileKey -join ', ')"
+                continue                
+            }
+
+            $fileKey = $fileKey | Select-Object -First 1
+
+            if (!$FileLine.ContainsKey($fileKey))
+            {
+                $FileLine.add($fileKey, @{ $TableName = @{}})
+            }
+
+            if (!$FileLine.$fileKey.ContainsKey($TableName))
+            {
+                $FileLine.$fileKey.Add($TableName,@{})
+            }
+
+            $lines = $FileLine.($fileKey).$TableName
+            $lineKey = $($command.line)
+            if (!$lines.ContainsKey($lineKey))
+            {
+                $lines.Add($lineKey,1)
+            }
+            else
+            {
+                $lines.$lineKey ++
+            }
+        }
+    }
+    finally
     {
-        $fileKey = $command.File.replace($RepoRoot,'').replace('\','/')
-        if (!$FileLine.ContainsKey($fileKey))
-        {
-            $FileLine.add($fileKey, @{ $TableName = @{}})
-        }
-
-        if (!$FileLine.$fileKey.ContainsKey($TableName))
-        {
-            $FileLine.$fileKey.Add($TableName,@{})
-        }
-
-        $lines = $FileLine.($fileKey).$TableName
-        $lineKey = $($command.line)
-        if (!$lines.ContainsKey($lineKey))
-        {
-            $lines.Add($lineKey,1)
-        }
-        else
-        {
-            $lines.$lineKey ++
-        }
+        Pop-Location
     }
 }
 
@@ -303,5 +333,13 @@ function Invoke-UploadCoveCoveIoReport
     $ENV:PATH = 'C:\\Python34;C:\\Python34\\Scripts;' + $ENV:PATH
     $null = python -m pip install --upgrade pip
     $null = pip install git+git://github.com/codecov/codecov-python.git
-    $null = codecov -f $resolvedResultFile -X gcov
+    $uploadResults = codecov -f $resolvedResultFile -X gcov
+    
+    if ($env:APPVEYOR_REPO_BRANCH)
+    {
+        $logPath = (Join-Path -Path $env:TEMP -ChildPath 'codeCovUpload.log')
+        $uploadResults | Out-File -Encoding ascii -LiteralPath $logPath -Force
+        $resolvedLogPath = (Resolve-Path -Path $logPath).ProviderPath
+        Push-AppVeyorArtifact $resolvedLogPath
+    }
 }
