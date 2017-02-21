@@ -338,6 +338,7 @@ Invoke-AppveyorAfterTestTask `
 * Added phased Meta Test roll-out
 * Added code coverage report with [codecov.io](http://codecove.io)
 * Added default parameter values for HarnessFunctionName and HarnessModulePath in AppVeyor\Invoke-AppveyorTestScriptTask cmdlet
+* Fixed bug in DscResource.DocumentationHelper\MofHelper.psm1 when 'class' mentioned in MOF file outside of header
 
 ### 0.2.0.0
 
