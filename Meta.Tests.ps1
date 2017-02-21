@@ -2,6 +2,9 @@
     .SYNOPSIS
         Common tests for all resource modules in the DSC Resource Kit.
 #>
+# Suppressing this because we need to generate a mocked credentials that will be passed along to the examples that are needed in the tests.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
+param()
 
 Set-StrictMode -Version 'Latest'
 $errorActionPreference = 'Stop'
@@ -432,54 +435,93 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
     $examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
     if (Test-Path -Path $examplesPath)
     {
-
-        ## For Appveyor builds copy the module to the system modules directory so it falls
-        ## in to a PSModulePath folder and is picked up correctly.
+        <#
+            For Appveyor builds copy the module to the system modules directory so it falls in to a PSModulePath folder and is
+            picked up correctly.
+            For a user to run the test, they need to make sure that the module exist in one of the paths in env:PSModulePath, i.e.
+            '%USERPROFILE%\Documents\WindowsPowerShell\Modules'.
+            No copying is done when a user runs the test, becuase that could potentially be destructive.
+        #>
         if ($env:APPVEYOR -eq $true)
         {
-            Copy-item -Path $moduleRootFilePath `
-                      -Destination 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
-                      -Recurse
+            $powershellModulePath = Join-Path -Path (Join-Path -Path $env:SystemRoot -ChildPath 'System32\WindowsPowerShell\v1.0\Modules') -ChildPath $repoName
+
+            Copy-item -Path $env:APPVEYOR_BUILD_FOLDER -Destination $powershellModulePath -Recurse -Force
         }
 
-        $exampleFiles = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter "*.ps1" -Recurse
-        foreach ($exampleFile in $exampleFiles)
+        $exampleFile = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter '*.ps1' -Recurse
+        foreach ($exampleToValidate in $exampleFile)
         {
-            Context -Name $exampleFile.Name {
+            $exampleDescriptiveName = Join-Path -Path (Split-Path $exampleToValidate.Directory -Leaf) -ChildPath (Split-Path $exampleToValidate -Leaf)
 
-                try
-                {
-                    $exampleError = $false
-                    $path = $exampleFile.FullName
-                    . $path
+            Context -Name $exampleDescriptiveName {
+                It "Should compile MOFs for example correctly" -Skip:(!$optin) {
+                    {
+                        $mockPassword = ConvertTo-SecureString '&iPm%M5q3K$Hhq=wcEK' -AsPlainText -Force
+                        $mockCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList @('username', $mockPassword)
+                        $mockConfigurationData = @{
+                            AllNodes = @(
+                                @{
+                                    NodeName = 'localhost'
+                                    PSDscAllowPlainTextPassword = $true
+                                }
+                            )
+                        }
 
-                    $command = Get-Command Example
-                    $params = @{}
-                    $command.Parameters.Keys | Where-Object { $_ -like "*Account" -or $_ -eq "Passphrase" } | ForEach-Object -Process {
-                        $params.Add($exampleFile, $mockCredential)
-                    }
-                    $null = Example @params -OutputPath "TestDrive:\" -ErrorAction Continue -WarningAction SilentlyContinue
-                }
-                catch
-                {
-                    Write-Warning -Message "Unable to compile MOF for example '$path'"
-                    Write-Warning $_.Exception.Message
-                    $exampleError = $true
-                }
+                        try
+                        {
+                            . $exampleToValidate.FullName
 
-                It "Should compile MOFs for example correctly" -Skip:(!$optin)  {
-                    $exampleError | Should Be $false
+                            $exampleCommand = Get-Command -Name Example -ErrorAction SilentlyContinue
+                            if ($exampleCommand)
+                            {
+                                    $params = @{}
+
+                                    # Each credential parameter in the Example function is assigned the mocked credential. 'PsDscRunAsCredential' is not assigned because that broke the example.
+                                    $credentialParameterToMockCredentialFor = $exampleCommand.Parameters.Keys | Where-Object {
+                                        $_ -like '*Account' `
+                                        -or ($_ -like '*Credential' -and $_ -ne 'PsDscRunAsCredential') `
+                                        -or $_ -like '*Passphrase'
+                                    }
+
+                                    foreach ($currentParameter in $credentialParameterToMockCredentialFor)
+                                    {
+                                        $params.Add($currentParameter, $mockCredential)
+                                    }
+
+                                    <#
+                                        If there is a $ConfigurationData variable that was dot-sources.
+                                        Then use that as the configuration data instead of the mocked confgiuration data.
+                                    #>
+                                    if (Get-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue)
+                                    {
+                                        $mockConfigurationData = $ConfigurationData
+                                    }
+
+                                    Example @params -ConfigurationData $mockConfigurationData -OutputPath 'TestDrive:\' -ErrorAction Continue -WarningAction SilentlyContinue | Out-Null
+                            }
+                            else
+                            {
+                                throw "The example '$exampleDescriptiveName' does not contain a function 'Example'."
+                            }
+                        }
+                        finally
+                        {
+                            # Remove the function we dot-sourced so next example file doesn't use the previous Example-function.
+                            Remove-Item -Path function:Example -ErrorAction SilentlyContinue
+
+                            # Remove the variable $ConfigurationData if it existed in the file we dot-sourced so next example file doesn't use the previous examples configuration.
+                            Remove-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue
+                        }
+                    } | Should Not Throw
                 }
             }
         }
 
         if ($env:APPVEYOR -eq $true)
         {
-            Remove-item -Path (Join-Path -Path 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules\' `
-                                         -ChildPath $repoName) `
-                        -Recurse `
-                        -Force `
-                        -Confirm:$false
+            Remove-item -Path $powershellModulePath -Recurse -Force -Confirm:$false
+
             # Restore the load of the module to ensure future tests have access to it
             Import-Module -Name (Join-Path -Path $moduleRootFilePath `
                                            -ChildPath "$repoName.psd1") `

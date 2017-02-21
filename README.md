@@ -96,6 +96,14 @@ The 'example' tests can be excluded when running pester by using:
 Invoke-Pester -ExcludeTag 'Example'
 ```
 
+When a repository is opted-in to example testing, each example file in the 'Examples'
+folder must have a function named Example which should contain the configuration
+which will be tested.
+
+An optional configuration data hash table can be added for any specific data that
+needs to be provided to the example configuration. The configuration data hash table
+variable name must be `$ConfigurationData` for the test to pick it up. If no
+configuration block is provided a default configuration block is used.
 
 ## MetaFixers Module
 
