@@ -87,7 +87,7 @@ function New-DscResourceWikiSite
 
             if ($null -ne $exampleFiles)
             {
-                $null = $output.AppendLine('# Examples')
+                $null = $output.AppendLine('## Examples')
                 $exampleCount = 1
                 foreach ($exampleFile in $exampleFiles)
                 {
@@ -102,7 +102,7 @@ function New-DscResourceWikiSite
                     $exampleContent = $exampleContent -replace "<#"
                     $exampleContent = $exampleContent -replace "#>"
                     $exampleContent = $exampleContent.Replace(".EXAMPLE", `
-                                                            "## Example $exampleCount`n")
+                                                            "### Example $exampleCount`n")
                     $exampleContent += '````'
 
                     $null = $output.AppendLine($exampleContent)
