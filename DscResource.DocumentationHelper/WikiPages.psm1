@@ -59,6 +59,7 @@ function New-DscResourceWikiSite
 
             $output = New-Object System.Text.StringBuilder
             $null = $output.AppendLine("# $($result.FriendlyName)")
+            $null = $output.AppendLine('')
             $null = $output.AppendLine('## Parameters')
             $null = $output.AppendLine('')
             $null = $output.AppendLine('| Parameter | Attribute | DataType | Description | Allowed Values |')
@@ -87,7 +88,6 @@ function New-DscResourceWikiSite
             if ($null -ne $exampleFiles)
             {
                 $null = $output.AppendLine('# Examples')
-                $null = $output.AppendLine('')
                 $exampleCount = 1
                 foreach ($exampleFile in $exampleFiles)
                 {
