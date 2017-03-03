@@ -446,15 +446,11 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         {
             $powershellModulePath = Join-Path -Path (Join-Path -Path $env:SystemRoot -ChildPath 'System32\WindowsPowerShell\v1.0\Modules') -ChildPath $repoName
 
-            Write-Verbose -Message "Copying from: $env:APPVEYOR_BUILD_FOLDER"
-            Write-Verbose -Message "Copying to: $powershellModulePath"
-
-            Get-ChildItem $env:APPVEYOR_BUILD_FOLDER -Recurse | ForEach-Object {
-                if ($_.FullName.Length -gt 240) {
-                    Write-Warning -Message "Long file: $($_.FullName)" 
-                }
+            Get-ChildItem $env:APPVEYOR_BUILD_FOLDER -Recurse | Where-Object -FilterScript {
+                $_.FullName -notmatch "node_modules"
+            } | Copy-Item -Destination {
+                Join-Path -Path $powershellModulePath -ChildPath $_.FullName.Substring($env:APPVEYOR_BUILD_FOLDER.length)
             }
-            Copy-item -Path $env:APPVEYOR_BUILD_FOLDER -Destination $powershellModulePath -Recurse -Force
         }
 
         $exampleFile = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter '*.ps1' -Recurse
