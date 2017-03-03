@@ -446,6 +446,14 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         {
             $powershellModulePath = Join-Path -Path (Join-Path -Path $env:SystemRoot -ChildPath 'System32\WindowsPowerShell\v1.0\Modules') -ChildPath $repoName
 
+            Write-Verbose -Message "Copying from: $env:APPVEYOR_BUILD_FOLDER"
+            Write-Verbose -Message "Copying to: $powershellModulePath"
+
+            Get-ChildItem C:\repos\OfficeOnlineServerDsc\ -Recurse | ForEach-Object {
+                if ($_.FullName.Length -gt 240) {
+                    Write-Warning -Message "Long file: $($_.FullName)" 
+                }
+            }
             Copy-item -Path $env:APPVEYOR_BUILD_FOLDER -Destination $powershellModulePath -Recurse -Force
         }
 
