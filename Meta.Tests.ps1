@@ -449,7 +449,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
             Write-Verbose -Message "Copying from: $env:APPVEYOR_BUILD_FOLDER"
             Write-Verbose -Message "Copying to: $powershellModulePath"
 
-            Get-ChildItem C:\repos\OfficeOnlineServerDsc\ -Recurse | ForEach-Object {
+            Get-ChildItem $env:APPVEYOR_BUILD_FOLDER -Recurse | ForEach-Object {
                 if ($_.FullName.Length -gt 240) {
                     Write-Warning -Message "Long file: $($_.FullName)" 
                 }
