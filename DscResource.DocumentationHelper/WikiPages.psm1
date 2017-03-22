@@ -98,7 +98,7 @@ function New-DscResourceWikiSite
                     $helpOriginal = $help
                     $help += [Environment]::NewLine + '````powershell'
                     $help = $help.Replace("    ", "")
-                    $exampleContent = $exampleContent -replace $helpOriginal, $help
+                    $exampleContent = $exampleContent.Replace($helpOriginal, $help)
                     $exampleContent = $exampleContent -replace "<#"
                     $exampleContent = $exampleContent -replace "#>"
                     $exampleContent = $exampleContent.Replace(".EXAMPLE", `

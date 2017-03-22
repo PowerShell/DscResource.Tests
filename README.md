@@ -339,6 +339,7 @@ Invoke-AppveyorAfterTestTask `
 * Fixed bug in DscResource.DocumentationHelper\MofHelper.psm1 when 'class' mentioned in MOF file outside of header
 * Fixed Wiki Generation to create Markdown that does not violate markdown rules
 * Removed violation of markdown rules from Readme.md
+* Fixed Wiki Generation when Example header contains parentheses.
 
 ### 0.2.0.0
 
