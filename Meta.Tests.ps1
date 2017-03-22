@@ -446,7 +446,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         {
             $powershellModulePath = Join-Path -Path (Join-Path -Path $env:SystemRoot -ChildPath 'System32\WindowsPowerShell\v1.0\Modules') -ChildPath $repoName
 
-            Get-ChildItem $env:APPVEYOR_BUILD_FOLDER -Recurse | Where-Object -FilterScript {
+            Get-ChildItem -Path $env:APPVEYOR_BUILD_FOLDER -Recurse | Where-Object -FilterScript {
                 $_.FullName -notmatch "node_modules"
             } | Copy-Item -Destination {
                 Join-Path -Path $powershellModulePath -ChildPath $_.FullName.Substring($env:APPVEYOR_BUILD_FOLDER.length)
