@@ -214,6 +214,7 @@ function Invoke-AppveyorTestScriptTask
                 $pesterParameters += @{
                     CodeCoverage = @(
                         "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
+                        "$env:APPVEYOR_BUILD_FOLDER\DSCResources\*.psm1"
                         "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
                     )
                 }
