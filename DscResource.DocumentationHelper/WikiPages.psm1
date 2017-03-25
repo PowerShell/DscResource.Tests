@@ -71,9 +71,9 @@ function New-DscResourceWikiSite
                     $dataType += '[]'
                 }
                 $null = $output.Append("| **$($property.Name)** " + `
-                    " | $($property.State) " + `
-                    " | $dataType " + `
-                    " | $($property.Description) | ")
+                    "| $($property.State) " + `
+                    "| $dataType " + `
+                    "| $($property.Description) |")
                 if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
                     $null = $output.Append(($property.ValueMap -Join ", "))
