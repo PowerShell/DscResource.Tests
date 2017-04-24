@@ -58,7 +58,9 @@ function New-DscResourceWikiSite
             Write-Verbose -Message "Generating wiki page for $($result.FriendlyName)"
 
             $output = New-Object System.Text.StringBuilder
-            $null = $output.AppendLine('**Parameters**')
+            $null = $output.AppendLine("# $($result.FriendlyName)")
+            $null = $output.AppendLine('')
+            $null = $output.AppendLine('## Parameters')
             $null = $output.AppendLine('')
             $null = $output.AppendLine('| Parameter | Attribute | DataType | Description | Allowed Values |')
             $null = $output.AppendLine('| --- | --- | --- | --- | --- |')
@@ -74,6 +76,8 @@ function New-DscResourceWikiSite
             }
 
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
+            # Change the description H1 header to an H2
+            $descriptionContent = $descriptionContent -replace '# Description','## Description'
             $null = $output.AppendLine()
             $null = $output.AppendLine($descriptionContent)
 
@@ -83,8 +87,7 @@ function New-DscResourceWikiSite
 
             if ($null -ne $exampleFiles)
             {
-                $null = $output.AppendLine('**Examples**')
-                $null = $output.AppendLine('')
+                $null = $output.AppendLine('## Examples')
                 $exampleCount = 1
                 foreach ($exampleFile in $exampleFiles)
                 {
@@ -95,11 +98,11 @@ function New-DscResourceWikiSite
                     $helpOriginal = $help
                     $help += [Environment]::NewLine + '````powershell'
                     $help = $help.Replace("    ", "")
-                    $exampleContent = $exampleContent -replace $helpOriginal, $help
+                    $exampleContent = $exampleContent.Replace($helpOriginal, $help)
                     $exampleContent = $exampleContent -replace "<#"
                     $exampleContent = $exampleContent -replace "#>"
                     $exampleContent = $exampleContent.Replace(".EXAMPLE", `
-                                                            "***Example $exampleCount***`n")
+                                                            "### Example $exampleCount`n")
                     $exampleContent += '````'
 
                     $null = $output.AppendLine($exampleContent)
