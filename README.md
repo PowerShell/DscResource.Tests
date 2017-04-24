@@ -7,7 +7,6 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any
 additional questions or comments.
 
-
 ## DSC Resource Common Meta Tests
 
 > Meta.Tests.ps1
@@ -23,7 +22,6 @@ additional questions or comments.
   please make it a **separate commit**.
   This will give reviewers an option to review meaningful changes separately
   from formatting changes.
-
 
 ### Git and Unicode
 
@@ -62,7 +60,6 @@ With forced `--text` option it would look like this:
 
 Command line `git` version is a core component and should be used as a common denominator.
 
-
 ### Markdown Testing
 
 > .markdownlint.json
@@ -80,7 +77,6 @@ The 'markdown' tests can be excluded when running pester by using:
 ```PowerShell
 Invoke-Pester -ExcludeTag 'Markdown'
 ```
-
 
 ### Example Testing
 
@@ -115,7 +111,6 @@ corresponds to a particular test.
 For example, if `Files encoding` test from [Meta.Tests.ps1](Meta.Tests.ps1) test
 fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](MetaFixers.psm1).
 
-
 ## TestHelper Module
 
 > TestHelper.psm1
@@ -129,7 +124,6 @@ The test helper module (TestHelper.psm1) contains the following functions:
   integration tests on a DSC resource.
 * **Restore-TestEnvironment**: Restores the environment after running unit or
   integration tests on a DSC resource.
-
 
 ## Templates for Creating Tests
 
@@ -150,7 +144,6 @@ The resource files are:
   Use to create a DSC Configuration file for a single DSC Resource. Used in
   conjunction with Integration_Template.ps1.
 
-
 ## Example Test Usage
 
 To see examples of the Unit/Integration tests in practice, see the xNetworking
@@ -159,13 +152,11 @@ MSFT_xFirewall resource:
 [Integration Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.Integration.Tests.ps1)
 [Resource DSC Configuration](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.config.ps1)
 
-
 ## Example Usage of DSCResource.Tests in AppVeyor.yml
 
 To automatically download and install the DscResource.Tests in an AppVeyor.yml
 file, please see the following sample AppVeyor.yml.
 [https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml)
-
 
 ## AppVeyor Module
 
@@ -281,7 +272,7 @@ Pester code coverage, which the first two sections cover.
 ### Configure CodeCov.io
 
 1. Copy `.codecov.io` from the root of this repo to the root of your repo.
-1. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
+2. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
 
 ### Add the badge to the Readme
 
@@ -312,7 +303,6 @@ Invoke-AppveyorAfterTestTask `
     -MainModulePath '.\Modules\SharePointDsc\' `
     -ResourceModuleName 'SharePointDsc'
 ```
-
 
 ## Versions
 
@@ -348,6 +338,9 @@ Invoke-AppveyorAfterTestTask `
 * Added default parameter values for HarnessFunctionName and HarnessModulePath in AppVeyor\Invoke-AppveyorTestScriptTask cmdlet
 * Fixed bug in DscResource.DocumentationHelper\MofHelper.psm1 when 'class' mentioned in MOF file outside of header
 * Added ability for DscResource.DocumentationHelper\WikiPages.psm1 to display Array type parameters correctly
+* Fixed Wiki Generation to create Markdown that does not violate markdown rules
+* Removed violation of markdown rules from Readme.md
+* Fixed Wiki Generation when Example header contains parentheses.
 
 ### 0.2.0.0
 
@@ -356,4 +349,3 @@ Invoke-AppveyorAfterTestTask `
 ### 0.1.0.0
 
 * Initial release
-
