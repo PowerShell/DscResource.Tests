@@ -341,6 +341,7 @@ Invoke-AppveyorAfterTestTask `
 * Fixed Wiki Generation to create Markdown that does not violate markdown rules
 * Removed violation of markdown rules from Readme.md
 * Fixed Wiki Generation when Example header contains parentheses.
+* Added so that any error message for each test are also published to the AppVeyor "Tests-view".
 
 ### 0.2.0.0
 
