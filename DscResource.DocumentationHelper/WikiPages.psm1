@@ -66,8 +66,16 @@ function New-DscResourceWikiSite
             $null = $output.AppendLine('| --- | --- | --- | --- | --- |')
             foreach ($property in $result.Attributes)
             {
-                $null = $output.Append("| **$($property.Name)** | $($property.State) | " + `
-                            "$($property.DataType) | $($property.Description) | ")
+                # If the attribute is an array, add [] to the DataType string
+                $dataType = $property.DataType
+                if ($property.IsArray)
+                {
+                    $dataType += '[]'
+                }
+                $null = $output.Append("| **$($property.Name)** " + `
+                    "| $($property.State) " + `
+                    "| $dataType " + `
+                    "| $($property.Description) |")
                 if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
                     $null = $output.Append(($property.ValueMap -Join ", "))
