@@ -342,6 +342,7 @@ Invoke-AppveyorAfterTestTask `
 * Removed violation of markdown rules from Readme.md
 * Fixed Wiki Generation when Example header contains parentheses.
 * Added so that any error message for each test are also published to the AppVeyor "Tests-view".
+* Added common test to test if markdown files contains Byte Order Mark (BOM) (issue #108).
 
 ### 0.2.0.0
 
