@@ -157,6 +157,10 @@ Describe 'Common Tests - File Formatting' {
                     -and $firstThreeBytes[1] -eq 187 `
                     -and $firstThreeBytes[2] -eq 191)
 
+                if ($markdownFileHasBom) {
+                    Write-Warning -Message "$($markdownFile.FullName) contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
+                }
+
                 $markdownFileHasBom | Should Be $false
             }
         }
