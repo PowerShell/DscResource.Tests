@@ -139,6 +139,32 @@ Describe 'Common Tests - File Formatting' {
 
         $containsFileWithoutNewLine | Should Be $false
     }
+
+    Context 'When repository contains markdown files' {
+        $markdownFileExtensions = @('.md')
+
+        $markdownFiles = $textFiles |
+                            Where-Object { $markdownFileExtensions -contains $_.Extension }
+
+        foreach ($markdownFile in $markdownFiles)
+        {
+            It ('Markdown file ''{0}'' should not have Byte Order Mark (BOM)' -f $markdownFile.Name) {
+                # This reads the first three bytes of the first row.
+                $firstThreeBytes = Get-Content -Path $markdownFile.FullName -Encoding Byte -ReadCount 3 -TotalCount 3
+
+                # Check for the correct byte order (239,187,191) which equal the Byte Order Mark (BOM).
+                $markdownFileHasBom = ($firstThreeBytes[0] -eq 239 `
+                    -and $firstThreeBytes[1] -eq 187 `
+                    -and $firstThreeBytes[2] -eq 191)
+
+                if ($markdownFileHasBom) {
+                    Write-Warning -Message "$($markdownFile.FullName) contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
+                }
+
+                $markdownFileHasBom | Should Be $false
+            }
+        }
+    }
 }
 
 Describe 'Common Tests - .psm1 File Parsing' {
