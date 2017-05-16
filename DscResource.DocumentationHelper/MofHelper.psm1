@@ -72,7 +72,7 @@ function Get-MofSchemaObject
                 $currentResult.FriendlyName = $textLine.Substring($start, $end - $start)
             }
         }
-        elseif ($textLine -match "class ")
+        elseif ($textLine -match "^\s*class ")
         {
             $start = $textLine.ToLower().IndexOf("class ") + 6
             $end = $textLine.IndexOf(" ", $start)
@@ -108,9 +108,9 @@ function Get-MofSchemaObject
                 [string] $currentLine = $partialLine + $textLine
                 $partialLine = $null
             }
-            else 
+            else
             {
-                $currentLine = $textLine                
+                $currentLine = $textLine
             }
 
             $attributeValue = @{

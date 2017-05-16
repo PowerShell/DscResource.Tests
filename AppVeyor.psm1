@@ -148,7 +148,7 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter()]
         [Switch]
-        $DisableConsistency 
+        $DisableConsistency
     )
 
     # Convert the Main Module path into an absolute path if it is relative
@@ -175,13 +175,13 @@ function Invoke-AppveyorTestScriptTask
         $disableConsistencyMofPath = Join-Path -Path $env:temp -ChildPath 'DisableConsistency'
         if ( -not (Test-Path -Path $disableConsistencyMofPath))
         {
-            $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force 
+            $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force
         }
 
         # have LCM Apply only once.
         Configuration Meta
         {
-            LocalConfigurationManager 
+            LocalConfigurationManager
             {
                 ConfigurationMode = 'ApplyOnly'
             }
@@ -189,7 +189,7 @@ function Invoke-AppveyorTestScriptTask
         meta -outputPath $disableConsistencyMofPath
 
         Set-DscLocalConfigurationManager -Path $disableConsistencyMofPath -Force -Verbose
-        $null = Remove-Item -LiteralPath $disableConsistencyMofPath -Recurse -Force -Confirm:$false 
+        $null = Remove-Item -LiteralPath $disableConsistencyMofPath -Recurse -Force -Confirm:$false
     }
 
     switch ($Type)
@@ -261,12 +261,23 @@ function Invoke-AppveyorTestScriptTask
             }
         }
 
-        Add-AppveyorTest `
-            -Name $result.Name `
-            -Framework NUnit `
-            -Filename $componentName `
-            -Outcome $appVeyorResult `
-            -Duration $result.Time.TotalMilliseconds
+        $addAppVeyorTestParameters = @{
+            Name = $result.Name
+            Framework = 'NUnit'
+            Filename = $componentName
+            Outcome = $appVeyorResult
+            Duration = $result.Time.TotalMilliseconds
+        }
+
+        if ($result.FailureMessage)
+        {
+            $addAppVeyorTestParameters += @{
+                ErrorMessage = $result.FailureMessage
+                ErrorStackTrace = $result.StackTrace
+            }
+        }
+
+        Add-AppveyorTest @addAppVeyorTestParameters
     }
 
     Push-TestArtifact -Path $testResultsFile
