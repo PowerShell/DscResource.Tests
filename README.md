@@ -343,6 +343,8 @@ Invoke-AppveyorAfterTestTask `
 * Fixed Wiki Generation when Example header contains parentheses.
 * Added so that any error message for each test are also published to the AppVeyor "Tests-view".
 * Added a common test to verify so that no markdown files contains Byte Order Mark (BOM) (issue #108).
+* Fixed bug where node_modules directory caused errors with long file paths for
+  tests
 
 ### 0.2.0.0
 
