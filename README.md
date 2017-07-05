@@ -345,6 +345,8 @@ Invoke-AppveyorAfterTestTask `
 * Added a common test to verify so that no markdown files contains Byte Order Mark (BOM) (issue #108).
 * Fixed bug where node_modules directory caused errors with long file paths for
   tests
+* Added SkipPublisherCheck to Install-Module calls for installing Pester.
+  This way it does not conflict with signed Pester module included in Windows.
 
 ### 0.2.0.0
 

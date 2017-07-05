@@ -55,11 +55,11 @@ function Invoke-AppveyorInstallTask
 
     if ($PesterMaximumVersion)
     {
-        Install-Module -Name Pester -MaximumVersion $PesterMaximumVersion -Force
+        Install-Module -Name Pester -MaximumVersion $PesterMaximumVersion -Force -SkipPublisherCheck
     }
     else
     {
-        Install-Module -Name Pester -Force
+        Install-Module -Name Pester -Force -SkipPublisherCheck
     }
 
     # Execute the custom install task if defined
