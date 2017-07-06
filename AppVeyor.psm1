@@ -53,14 +53,23 @@ function Invoke-AppveyorInstallTask
                               -ChildPath 'nuget.exe'
     Install-NugetExe -OutFile $nugetExePath
 
+    $installPesterParameters = @{
+        Name = 'Pester'
+        Force = $true
+    }
+
+    $installModuleSupportsSkipPublisherCheck = (Get-Command Install-Module).Parameters['SkipPublisherCheck']
+    if ($installModuleSupportsSkipPublisherCheck)
+    {
+        $installPesterParameters['SkipPublisherCheck'] = $true
+    }
+
     if ($PesterMaximumVersion)
     {
-        Install-Module -Name Pester -MaximumVersion $PesterMaximumVersion -Force -SkipPublisherCheck
+        $installPesterParameters['MaximumVersion'] = $PesterMaximumVersion
     }
-    else
-    {
-        Install-Module -Name Pester -Force -SkipPublisherCheck
-    }
+
+    Install-Module @installPesterParameters
 
     # Execute the custom install task if defined
     if ($customTaskModuleLoaded `

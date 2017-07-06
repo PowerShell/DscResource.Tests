@@ -347,6 +347,8 @@ Invoke-AppveyorAfterTestTask `
   tests
 * Added SkipPublisherCheck to Install-Module calls for installing Pester.
   This way it does not conflict with signed Pester module included in Windows.
+  * Fixed bug when SkipPublisherCheck does not exist in older versions of the
+    Install-Module cmdlet.
 
 ### 0.2.0.0
 
