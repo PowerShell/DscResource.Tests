@@ -466,7 +466,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
             picked up correctly.
             For a user to run the test, they need to make sure that the module exist in one of the paths in env:PSModulePath, i.e.
             '%USERPROFILE%\Documents\WindowsPowerShell\Modules'.
-            No copying is done when a user runs the test, becuase that could potentially be destructive.
+            No copying is done when a user runs the test, because that could potentially be destructive.
         #>
         if ($env:APPVEYOR -eq $true)
         {
@@ -474,8 +474,8 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
             $items =  Get-ChildItem -Path $env:APPVEYOR_BUILD_FOLDER -Recurse | Where-Object -FilterScript {
                 $_.FullName -notmatch "node_modules"
-            } 
-            
+            }
+
             $items | Copy-Item -Destination {
                 Join-Path -Path $powershellModulePath `
                           -ChildPath $_.FullName.Substring($env:APPVEYOR_BUILD_FOLDER.length)
@@ -585,18 +585,41 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             -PassThru `
             -NoNewWindow
 
+        if (Test-Path -Path (Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'))
+        {
+            Write-Verbose -Message ('Using markdownlint settings file from repository folder ''{0}''.' -f $repoRootPath) -Verbose
+            $markdownlintSettingsFilePath = Join-Path -Path $repoRootPath -Childpath '.markdownlint.json'
+        }
+        else
+        {
+            Write-Verbose -Message 'Using markdownlint settings file from DscResource.Test repository.' -Verbose
+            $markdownlintSettingsFilePath = $null
+        }
+
         It "Should not have errors in any markdown files" {
 
             $mdErrors = 0
             try
             {
-                Start-Process -FilePath "gulp" -ArgumentList @(
+
+                $gulpArgumentList = @(
                     'test-mdsyntax',
                     '--silent',
                     '--rootpath',
                     $repoRootPath,
                     '--dscresourcespath',
-                    $dscResourcesFolderFilePath) `
+                    $dscResourcesFolderFilePath
+                )
+
+                if ($markdownlintSettingsFilePath)
+                {
+                    $gulpArgumentList += @(
+                        '--settingspath',
+                        $markdownlintSettingsFilePath
+                    )
+                }
+
+                Start-Process -FilePath "gulp" -ArgumentList $gulpArgumentList `
                     -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
                 Start-Sleep -Seconds 3
                 $mdIssuesPath = Join-Path -Path $PSScriptRoot -ChildPath "markdownissues.txt"

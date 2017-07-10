@@ -78,6 +78,16 @@ The 'markdown' tests can be excluded when running pester by using:
 Invoke-Pester -ExcludeTag 'Markdown'
 ```
 
+It is possible to override the default behavior of the markdown validation test.
+By default the common tests use the settings in the markdownlint settings file
+[.markdownlint.json](/.markdownlint.json). If the file '.markdownlint.json' exists
+in the root path of the module repository, then that file will be used as the settings
+file.
+Please note that there are currently _only two markdown lint rules allowed to be
+overridden_, and that is lint rule MD013 (line length) and MD024 (Multiple headers
+with the same content). These are disabled by default, and can be enabled by
+individual repositories to enforce those linting rules.
+
 ### Example Testing
 
 The DSC Resource Common Meta Tests contains tests for validating that any
@@ -349,6 +359,9 @@ Invoke-AppveyorAfterTestTask `
   This way it does not conflict with signed Pester module included in Windows.
   * Fixed bug when SkipPublisherCheck does not exist in older versions of the
     Install-Module cmdlet.
+* Changed so that markdown lint rules MD013 and MD024 is disabled by default for the markdown common test.
+* Added an option to use a markdown lint settings file in the repository which will
+  override the default markdown lint settings file in DscResource.Tests repository.
 
 ### 0.2.0.0
 
