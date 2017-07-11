@@ -336,7 +336,7 @@ Invoke-AppveyorAfterTestTask `
 * Cleaned MetaFixers and TestRunner
 * Updated common test output format
 * Added ```Install-NugetExe``` to TestHelper.psm1
-* Fixed up Readme.md to remove markdown violaions and resolve duplicate information
+* Fixed up Readme.md to remove markdown violations and resolve duplicate information
 * Added ```AppVeyor.psm1``` module
 * Added ```DscResource.DocumentationHelper``` modules
 * Added new tests for testing Examples and Markdown (using Node/NPM/Gulp)
@@ -362,6 +362,10 @@ Invoke-AppveyorAfterTestTask `
 * Changed so that markdown lint rules MD013 and MD024 is disabled by default for the markdown common test.
 * Added an option to use a markdown lint settings file in the repository which will
   override the default markdown lint settings file in DscResource.Tests repository.
+* Added a new parameter ResourceType to the test helper function Initialize-TestEnvironment
+  to be able to test class-based resources in the folder DscClassResources.
+  The new parameter ResourceType can be set to either 'Mof' or 'Class'.
+  Default value for parameter ResourceType is 'Mof'.
 
 ### 0.2.0.0
 

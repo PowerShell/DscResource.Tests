@@ -187,7 +187,7 @@ function Install-ModuleFromPowerShellGallery
 
 <#
     .SYNOPSIS
-        Initializes an enviroment for running unit or integration tests
+        Initializes an environment for running unit or integration tests
         on a DSC resource.
 
         This includes:
@@ -212,26 +212,45 @@ function Install-ModuleFromPowerShellGallery
         usually the name of the folder containing the actual resource MOF file.
 
     .PARAMETER TestType
-        Specifies the type of tests that are being intialized. It can be:
+        Specifies the type of tests that are being initialized. It can be:
         Unit: Initialize for running Unit tests on a DSC resource. Default.
         Integration: Initialize for running Integration tests on a DSC resource.
 
+    .PARAMETER ResourceType
+        Specifies if the DscResource under test is mof-based or class-based.
+        The default value is 'mof'.
+
+        It can be:
+        Mof: The test initialization assumes a Mof-based DscResource folder structure.
+        Class: The test initialization assumes a Class-based DscResource folder structure.
+
     .EXAMPLE
-        $TestEnvironment = Inialize-TestEnvironment `
+        $TestEnvironment = Initialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
             -DSCResourceName 'MSFT_xFirewall' `
             -TestType Unit
 
-        This command will initialize the test enviroment for Unit testing
-        the MSFT_xFirewall DSC resource in the xNetworking DSC module.
+        This command will initialize the test environment for Unit testing
+        the MSFT_xFirewall mof-based DSC resource in the xNetworking DSC module.
 
     .EXAMPLE
-        $TestEnvironment = Inialize-TestEnvironment `
+        $TestEnvironment = Initialize-TestEnvironment `
+            -DSCModuleName 'xSQLServer' `
+            -DSCResourceName 'xSQLServerAlwaysOnAvailabilityGroupDatabaseMembership' `
+            -TestType Unit
+            -ResourceType Class
+
+        This command will initialize the test environment for Unit testing
+        the xSQLServerAlwaysOnAvailabilityGroupDatabaseMembership class-based DSC
+        resource in the xSQLServer DSC module.
+
+    .EXAMPLE
+        $TestEnvironment = Initialize-TestEnvironment `
             -DSCModuleName 'xNetworking' `
             -DSCResourceName 'MSFT_xFirewall' `
             -TestType Integration
 
-        This command will initialize the test enviroment for Integration testing
+        This command will initialize the test environment for Integration testing
         the MSFT_xFirewall DSC resource in the xNetworking DSC module.
 #>
 function Initialize-TestEnvironment
@@ -253,7 +272,12 @@ function Initialize-TestEnvironment
         [Parameter(Mandatory = $true)]
         [ValidateSet('Unit', 'Integration')]
         [String]
-        $TestType
+        $TestType,
+
+        [Parameter()]
+        [ValidateSet('Mof','Class')]
+        [String]
+        $ResourceType = 'Mof'
     )
 
     Write-Verbose -Message "Initializing test environment for $TestType testing of $DscResourceName in module $DscModuleName"
@@ -273,7 +297,20 @@ function Initialize-TestEnvironment
     # Import the module to test
     if ($TestType -ieq 'Unit')
     {
-        $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DSCResources'
+        switch ($ResourceType)
+        {
+            'Mof'
+            {
+                $resourceTypeFolderName = 'DSCResources'
+            }
+
+            'Class'
+            {
+                $resourceTypeFolderName = 'DSCClassResources'
+            }
+        }
+
+        $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath $resourceTypeFolderName
         $dscResourceToTestFolderFilePath = Join-Path -Path $dscResourcesFolderFilePath -ChildPath $DscResourceName
 
         $moduleToImportFilePath = Join-Path -Path $dscResourceToTestFolderFilePath -ChildPath "$DscResourceName.psm1"
