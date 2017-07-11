@@ -353,8 +353,8 @@ Invoke-AppveyorAfterTestTask `
 * Fixed Wiki Generation when Example header contains parentheses.
 * Added so that any error message for each test are also published to the AppVeyor "Tests-view".
 * Added a common test to verify so that no markdown files contains Byte Order Mark (BOM) (issue #108).
-* Fixed bug where node_modules directory caused errors with long file paths for
-  tests
+* Fixed bug where node_modules or .git directories caused errors with long file
+  paths for tests
 * Added SkipPublisherCheck to Install-Module calls for installing Pester.
   This way it does not conflict with signed Pester module included in Windows.
   * Fixed bug when SkipPublisherCheck does not exist in older versions of the
