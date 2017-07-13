@@ -91,7 +91,7 @@ Describe 'Common Tests - File Formatting' {
 
             if ($null -ne $tabCharacterMatches)
             {
-                Write-Warning -Message "Found tab character(s) in $fileName. Use fixer function 'Get-TextFilesList `$pwd | ConvertTo-SpaceIndentation'."
+                Write-Warning -Message "Found tab character(s) in $fileName."
                 $containsFileWithTab = $true
             }
         }
