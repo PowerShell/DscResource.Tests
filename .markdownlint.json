@@ -1,7 +1,7 @@
 {
     "default": true,
     "MD029": {
-        "style": "ordered"
+        "style": "one"
     },
     "MD013": false,
     "MD024": false,

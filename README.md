@@ -366,6 +366,7 @@ Invoke-AppveyorAfterTestTask `
   to be able to test class-based resources in the folder DscClassResources.
   The new parameter ResourceType can be set to either 'Mof' or 'Class'.
   Default value for parameter ResourceType is 'Mof'.
+* Changed markdown lint rule MD029 to use the 'one' style for ordered lists (issue #115).
 
 ### 0.2.0.0
 
