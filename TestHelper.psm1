@@ -757,7 +757,7 @@ function Import-PSScriptAnalyzer
     {
         Write-Verbose -Message 'Installing PSScriptAnalyzer from the PowerShell Gallery'
         $userProfilePSModulePathItem = Get-UserProfilePSModulePathItem
-        $psScriptAnalyzerModulePath = Join-Path -Path userProfilePSModulePathItem -ChildPath PSScriptAnalyzer
+        $psScriptAnalyzerModulePath = Join-Path -Path $userProfilePSModulePathItem -ChildPath PSScriptAnalyzer
         Install-ModuleFromPowerShellGallery -ModuleName 'PSScriptAnalyzer' -DestinationPath $psScriptAnalyzerModulePath
     }
 
