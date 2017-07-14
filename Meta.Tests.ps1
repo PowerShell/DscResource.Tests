@@ -464,15 +464,14 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         <#
             For Appveyor builds copy the module to the system modules directory so it falls in to a PSModulePath folder and is
             picked up correctly.
-            For a user to run the test, they need to make sure that the module exist in one of the paths in env:PSModulePath, i.e.
+            For a user to run the test, they need to make sure that the module exists in one of the paths in env:PSModulePath, i.e.
             '%USERPROFILE%\Documents\WindowsPowerShell\Modules'.
             No copying is done when a user runs the test, because that could potentially be destructive.
         #>
         if ($env:APPVEYOR -eq $true)
         {
-            $powershellModulePath = Join-Path -Path (Join-Path -Path $env:SystemRoot `
-                                                               -ChildPath 'System32\WindowsPowerShell\v1.0\Modules') `
-                                              -ChildPath $repoName
+            $psHomePSModulePathItem = Get-PSHomePSModulePathItem
+            $powershellModulePath = Join-Path -Path $psHomePSModulePathItem -ChildPath $repoName
 
             Write-Verbose -Message ('Copying module from ''{0}'' to ''{1}''' -f $moduleRootFilePath, $powershellModulePath) -Verbose
 
