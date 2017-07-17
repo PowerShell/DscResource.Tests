@@ -325,6 +325,8 @@ Describe 'Common Tests - Script Resource Schema Validation' {
     problems before we turn on these tests. These 'automatic passes' should be removed
     along with the first test (which is replaced by the following 3) around Jan-Feb
     2017.
+    Issue #161 has been raised to adddress this:
+    https://github.com/PowerShell/DscResource.Tests/issues/161
 #>
 Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 
@@ -387,9 +389,9 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
         foreach ($dscResourcesPsm1File in $dscResourcesPsm1Files)
         {
             $invokeScriptAnalyzerParameters = @{
-                Path = $dscResourcesPsm1File.FullName
-                ErrorAction = 'SilentlyContinue'
-                Recurse = $true
+                Path                = $dscResourcesPsm1File.FullName
+                ErrorAction         = 'SilentlyContinue'
+                Recurse             = $true
             }
 
             Context $dscResourcesPsm1File.Name {
@@ -431,6 +433,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                     <#
                         Automatically passing this test since it may break several resource modules at the moment.
                         Automatic pass to be removed Jan-Feb 2017.
+                        Issue #161 has been raised to adddress this:
+                        https://github.com/PowerShell/DscResource.Tests/issues/161
                     #>
                     $requiredPssaRulesOutput = $null
                     $requiredPssaRulesOutput | Should Be $null
@@ -455,6 +459,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                     <#
                         Automatically passing this test since it may break several resource modules at the moment.
                         Automatic pass to be removed Jan-Feb 2017.
+                        Issue #161 has been raised to adddress this:
+                        https://github.com/PowerShell/DscResource.Tests/issues/161
                     #>
                     $flaggedPssaRulesOutput = $null
                     $flaggedPssaRulesOutput | Should Be $null
@@ -481,6 +487,8 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                     <#
                         Automatically passing this test since it may break several resource modules at the moment.
                         Automatic pass to be removed Jan-Feb 2017.
+                        Issue #161 has been raised to adddress this:
+                        https://github.com/PowerShell/DscResource.Tests/issues/161
                     #>
                     $newErrorPssaRulesOutput = $null
                     $newErrorPssaRulesOutput | Should Be $null
@@ -503,6 +511,35 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                     }
 
                     $requiredRuleIsSuppressed | Should Be $false
+                }
+
+                It 'Should pass all custom DSC Resource Kit PSSA rules' {
+                    $customDscResourceAnalyzerRulesPath = Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.AnalyzerRules'
+                    $customPssaRulesOutput = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters `
+                        -CustomRulePath $customDscResourceAnalyzerRulesPath `
+                        -Severity 'Warning'
+
+                    if ($null -ne $customPssaRulesOutput)
+                    {
+                        Write-Warning -Message 'Custom DSC Resource Kit PSSA rule(s) did not pass.'
+                        Write-Warning -Message 'The following PSScriptAnalyzer errors need to be fixed:'
+
+                        foreach ($customPssaRuleOutput in $customPssaRulesOutput)
+                        {
+                            Write-Warning -Message "$($customPssaRuleOutput.ScriptName) (Line $($customPssaRuleOutput.Line)): $($customPssaRuleOutput.Message)"
+                        }
+
+                        Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
+                    }
+
+                    <#
+                        Automatically passing this test since it may break several resource modules at the moment.
+                        Automatic pass to be removed Jan-Feb 2017.
+                        Issue #161 has been raised to adddress this:
+                        https://github.com/PowerShell/DscResource.Tests/issues/161
+                    #>
+                    $customPssaRulesOutput = $null
+                    $customPssaRulesOutput | Should Be $null
                 }
             }
         }

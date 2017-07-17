@@ -387,6 +387,9 @@ Invoke-AppveyorAfterTestTask `
 * Added new common test so that script files (.ps1) are checked for Byte Order
   Mark (BOM) ([issue #160](https://github.com/PowerShell/DscResource.Tests/issues/160)).
   This test is opt-in using .MetaTestOptIn.json.
+* Added minimum viable product for applying custom PSSA rules to check adherence to
+  DSC Resource Kit style guidelines ([issue #86](https://github.com/PowerShell/DscResource.Tests/issues/86)).
+  The current rules checks the [Parameter()] attribute format is correct in all parameter blocks.
 
 ### 0.2.0.0
 
