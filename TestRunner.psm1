@@ -1,4 +1,4 @@
-﻿<#
+<#
     .SYNOPSIS
         Runs all tests (including common tests) on all DSC resources in the given folder.
 
@@ -17,7 +17,7 @@ function Start-DscResourceTests
         [String]
         $ResourcesPath
     )
-    
+
     $testsPath = $pwd
     Push-Location -Path $ResourcesPath
 
@@ -26,10 +26,10 @@ function Start-DscResourceTests
         $destinationPath = Join-Path -Path $ResourcesPath -ChildPath $moduleName
 
         Write-Verbose -Message "Copying common tests from $testsPath to $destinationPath"
-        Copy-Item -Path $testsPath -Destination $destinationPath -Recurse -Force 
+        Copy-Item -Path $testsPath -Destination $destinationPath -Recurse -Force
 
         Push-Location -Path $moduleName
-        
+
         Write-Verbose "Running tests for $moduleName"
         Invoke-Pester
 

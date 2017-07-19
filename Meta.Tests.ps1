@@ -42,6 +42,7 @@ $repoName = Split-Path -Path $repoRootPath -Leaf
 $testOptInFilePath = Join-Path -Path $repoRootPath -ChildPath '.MetaTestOptIn.json'
 # .MetaTestOptIn.json should be in the following format
 # [
+#     "Common Tests - Validate Module Files",
 #     "Common Tests - Validate Markdown Files",
 #     "Common Tests - Validate Example Files"
 # ]
@@ -148,17 +149,15 @@ Describe 'Common Tests - File Formatting' {
 
         foreach ($markdownFile in $markdownFiles)
         {
-            It ('Markdown file ''{0}'' should not have Byte Order Mark (BOM)' -f $markdownFile.Name) {
-                # This reads the first three bytes of the first row.
-                $firstThreeBytes = Get-Content -Path $markdownFile.FullName -Encoding Byte -ReadCount 3 -TotalCount 3
+            $filePathOutputName = Get-RelativePathFromModuleRoot `
+                                    -FilePath $markdownFile.FullName `
+                                    -ModuleRootFilePath $moduleRootFilePath
 
-                # Check for the correct byte order (239,187,191) which equal the Byte Order Mark (BOM).
-                $markdownFileHasBom = ($firstThreeBytes[0] -eq 239 `
-                    -and $firstThreeBytes[1] -eq 187 `
-                    -and $firstThreeBytes[2] -eq 191)
+            It ('Markdown file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) {
+                $markdownFileHasBom = Test-FileHasByteOrderMark -FilePath $markdownFile.FullName
 
                 if ($markdownFileHasBom) {
-                    Write-Warning -Message "$($markdownFile.FullName) contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
+                    Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
                 $markdownFileHasBom | Should Be $false
@@ -172,8 +171,12 @@ Describe 'Common Tests - .psm1 File Parsing' {
 
     foreach ($psm1File in $psm1Files)
     {
-        Context $psm1File.Name {
-            It 'Should not contain parse errors' {
+        $filePathOutputName = Get-RelativePathFromModuleRoot `
+                                -FilePath $psm1File.FullName `
+                                -ModuleRootFilePath $moduleRootFilePath
+
+        Context $filePathOutputName {
+            It ('Module file ''{0}'' should not contain parse errors' -f $filePathOutputName) {
                 $containsParseErrors = $false
 
                 $parseErrors = Get-FileParseErrors -FilePath $psm1File.FullName
@@ -187,6 +190,30 @@ Describe 'Common Tests - .psm1 File Parsing' {
                 }
 
                 $containsParseErrors | Should Be $false
+            }
+        }
+    }
+}
+
+Describe 'Common Tests - Validate Module Files' -Tag 'Module' {
+    $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
+
+    $moduleFiles = Get-Psm1FileList -FilePath $moduleRootFilePath
+    foreach ($moduleFile in $moduleFiles)
+    {
+        $filePathOutputName = Get-RelativePathFromModuleRoot `
+                                -FilePath $moduleFile.FullName `
+                                -ModuleRootFilePath $moduleRootFilePath
+
+        Context $filePathOutputName {
+            It ('Module file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) -Skip:(!$optIn) {
+                $moduleFileHasBom = Test-FileHasByteOrderMark -FilePath $moduleFile.FullName
+
+                if ($moduleFileHasBom) {
+                    Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
+                }
+
+                $moduleFileHasBom | Should Be $false
             }
         }
     }
@@ -456,7 +483,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 }
 
 Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
-    $optin = Get-PesterDescribeOptInStatus -OptIns $optIns
+    $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     $examplesPath = Join-Path -Path $moduleRootFilePath -ChildPath 'Examples'
     if (Test-Path -Path $examplesPath)
@@ -492,7 +519,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
             $exampleDescriptiveName = Join-Path -Path (Split-Path $exampleToValidate.Directory -Leaf) -ChildPath (Split-Path $exampleToValidate -Leaf)
 
             Context -Name $exampleDescriptiveName {
-                It "Should compile MOFs for example correctly" -Skip:(!$optin) {
+                It "Should compile MOFs for example correctly" -Skip:(!$optIn) {
                     {
                         $mockPassword = ConvertTo-SecureString '&iPm%M5q3K$Hhq=wcEK' -AsPlainText -Force
                         $mockCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList @('username', $mockPassword)
@@ -568,7 +595,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 }
 
 Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
-    $optin = Get-PesterDescribeOptInStatus -OptIns $optIns
+    $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     if (Get-Command -Name 'npm' -ErrorAction SilentlyContinue)
     {
@@ -647,7 +674,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                                         "run 'npm install -g gulp' in order to have this " + `
                                         "text execute.")
             }
-            if($optin)
+            if($optIn)
             {
                 $mdErrors | Should Be 0
             }

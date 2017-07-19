@@ -370,6 +370,14 @@ Invoke-AppveyorAfterTestTask `
 * Removed the reference to the function ConvertTo-SpaceIndentation from the warning
   message in the test that checks for tabs in module files. The function
   ConvertTo-SpaceIndentation does not exist anymore ([issue #4](https://github.com/PowerShell/DscResource.Tests/issues/4)).
+* Removed Byte Order Mark (BOM) from the module file TestRunner.psm1.
+* Updated so that checking for Byte Order Mark (BOM) in markdown file lists the
+  full path so it easier to distinguish when filenames are equal in different
+  locations.
+* Updated so that module files (.psm1) are checked for Byte Order Mark (BOM)
+  (issue #143).
+* Updated It-blocks for File Parsing tests so that they are more descriptive for
+  the AppVeyor "Tests-view".
 
 ### 0.2.0.0
 

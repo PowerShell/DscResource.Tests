@@ -934,14 +934,14 @@ function Get-CommandNameParameterValue
     .PARAMETER Prefix
         Path prefix to look for.
     .NOTES
-        If there are multiple matching items, the function returns the first item that occurs in the module path; this matches the lookup 
+        If there are multiple matching items, the function returns the first item that occurs in the module path; this matches the lookup
         behavior of PowerSHell, which looks at the items in the module path in order of occurrence.
     .EXAMPLE
         If $env:PSModulePath is
             C:\Program Files\WindowsPowerShell\Modules;C:\Users\foo\Documents\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
-        then 
+        then
             Get-PSModulePathItem C:\Users
-        will return 
+        will return
             C:\Users\foo\Documents\WindowsPowerShell\Modules
 #>
 function Get-PSModulePathItem {
@@ -950,7 +950,7 @@ function Get-PSModulePathItem {
         [string] $Prefix
     )
 
-    $item = $env:PSModulePath.Split(';') | 
+    $item = $env:PSModulePath.Split(';') |
         Where-Object -FilterScript { $_ -like "$Prefix*" } |
         Select-Object -First 1
 
@@ -968,9 +968,9 @@ function Get-PSModulePathItem {
     .EXAMPLE
         If $env:PSModulePath is
             C:\Program Files\WindowsPowerShell\Modules;C:\Users\foo\Documents\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
-        and the current user is 'foo', then 
-            Get-UserProfilePSModulePathItem 
-        will return 
+        and the current user is 'foo', then
+            Get-UserProfilePSModulePathItem
+        will return
             C:\Users\foo\Documents\WindowsPowerShell\Modules
 #>
 function Get-UserProfilePSModulePathItem {
@@ -986,15 +986,70 @@ function Get-UserProfilePSModulePathItem {
     .EXAMPLE
         If $env:PSModulePath is
             C:\Program Files\WindowsPowerShell\Modules;C:\Users\foo\Documents\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
-        then 
-            Get-PSHomePSModulePathItem 
-        will return 
+        then
+            Get-PSHomePSModulePathItem
+        will return
             C:\Windows\system32\WindowsPowerShell\v1.0\Modules
 #>
 function Get-PSHomePSModulePathItem {
     param()
 
     return Get-PSModulePathItem -Prefix $global:PSHOME
+}
+
+<#
+    .SYNOPSIS
+        Tests if a file contains Byte Order Mark (BOM).
+
+    .PARAMETER FilePath
+        The file path to evaluate.
+#>
+function Test-FileHasByteOrderMark
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $FilePath
+    )
+
+    # This reads the first three bytes of the first row.
+    $firstThreeBytes = Get-Content -Path $FilePath -Encoding Byte -ReadCount 3 -TotalCount 3
+
+    # Check for the correct byte order (239,187,191) which equal the Byte Order Mark (BOM).
+    return ($firstThreeBytes[0] -eq 239 `
+        -and $firstThreeBytes[1] -eq 187 `
+        -and $firstThreeBytes[2] -eq 191)
+}
+
+<#
+    .SYNOPSIS
+        This returns a string containing the relative path from the module root.
+
+    .PARAMETER FilePath
+        The file path to remove the module root path from.
+
+    .PARAMETER ModuleRootFilePath
+        The root path to remove from the file path.
+#>
+function Get-RelativePathFromModuleRoot
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $FilePath,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ModuleRootFilePath
+    )
+
+    <#
+        Removing the module root path from the file path so that the path
+        doesn't get so long in the Pester output.
+    #>
+    return ($FilePath -replace [Regex]::Escape($ModuleRootFilePath),'').Trim('\')
 }
 
 Export-ModuleMember -Function @(
@@ -1017,5 +1072,7 @@ Export-ModuleMember -Function @(
     'Install-NugetExe',
     'Get-PesterDescribeOptInStatus',
     'Get-UserProfilePSModulePathItem',
-    'Get-PSHomePSModulePathItem'
+    'Get-PSHomePSModulePathItem',
+    'Test-FileHasByteOrderMark',
+    'Get-RelativePathFromModuleRoot'
 )
