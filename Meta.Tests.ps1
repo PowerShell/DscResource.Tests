@@ -45,7 +45,8 @@ $testOptInFilePath = Join-Path -Path $repoRootPath -ChildPath '.MetaTestOptIn.js
 # [
 #     "Common Tests - Validate Module Files",
 #     "Common Tests - Validate Markdown Files",
-#     "Common Tests - Validate Example Files"
+#     "Common Tests - Validate Example Files",
+#     "Common Tests - Validate Script Files"
 # ]
 
 $optIns = @()
@@ -162,6 +163,34 @@ Describe 'Common Tests - File Formatting' {
                 }
 
                 $markdownFileHasBom | Should Be $false
+            }
+        }
+    }
+}
+
+Describe 'Common Tests - Validate Script Files' -Tag 'Script' {
+    $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
+
+    $scriptFilesFilterScript = {
+        '.ps1' -eq $_.Extension
+    }
+
+    $scriptFiles = Get-TextFilesList -Root $moduleRootFilePath | Where-Object -FilterScript $scriptFilesFilterScript
+    foreach ($scriptFile in $scriptFiles)
+    {
+        $filePathOutputName = Get-RelativePathFromModuleRoot `
+                                -FilePath $scriptFile.FullName `
+                                -ModuleRootFilePath $moduleRootFilePath
+
+        Context $filePathOutputName {
+            It ('Script file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) -Skip:(!$optIn) {
+                $scriptFileHasBom = Test-FileHasByteOrderMark -FilePath $scriptFile.FullName
+
+                if ($scriptFileHasBom) {
+                    Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
+                }
+
+                $scriptFileHasBom | Should Be $false
             }
         }
     }

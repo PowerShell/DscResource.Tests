@@ -384,6 +384,8 @@ Invoke-AppveyorAfterTestTask `
   DSC Resource modules when testing examples.
 * Enable 'Common Tests - Validate Example Files' to install missing required modules if
   running in AppVeyor or show warning if run by user.
+* Added new common test so that script files (.ps1) are checked for Byte Order
+  Mark (BOM) (issue #160). This test is opt-in using .MetaTestOptIn.json.
 
 ### 0.2.0.0
 
