@@ -306,8 +306,9 @@ function Invoke-AppveyorTestScriptTask
         }
     }
 
+    Write-Verbose -Message "Test result Type: $($results.GetType().FullName)"
+
     Write-Info -Message 'Done running tests.'
-    Write-Info -Message "Test result Type: $($results.GetType().Fullname)"
 
     if ($results.FailedCount -gt 0)
     {
