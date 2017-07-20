@@ -378,6 +378,8 @@ Invoke-AppveyorAfterTestTask `
   (issue #143).
 * Updated It-blocks for File Parsing tests so that they are more descriptive for
   the AppVeyor "Tests-view".
+* Changed debug message which outputs the type of the $results variable (in
+  AppVeyor.psm1) to use Write-Verbose instead of Write-Info ([issue #99](https://github.com/PowerShell/DscResource.Tests/issues/99)).
 
 ### 0.2.0.0
 
