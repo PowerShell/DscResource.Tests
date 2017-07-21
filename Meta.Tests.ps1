@@ -176,6 +176,7 @@ Describe 'Common Tests - Validate Script Files' -Tag 'Script' {
     }
 
     $scriptFiles = Get-TextFilesList -Root $moduleRootFilePath | Where-Object -FilterScript $scriptFilesFilterScript
+
     foreach ($scriptFile in $scriptFiles)
     {
         $filePathOutputName = Get-RelativePathFromModuleRoot `
@@ -229,6 +230,7 @@ Describe 'Common Tests - Validate Module Files' -Tag 'Module' {
     $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     $moduleFiles = Get-Psm1FileList -FilePath $moduleRootFilePath
+
     foreach ($moduleFile in $moduleFiles)
     {
         $filePathOutputName = Get-RelativePathFromModuleRoot `
