@@ -380,6 +380,10 @@ Invoke-AppveyorAfterTestTask `
   the AppVeyor "Tests-view".
 * Changed debug message which outputs the type of the $results variable (in
   AppVeyor.psm1) to use Write-Verbose instead of Write-Info ([issue #99](https://github.com/PowerShell/DscResource.Tests/issues/99)).
+* Added `Get-ResourceModulesInConfiguration` to `TestHelper.psm1` to get support installing
+  DSC Resource modules when testing examples.
+* Enable 'Common Tests - Validate Example Files' to install missing required modules if
+  running in AppVeyor or show warning if run by user.
 
 ### 0.2.0.0
 

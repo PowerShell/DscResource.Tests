@@ -13,6 +13,7 @@ $testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm
 Import-Module -Name $testHelperModulePath
 
 $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
+$moduleName = (Get-Item -Path $moduleRootFilePath).Name
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
 # Identify the repository root path of the resource module
@@ -231,7 +232,6 @@ Describe 'Common Tests - Module Manifest' {
         $minimumPSVersion = [Version]'4.0'
     }
 
-    $moduleName = (Get-Item -Path $moduleRootFilePath).Name
     $moduleManifestPath = Join-Path -Path $moduleRootFilePath -ChildPath "$moduleName.psd1"
 
     <#
@@ -534,6 +534,58 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
                         try
                         {
+                            # Get the list of additional modules required by the example
+                            $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $exampleToValidate.FullName |
+                                Where-Object -Property Name -ne $moduleName
+
+                            # Check any additional modules required are installed
+                            foreach ($requiredModule in $requiredModules)
+                            {
+                                if (-not (Get-Module @requiredModule -ListAvailable -ErrorAction SilentlyContinue))
+                                {
+                                    # The required module is missing from this machine
+                                    if ($requiredModule.ContainsKey('Version')) {
+                                        $requiredModuleName = ('{0} version {1}' -f $requiredModule.Name, $requiredModule.Version)
+                                    }
+                                    else
+                                    {
+                                        $requiredModuleName = ('{0}' -f $requiredModule.Name)
+                                    }
+
+                                    if ($env:APPVEYOR -eq $true)
+                                    {
+                                        # Tests are running in AppVeyor so just install the module
+                                        $installModuleParams = @{
+                                            Name  = $requiredModule.Name
+                                        }
+
+                                        if ($requiredModule.ContainsKey('Version'))
+                                        {
+                                            $installModuleParams = @{
+                                                RequiredVersion = $requiredModule.Version
+                                            }
+                                        }
+
+                                        Write-Verbose -Message "Installing module $requiredModuleName required to test example." -Verbose
+                                        try
+                                        {
+                                            Install-Module @requiredModule -Scope CurrentUser
+                                        }
+                                        catch
+                                        {
+                                            throw "An error occurred installing the required module $($requiredModuleName) : $_"
+                                        }
+                                    }
+                                    else
+                                    {
+                                        # Warn the user that the test fill fail
+                                        Write-Warning -Message ("Example requires resource module $requiredModuleName but it is not installed on this computer. " + `
+                                            'This test will fail until the required module is installed. ' + `
+                                            'Please install it from the PowerShell Gallery to enable these tests to pass.')
+                                    } # if
+                                } # if
+                            } # foreach
+
                             . $exampleToValidate.FullName
 
                             $exampleCommand = Get-Command -Name Example -ErrorAction SilentlyContinue
