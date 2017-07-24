@@ -1,4 +1,4 @@
-﻿#Requires -Version 4.0
+#Requires -Version 4.0
 
 # Import Localized Data
 Import-LocalizedData -BindingVariable localizedData
@@ -52,7 +52,7 @@ function Measure-ParameterBlockParameterAttribute
             foreach ($functionAst in $functionsAst)
             {
                 [System.Management.Automation.Language.Ast[]] $parametersAst = $functionAst.FindAll( $findAllParametersFilter, $true ).Parameters
-                
+
                 foreach ($parameterAst in $parametersAst)
                 {
                     if ($parameterAst.Attributes.Typename.FullName -notcontains 'parameter')

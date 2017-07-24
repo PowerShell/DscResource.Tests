@@ -390,6 +390,9 @@ Invoke-AppveyorAfterTestTask `
 * Added minimum viable product for applying custom PSSA rules to check adherence to
   DSC Resource Kit style guidelines ([issue #86](https://github.com/PowerShell/DscResource.Tests/issues/86)).
   The current rules checks the [Parameter()] attribute format is correct in all parameter blocks.
+  * Fixed Byte Order Mark (BOM) in files; DscResource.AnalyzerRules.psd1,
+  DscResource.AnalyzerRules.psm1 and en-US/DscResource.AnalyzerRules.psd1
+  ([issue #169](https://github.com/PowerShell/DscResource.Tests/issues/169)).
 
 ### 0.2.0.0
 
