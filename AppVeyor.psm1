@@ -182,7 +182,7 @@ function Invoke-AppveyorTestScriptTask
     if ($DisableConsistency.IsPresent)
     {
         $disableConsistencyMofPath = Join-Path -Path $env:temp -ChildPath 'DisableConsistency'
-        if ( -not (Test-Path -Path $disableConsistencyMofPath))
+        if (-not (Test-Path -Path $disableConsistencyMofPath))
         {
             $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force
         }
@@ -220,12 +220,25 @@ function Invoke-AppveyorTestScriptTask
             if ($CodeCoverage)
             {
                 Write-Warning -Message 'Code coverage statistics are being calculated. This will slow the start of the tests while the code matrix is built. Please be patient.'
-                $pesterParameters += @{
-                    CodeCoverage = @(
-                        "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
-                        "$env:APPVEYOR_BUILD_FOLDER\DSCResources\*.psm1"
-                        "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
-                    )
+
+                # Only add code path for DSCResources if they exist.
+                if (Test-Path -Path "$MainModulePath\DSCResources" )
+                {
+                    $pesterParameters += @{
+                        CodeCoverage = @(
+                            "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
+                            "$env:APPVEYOR_BUILD_FOLDER\DSCResources\*.psm1"
+                            "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
+                        )
+                    }
+                }
+                else
+                {
+                    $pesterParameters += @{
+                        CodeCoverage = @(
+                            "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
+                        )
+                    }
                 }
             }
             $results = Invoke-Pester @pesterParameters
@@ -255,14 +268,14 @@ function Invoke-AppveyorTestScriptTask
         }
     }
 
-    foreach($result in $results.TestResult)
+    foreach ($result in $results.TestResult)
     {
         [string] $describeName = $result.Describe -replace '\\', '/'
         [string] $contextName = $result.Context -replace '\\', '/'
         $componentName = '{0}; Context: {1}' -f $describeName, $contextName
         $appVeyorResult = $result.Result
         # Convert any result not know by AppVeyor to an AppVeyor Result
-        switch($result.Result)
+        switch ($result.Result)
         {
             'Pending'
             {

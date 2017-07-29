@@ -16,6 +16,20 @@ $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
 $moduleName = (Get-Item -Path $moduleRootFilePath).Name
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
+<#
+    This is a workaround to be able to test DscResource.Tests module.
+    Because the name has punctuation in the name, AppVeyor replaces
+    that with a dash when it creates the folder structure, so the folder
+    name becomes 'dscresource-tests'. This sets the module name to the
+    correct name.
+    If the name can be detected in a better way, for DscResource.Tests
+    and all other modules, then this could be removed.
+#>
+if ($moduleName -eq 'dscresource-tests')
+{
+    $moduleName = 'DscResource.Tests'
+}
+
 # Identify the repository root path of the resource module
 $repoRootPath = $moduleRootFilePath
 $repoRootPathFound = $false
@@ -39,7 +53,7 @@ if (-not $repoRootPathFound)
         'errors. Please ensure this repository has been cloned using Git.')
     $repoRootPath = $moduleRootFilePath
 }
-$repoName = Split-Path -Path $repoRootPath -Leaf
+
 $testOptInFilePath = Join-Path -Path $repoRootPath -ChildPath '.MetaTestOptIn.json'
 # .MetaTestOptIn.json should be in the following format
 # [
@@ -50,7 +64,7 @@ $testOptInFilePath = Join-Path -Path $repoRootPath -ChildPath '.MetaTestOptIn.js
 # ]
 
 $optIns = @()
-if(Test-Path $testOptInFilePath)
+if (Test-Path $testOptInFilePath)
 {
     $optIns = Get-Content -LiteralPath $testOptInFilePath | ConvertFrom-Json
 }
@@ -66,7 +80,7 @@ Describe 'Common Tests - File Formatting' {
         {
             if (Test-FileInUnicode $textFile)
             {
-                if($textFile.Extension -ieq '.mof')
+                if ($textFile.Extension -ieq '.mof')
                 {
                     Write-Warning -Message "File $($textFile.FullName) should be converted to ASCII. Use fixer function 'Get-UnicodeFilesList `$pwd | ConvertTo-ASCII'."
                 }
@@ -109,7 +123,7 @@ Describe 'Common Tests - File Formatting' {
         {
             $fileContent = Get-Content -Path $textFile.FullName -Raw
 
-            if([String]::IsNullOrWhiteSpace($fileContent))
+            if ([String]::IsNullOrWhiteSpace($fileContent))
             {
                 Write-Warning -Message "File $($textFile.FullName) is empty. Please remove this file."
                 $containsEmptyFile = $true
@@ -126,7 +140,7 @@ Describe 'Common Tests - File Formatting' {
         {
             $fileContent = Get-Content -Path $textFile.FullName -Raw
 
-            if(-not [String]::IsNullOrWhiteSpace($fileContent) -and $fileContent[-1] -ne "`n")
+            if (-not [String]::IsNullOrWhiteSpace($fileContent) -and $fileContent[-1] -ne "`n")
             {
                 if (-not $containsFileWithoutNewLine)
                 {
@@ -566,7 +580,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         if ($env:APPVEYOR -eq $true)
         {
             $psHomePSModulePathItem = Get-PSHomePSModulePathItem
-            $powershellModulePath = Join-Path -Path $psHomePSModulePathItem -ChildPath $repoName
+            $powershellModulePath = Join-Path -Path $psHomePSModulePathItem -ChildPath $moduleName
 
             Write-Verbose -Message ('Copying module from ''{0}'' to ''{1}''' -f $moduleRootFilePath, $powershellModulePath) -Verbose
 
@@ -708,7 +722,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
             # Restore the load of the module to ensure future tests have access to it
             Import-Module -Name (Join-Path -Path $moduleRootFilePath `
-                                           -ChildPath "$repoName.psd1") `
+                                           -ChildPath "$moduleName.psd1") `
                           -Global
         }
     }
@@ -794,7 +808,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                                         "run 'npm install -g gulp' in order to have this " + `
                                         "text execute.")
             }
-            if($optIn)
+            if ($optIn)
             {
                 $mdErrors | Should Be 0
             }
