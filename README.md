@@ -7,6 +7,25 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any
 additional questions or comments.
 
+## Branches
+
+### master
+
+[![Build status](https://ci.appveyor.com/api/projects/status/github/PowerShell/DscResource.Tests?branch=master&svg=true)](https://ci.appveyor.com/project/PowerShell/dscresource-tests/branch/master)
+[![codecov](https://codecov.io/gh/PowerShell/DscResource.Tests/branch/master/graph/badge.svg)](https://codecov.io/gh/PowerShell/DscResource.Tests/branch/master)
+
+This is the branch containing the latest release - no contributions should be made
+directly to this branch.
+
+### dev
+
+[![Build status](https://ci.appveyor.com/api/projects/status/github/PowerShell/DscResource.Tests?branch=dev&svg=true)](https://ci.appveyor.com/project/PowerShell/dscresource-tests/branch/dev)
+[![codecov](https://codecov.io/gh/PowerShell/DscResource.Tests/branch/dev/graph/badge.svg)](https://codecov.io/gh/PowerShell/DscResource.Tests/branch/dev)
+
+This is the development branch to which contributions should be proposed by contributors
+as pull requests.
+This branch is used by DSC Resource Kit modules for running common tests.
+
 ## DSC Resource Common Meta Tests
 
 > Meta.Tests.ps1
@@ -16,7 +35,7 @@ additional questions or comments.
 1. Consistency in encoding and indentations.
 
   Consistency is good by itself. But more importantly it allows us to:
-2. Avoid big diffs with cosmetic changes in Pull Requests.
+1. Avoid big diffs with cosmetic changes in Pull Requests.
   Cosmetic changes (like formatting) make reviews harder.
   If you want to include formatting changes (like replacing `"` by `'`),
   please make it a **separate commit**.
@@ -174,7 +193,7 @@ file, please see the following sample AppVeyor.yml.
 
 This module provides functions for building and testing DSC Resources in AppVeyor.
 
-**Note: These functions will only work if called within an AppVeyor CI build task.**
+>Note: These functions will only work if called within an AppVeyor CI build task.
 
 * **Invoke-AppveyorInstallTask**: This task is used to set up the environment in
   preparation for the test and deploy tasks.
@@ -282,7 +301,7 @@ Pester code coverage, which the first two sections cover.
 ### Configure CodeCov.io
 
 1. Copy `.codecov.io` from the root of this repo to the root of your repo.
-2. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
+1. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
 
 ### Add the badge to the Readme
 
@@ -399,6 +418,11 @@ Invoke-AppveyorAfterTestTask `
   DscResource.Tests.
 * Remove the $repoName variable and replace it with $moduleName as it was a
   duplicate.
+* Added so that DscResource.Tests is testing it self with it's own common tests
+  ([issue #170](https://github.com/PowerShell/DscResource.Tests/issues/170)).
+* Change README.md to resolve lint error MD029 and MD036.
+* Added module manifest for manifest common tests to pass.
+* Added status badges to README.md.
 
 ### 0.2.0.0
 
