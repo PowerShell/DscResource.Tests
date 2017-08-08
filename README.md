@@ -423,6 +423,8 @@ Invoke-AppveyorAfterTestTask `
 * Change README.md to resolve lint error MD029 and MD036.
 * Added module manifest for manifest common tests to pass.
 * Added status badges to README.md.
+* Fixed the markdown test so that node_modules can be deleted when path contains
+  an apostrophe ([issue #166](https://github.com/PowerShell/DscResource.Tests/issues/166)).
 
 ### 0.2.0.0
 

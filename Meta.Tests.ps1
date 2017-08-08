@@ -733,27 +733,63 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
 
     if (Get-Command -Name 'npm' -ErrorAction SilentlyContinue)
     {
-        Write-Warning -Message "NPM is checking Gulp is installed. This may take a few moments."
+        $npmParametersForStartProcess = @{
+            FilePath = 'npm'
+            ArgumentList = ''
+            WorkingDirectory = $PSScriptRoot
+            Wait = $true
+            WindowStyle = 'Hidden'
+        }
 
-        $null = Start-Process `
-            -FilePath "npm" `
-            -ArgumentList @('install','--silent') `
-            -Wait `
-            -WorkingDirectory $PSScriptRoot `
-            -PassThru `
-            -NoNewWindow
-        $null = Start-Process `
-            -FilePath "npm" `
-            -ArgumentList @('install','-g','gulp','--silent') `
-            -Wait `
-            -WorkingDirectory $PSScriptRoot `
-            -PassThru `
-            -NoNewWindow
+        Context 'When installing markdown validation dependencies' {
+            It 'Should not throw an error when installing package Gulp in global scope' {
+                {
+                    <#
+                        gulp; gulp is a toolkit that helps you automate painful or time-consuming tasks in your development workflow.
+                        gulp must be installed globally to be able to be called through Start-Process
+                    #>
+                    $npmParametersForStartProcess['ArgumentList'] = 'install -g gulp'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package Gulp in local scope' {
+                {
+                    # gulp must also be installed locally to be able to be referenced in the javascript file.
+                    $npmParametersForStartProcess['ArgumentList'] = 'install gulp'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package through2' {
+                {
+                    # Used in gulpfile.js; A tiny wrapper around Node streams2 Transform to avoid explicit sub classing noise
+                    $npmParametersForStartProcess['ArgumentList'] = 'install through2'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package markdownlint' {
+                {
+                    # Used in gulpfile.js; A Node.js style checker and lint tool for Markdown/CommonMark files.
+                    $npmParametersForStartProcess['ArgumentList'] = 'install markdownlint'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package gulp-concat as a dev-dependency' {
+                {
+                    # gulp-concat is installed as devDependencies. Used in gulpfile.js; Concatenates files
+                    $npmParametersForStartProcess['ArgumentList'] = 'install gulp-concat -D'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+        }
 
         if (Test-Path -Path (Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'))
         {
             Write-Verbose -Message ('Using markdownlint settings file from repository folder ''{0}''.' -f $repoRootPath) -Verbose
-            $markdownlintSettingsFilePath = Join-Path -Path $repoRootPath -Childpath '.markdownlint.json'
+            $markdownlintSettingsFilePath = Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'
         }
         else
         {
@@ -808,28 +844,74 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                                         "run 'npm install -g gulp' in order to have this " + `
                                         "text execute.")
             }
+
             if ($optIn)
             {
                 $mdErrors | Should Be 0
             }
         }
 
-        # We're using this tool to delete the node_modules folder because it gets too long
-        # for PowerShell to remove.
-        $null = Start-Process `
-            -FilePath "npm" `
-            -ArgumentList @('install','rimraf','-g','--silent') `
-            -Wait `
-            -WorkingDirectory $PSScriptRoot `
-            -PassThru `
-            -NoNewWindow
-        $null = Start-Process `
-            -FilePath "rimraf" `
-            -ArgumentList @(Join-Path -Path $PSScriptRoot -ChildPath 'node_modules') `
-            -Wait `
-            -WorkingDirectory $PSScriptRoot `
-            -PassThru `
-            -NoNewWindow
+        <#
+            We're uninstalling the dependencies, in reverse order, so that the
+            node_modules folder do not linger on a users computer if run locally.
+            Also, this fixes so that when there is a apostrophe in the path for
+            $PSScriptRoot, the node_modules folder is correctly removed.
+        #>
+        Context 'When uninstalling markdown validation dependencies' {
+            It 'Should not throw an error when installing package gulp-concat as a dev-dependency' {
+                {
+                    # gulp-concat is installed as devDependencies. Used in gulpfile.js; Concatenates files
+                    $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp-concat -D'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package markdownlint' {
+                {
+                    # Used in gulpfile.js; A Node.js style checker and lint tool for Markdown/CommonMark files.
+                    $npmParametersForStartProcess['ArgumentList'] = 'uninstall markdownlint'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package through2' {
+                {
+                    # Used in gulpfile.js; A tiny wrapper around Node streams2 Transform to avoid explicit sub classing noise
+                    $npmParametersForStartProcess['ArgumentList'] = 'uninstall through2'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package Gulp in local scope' {
+                {
+                    # gulp must also be installed locally to be able to be referenced in the javascript file.
+                    $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when installing package Gulp in global scope' {
+                {
+                    <#
+                        gulp; gulp is a toolkit that helps you automate painful or time-consuming tasks in your development workflow.
+                        gulp must be installed globally to be able to be called through Start-Process
+                    #>
+                    $npmParametersForStartProcess['ArgumentList'] = 'uninstall -g gulp'
+                    Start-Process @npmParametersForStartProcess
+                } | Should Not Throw
+            }
+
+            It 'Should not throw an error when removing the node_modules folder' {
+                {
+                    # Remove folder node_modules that npm created.
+                    $npmNodeModulesPath = (Join-Path -Path $PSScriptRoot -ChildPath 'node_modules')
+                    if( Test-Path -Path $npmNodeModulesPath)
+                    {
+                        Remove-Item -Path $npmNodeModulesPath -Recurse -Force
+                    }
+                } | Should Not Throw
+            }
+        }
     }
     else
     {
