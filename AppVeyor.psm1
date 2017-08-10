@@ -120,7 +120,7 @@ function Invoke-AppveyorInstallTask
 #>
 function Invoke-AppveyorTestScriptTask
 {
-    [CmdletBinding(DefaultParametersetName = 'Default')]
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
         [ValidateSet('Default','Harness')]
@@ -199,6 +199,22 @@ function Invoke-AppveyorTestScriptTask
 
         Set-DscLocalConfigurationManager -Path $disableConsistencyMofPath -Force -Verbose
         $null = Remove-Item -LiteralPath $disableConsistencyMofPath -Recurse -Force -Confirm:$false
+    }
+
+    $moduleName = Split-Path -Path $env:APPVEYOR_BUILD_FOLDER -Leaf
+    $testsPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'Tests'
+
+    $configurationFiles = Get-ChildItem -Path $testsPath -Include '*.config.ps1' -Recurse
+    foreach ($configurationFile in $configurationFiles)
+    {
+        # Get the list of additional modules required by the example
+        $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $configurationFile.FullName |
+            Where-Object -Property Name -ne $moduleName
+
+        if ($requiredModules)
+        {
+            Install-DependentModule -Module $requiredModules
+        }
     }
 
     switch ($Type)

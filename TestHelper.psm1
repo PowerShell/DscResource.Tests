@@ -1064,7 +1064,7 @@ function Get-ResourceModulesInConfiguration
 {
     [CmdletBinding()]
     [OutputType([System.Collections.Hashtable[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [System.String]
@@ -1151,6 +1151,90 @@ function Get-ResourceModulesInConfiguration
     return $listedModules
 }
 
+<#
+    .SYNOPSIS
+        Installs dependent modules in the user scope, if not already available
+        and only if run on an AppVeyor build worker. If not run on a AppVeyor
+        build worker, it will output a warning saying that the users must
+        install the correct module to be able to run the test.
+
+    .PARAMETER Module
+        An array of hash tables containing one or more dependent modules that
+        should be installed. The correct array is returned by the helper
+        function Get-ResourceModulesInConfiguration.
+
+        Hash table should be in this format. Where property Name is mandatory
+        and property Version is optional.
+
+        @{
+            Name    = 'xStorage'
+            [Version = '3.2.0.0']
+        }
+#>
+function Install-DependentModule
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Collections.Hashtable[]]
+        $Module
+    )
+
+    # Check any additional modules required are installed
+    foreach ($requiredModule in $Module)
+    {
+        if (-not (Get-Module @requiredModule -ListAvailable -ErrorAction SilentlyContinue))
+        {
+            # The required module is missing from this machine
+            if ($requiredModule.ContainsKey('Version')) {
+                $requiredModuleName = ('{0} version {1}' -f $requiredModule.Name, $requiredModule.Version)
+            }
+            else
+            {
+                $requiredModuleName = ('{0}' -f $requiredModule.Name)
+            }
+
+            if ($env:APPVEYOR -eq $true)
+            {
+                <#
+                    Tests are running in AppVeyor so just install the module.
+                    If not installed by using Force then the error message
+                    "User declined to install untrusted module (<module name>)."
+                    is thrown
+                #>
+                $installModuleParameters = @{
+                    Name  = $requiredModule.Name
+                    Force = $true
+                }
+
+                if ($requiredModule.ContainsKey('Version'))
+                {
+                    $installModuleParameters['RequiredVersion'] = $requiredModule.Version
+                }
+
+                Write-Verbose -Message "Installing module $requiredModuleName required to compile a configuration." -Verbose
+                try
+                {
+                    Install-Module @installModuleParameters -Scope CurrentUser
+                }
+                catch
+                {
+                    throw "An error occurred installing the required module $($requiredModuleName) : $_"
+                }
+            }
+            else
+            {
+                # Warn the user that the test fill fail
+                Write-Warning -Message ("To be able to compile a configuration the resource module $requiredModuleName " + `
+                    'is required but it is not installed on this computer. ' + `
+                    'The test that is dependent on this module will fail until the required module is installed. ' + `
+                    'Please install it from the PowerShell Gallery to enable these tests to pass.')
+            } # if
+        } # if
+    } # foreach
+}
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -1174,5 +1258,6 @@ Export-ModuleMember -Function @(
     'Get-PSHomePSModulePathItem',
     'Test-FileHasByteOrderMark',
     'Get-RelativePathFromModuleRoot',
-    'Get-ResourceModulesInConfiguration'
+    'Get-ResourceModulesInConfiguration',
+    'Install-DependentModule'
 )
