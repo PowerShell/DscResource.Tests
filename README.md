@@ -432,6 +432,10 @@ Invoke-AppveyorAfterTestTask `
   variable for splatting.
 * Enable so that missing required modules for integration tests is installed if
   running in AppVeyor or show warning if run by user ([issue #168](https://github.com/PowerShell/DscResource.Tests/issues/168)).
+* Set registry key HKLM:\Software\Microsoft\PowerShell\DisablePromptToUpdateHelp
+  to 1 when running in AppVeyor to suppress warning caused by running custom rules
+  in PSScriptAnalyzer in the GetExternalRule() method of `Engine/ScriptAnalyzer.cs`
+  ([issue #176](https://github.com/PowerShell/DscResource.Tests/issues/176)).
 
 ### 0.2.0.0
 

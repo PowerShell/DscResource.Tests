@@ -763,6 +763,24 @@ function Import-PSScriptAnalyzer
 
     $psScriptAnalyzerModule = Get-Module -Name 'PSScriptAnalyzer' -ListAvailable
 
+    <#
+        When using custom rules in PSSA the Get-Help cmdlet gets
+        called by PSSA. This causes a warning to be thrown in AppVeyor.
+        This warning does not cause a failure or error, but causes
+        additional bloat to the analyzer output. To suppress this
+        the registry key
+        HKLM:\Software\Microsoft\PowerShell\DisablePromptToUpdateHelp
+        should be set to 1 when running in AppVeyor.
+
+        See this line from PSSA in GetExternalRule() method for more
+        information:
+        https://github.com/PowerShell/PSScriptAnalyzer/blob/development/Engine/ScriptAnalyzer.cs#L1120
+    #>
+    if ($env:APPVEYOR -eq $true)
+    {
+        Set-ItemProperty -Path HKLM:\Software\Microsoft\PowerShell -Name DisablePromptToUpdateHelp -Value 1
+    }
+
     Import-Module -Name $psScriptAnalyzerModule
 }
 
