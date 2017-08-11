@@ -412,6 +412,7 @@ Invoke-AppveyorAfterTestTask `
   * Fixed Byte Order Mark (BOM) in files; DscResource.AnalyzerRules.psd1,
   DscResource.AnalyzerRules.psm1 and en-US/DscResource.AnalyzerRules.psd1
   ([issue #169](https://github.com/PowerShell/DscResource.Tests/issues/169)).
+  * Extended the parameter custom rule to also validate the Mandatory attribute.
 * Fixed so that code coverage can be scan for code even if there is no DSCResource
   folder.
 * Added workaround for AppVeyor replaces punctuation in folder structure for

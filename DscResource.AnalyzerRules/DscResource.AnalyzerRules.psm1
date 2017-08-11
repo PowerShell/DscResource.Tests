@@ -6,16 +6,22 @@ Import-LocalizedData -BindingVariable localizedData
 <#
 .SYNOPSIS
     Validates the [Parameter()] attribute for each parameter.
+
 .DESCRIPTION
     All parameters in a param block must contain a [Parameter()] attribute
-    and it must bethe first attribute for each parameter and must start with
-    a capital letter P.
+    and it must be the first attribute for each parameter and must start with
+    a capital letter P. If it also contains the mandatory attribute, then the
+    mandatory attribute must be formatted correctly.
+
 .EXAMPLE
     Measure-ParameterBlockParameterAttribute -ScriptBlockAst $ScriptBlockAst
+
 .INPUTS
     [System.Management.Automation.Language.ScriptBlockAst]
+
 .OUTPUTS
     [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
 .NOTES
     None
 #>
@@ -55,7 +61,7 @@ function Measure-ParameterBlockParameterAttribute
 
                 foreach ($parameterAst in $parametersAst)
                 {
-                    if ($parameterAst.Attributes.Typename.FullName -notcontains 'parameter')
+                    if ($parameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
                     {
                         $results += New-Object `
                                     -Typename $diagnosticRecordType `
@@ -67,7 +73,7 @@ function Measure-ParameterBlockParameterAttribute
                                         $null
                                     )
                     }
-                    elseif ($parameterAst.Attributes[0].Typename.FullName -ne 'parameter')
+                    elseif ($parameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
                     {
                         $results += New-Object `
                                     -Typename $diagnosticRecordType `
@@ -79,7 +85,7 @@ function Measure-ParameterBlockParameterAttribute
                                         $null
                                     )
                     }
-                    elseif ($parameterAst.Attributes[0].Typename.FullName -cne 'Parameter')
+                    elseif ($parameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
                     {
                         $results += New-Object `
                                     -Typename $diagnosticRecordType  `
@@ -91,6 +97,35 @@ function Measure-ParameterBlockParameterAttribute
                                         $null
                                     )
                     } # if
+
+                    if ($parameterAst.Attributes.NamedArguments.ArgumentName -eq 'Mandatory')
+                    {
+                        if ($parameterAst.Attributes[0].NamedArguments.Extent.Text -match '\$false')
+                        {
+                            $results += New-Object `
+                                -Typename $diagnosticRecordType  `
+                                -ArgumentList @(
+                                    $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat, `
+                                        $parameterAst.Extent, `
+                                        $PSCmdlet.MyInvocation.InvocationName, `
+                                        'Warning', `
+                                        $null
+                                )
+                        }
+                        elseif ($parameterAst.Attributes.NamedArguments.Extent.Text -cne 'Mandatory = $true')
+                        {
+                            $results += New-Object `
+                                -Typename $diagnosticRecordType  `
+                                -ArgumentList @(
+                                    $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat, `
+                                        $parameterAst.Extent, `
+                                        $PSCmdlet.MyInvocation.InvocationName, `
+                                        'Warning', `
+                                        $null
+                                )
+                        }
+                    } # if
+
                 } # foreach parameter
             } # foreach function
 
