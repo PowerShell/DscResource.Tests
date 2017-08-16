@@ -3,11 +3,8 @@
 #---------------------------------#
 version: 0.2.{build}.0
 install:
-    - git clone https://github.com/PowerShell/DscResource.Tests
-    - ps: cd "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests"
-
     - ps: |
-        Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
+        Import-Module "$env:APPVEYOR_BUILD_FOLDER\AppVeyor.psm1"
         Invoke-AppveyorInstallTask
 
 #---------------------------------#

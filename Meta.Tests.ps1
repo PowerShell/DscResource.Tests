@@ -12,23 +12,50 @@ $errorActionPreference = 'Stop'
 $testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
 Import-Module -Name $testHelperModulePath
 
-$moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
-$moduleName = (Get-Item -Path $moduleRootFilePath).Name
-$dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
-
 <#
-    This is a workaround to be able to test DscResource.Tests module.
-    Because the name has punctuation in the name, AppVeyor replaces
-    that with a dash when it creates the folder structure, so the folder
-    name becomes 'dscresource-tests'. This sets the module name to the
-    correct name.
-    If the name can be detected in a better way, for DscResource.Tests
-    and all other modules, then this could be removed.
+    This is a workaround to be able to run these common test on DscResource.Tests
+    module, for testing itself.
+    We need to determine if we are running the code on the repository
+    DscResource.Tests or some other resource module.
+
+    If the parent folder does NOT contain a module manifest we will assume that
+    DscResource.Test is the module being tested.
+    Example:
+        Current folder:  c:\source\DscResource.Tests
+        Parent folder:   c:\source
+        Module manifest: $null
+
+    If the parent folder do contain a module manifest we will assume that
+    DscResource.Test has been cloned into another resource module and it is
+    that resource module that is being tested.
+    Example:
+        Current folder:  c:\source\xSQLServer\DscResource.Tests
+        Parent folder:   c:\source\xSQLServer
+        Module manifest: c:\source\xSQLServer\xSQLServer.psd1
 #>
-if ($moduleName -eq 'dscresource-tests')
+$moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
+
+$moduleManifestExistInModuleRootFilePath = Get-ChildItem -Path $moduleRootFilePath -Filter '*.psd1'
+if (-not $moduleManifestExistInModuleRootFilePath)
 {
+    $moduleRootFilePath = $PSScriptRoot
+
+    <#
+        Because the repository name of 'DscResource.Tests' has punctuation in
+        the name, AppVeyor replaces that with a dash when it creates the folder
+        structure, so the folder name becomes 'dscresource-tests'.
+        This sets the module name to the correct name.
+        If the name can be detected in a better way, for DscResource.Tests
+        and all other modules, then this could be removed.
+    #>
     $moduleName = 'DscResource.Tests'
 }
+else
+{
+    $moduleName = (Get-Item -Path $moduleRootFilePath).Name
+}
+
+$dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
 # Identify the repository root path of the resource module
 $repoRootPath = $moduleRootFilePath

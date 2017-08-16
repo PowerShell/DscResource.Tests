@@ -436,6 +436,10 @@ Invoke-AppveyorAfterTestTask `
   to 1 when running in AppVeyor to suppress warning caused by running custom rules
   in PSScriptAnalyzer in the GetExternalRule() method of `Engine/ScriptAnalyzer.cs`
   ([issue #176](https://github.com/PowerShell/DscResource.Tests/issues/176)).
+* Added unit tests for helper function Start-DscResourceTests.
+* Updated AppVeyor code so that common tests and unit tests is run on the working
+  branch's tests. This is to be able to test changes to tests in pull requests
+  without having to merge the pull request before seeing the result.
 
 ### 0.2.0.0
 
