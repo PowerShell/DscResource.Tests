@@ -426,6 +426,7 @@ Invoke-AppveyorAfterTestTask `
 * Added status badges to README.md.
 * Fixed the markdown test so that node_modules can be deleted when path contains
   an apostrophe ([issue #166](https://github.com/PowerShell/DscResource.Tests/issues/166)).
+  * Fixed typo in It-blocks when uninstalling dependencies.
 * Code was moved from the example tests into a new helper function Install-DependentModule
   ([issue #168](https://github.com/PowerShell/DscResource.Tests/issues/168)).
   Also fixed bug with Version, where Install-Module would not use the correct

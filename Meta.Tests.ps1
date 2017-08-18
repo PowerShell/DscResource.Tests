@@ -842,7 +842,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             $PSScriptRoot, the node_modules folder is correctly removed.
         #>
         Context 'When uninstalling markdown validation dependencies' {
-            It 'Should not throw an error when installing package gulp-concat as a dev-dependency' {
+            It 'Should not throw an error when uninstalling package gulp-concat as a dev-dependency' {
                 {
                     # gulp-concat is installed as devDependencies. Used in gulpfile.js; Concatenates files
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp-concat -D'
@@ -850,7 +850,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 } | Should Not Throw
             }
 
-            It 'Should not throw an error when installing package markdownlint' {
+            It 'Should not throw an error when uninstalling package markdownlint' {
                 {
                     # Used in gulpfile.js; A Node.js style checker and lint tool for Markdown/CommonMark files.
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall markdownlint'
@@ -858,7 +858,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 } | Should Not Throw
             }
 
-            It 'Should not throw an error when installing package through2' {
+            It 'Should not throw an error when uninstalling package through2' {
                 {
                     # Used in gulpfile.js; A tiny wrapper around Node streams2 Transform to avoid explicit sub classing noise
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall through2'
@@ -866,7 +866,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 } | Should Not Throw
             }
 
-            It 'Should not throw an error when installing package Gulp in local scope' {
+            It 'Should not throw an error when uninstalling package Gulp in local scope' {
                 {
                     # gulp must also be installed locally to be able to be referenced in the javascript file.
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp'
@@ -874,7 +874,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 } | Should Not Throw
             }
 
-            It 'Should not throw an error when installing package Gulp in global scope' {
+            It 'Should not throw an error when uninstalling package Gulp in global scope' {
                 {
                     <#
                         gulp; gulp is a toolkit that helps you automate painful or time-consuming tasks in your development workflow.
