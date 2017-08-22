@@ -10,14 +10,13 @@ Import-LocalizedData -BindingVariable localizedData
 .DESCRIPTION
     All parameters in a param block must contain a [Parameter()] attribute
     and it must be the first attribute for each parameter and must start with
-    a capital letter P. If it also contains the mandatory attribute, then the
-    mandatory attribute must be formatted correctly.
+    a capital letter P.
 
 .EXAMPLE
-    Measure-ParameterBlockParameterAttribute -ScriptBlockAst $ScriptBlockAst
+    Measure-ParameterBlockParameterAttribute -ParameterAst $parameterAst
 
 .INPUTS
-    [System.Management.Automation.Language.ScriptBlockAst]
+    [System.Management.Automation.Language.ParameterAst]
 
 .OUTPUTS
     [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
@@ -33,108 +32,127 @@ function Measure-ParameterBlockParameterAttribute
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.Language.ScriptBlockAst]
-        $ScriptBlockAst
+        [System.Management.Automation.Language.ParameterAst]
+        $ParameterAst
     )
 
-    Process
+    try
     {
-        $results = @()
+        $recordType = [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord]
+        $record = @{
+            Message  = ''
+            Extent   = $ParameterAst.Extent
+            Rulename = $PSCmdlet.MyInvocation.InvocationName
+            Severity = 'Warning'
+        }
 
-        try
+        if ($ParameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
         {
-            $diagnosticRecordType = 'Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord'
+            $record['Message'] = $localizedData.ParameterBlockParameterAttributeMissing
 
-            $findAllFunctionsFilter = {
-                $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst]
+            $record -as $recordType
+        }
+        elseif ($ParameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
+        {
+            $record['Message'] = $localizedData.ParameterBlockParameterAttributeWrongPlace
+
+            $record -as $recordType
+        }
+        elseif ($ParameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
+        {
+            $record['Message'] = $localizedData.ParameterBlockParameterAttributeLowerCase
+
+            $record -as $recordType
+        }
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
+    }
+}
+
+<#
+.SYNOPSIS
+    Validates use of the Mandatory named argument within a Parameter attribute.
+
+.DESCRIPTION
+    If a parameter attribute contains the mandatory attribute the
+    mandatory attribute must be formatted correctly.
+
+.EXAMPLE
+    Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $namedAttributeArgumentAst
+
+.INPUTS
+    [System.Management.Automation.Language.NamedAttributeArgumentAst]
+
+.OUTPUTS
+    [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
+.NOTES
+    None
+#>
+function Measure-ParameterBlockMandatoryNamedArgument
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.Language.NamedAttributeArgumentAst]
+        $NamedAttributeArgumentAst
+    )
+
+    try
+    {
+        if ($NamedAttributeArgumentAst.ArgumentName -eq 'Mandatory')
+        {
+            $recordType = [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord]
+            $record = @{
+                Message  = ''
+                Extent   = $NamedAttributeArgumentAst.Extent
+                Rulename = $PSCmdlet.MyInvocation.InvocationName
+                Severity = 'Warning'
             }
 
-            $findAllParametersFilter = {
-                $args[0] -is [System.Management.Automation.Language.ParamBlockAst]
-            }
-
-            [System.Management.Automation.Language.Ast[]] $functionsAst = $ScriptBlockAst.FindAll( $findAllFunctionsFilter, $true )
-
-            foreach ($functionAst in $functionsAst)
+            if ($NamedAttributeArgumentAst)
             {
-                [System.Management.Automation.Language.Ast[]] $parametersAst = $functionAst.FindAll( $findAllParametersFilter, $true ).Parameters
-
-                foreach ($parameterAst in $parametersAst)
+                $invalidFormat = $false
+                try
                 {
-                    if ($parameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
+                    $value = $NamedAttributeArgumentAst.Argument.SafeGetValue()
+                    if ($value -eq $false)
                     {
-                        $results += New-Object `
-                                    -Typename $diagnosticRecordType `
-                                    -ArgumentList @(
-                                        $localizedData.ParameterBlockParameterAttributeMissing, `
-                                        $parameterAst.Extent, `
-                                        $PSCmdlet.MyInvocation.InvocationName, `
-                                        'Warning', `
-                                        $null
-                                    )
+                        $record['Message'] = $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+
+                        $record -as $recordType
                     }
-                    elseif ($parameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
+                    elseif ($NamedAttributeArgumentAst.Argument.VariablePath.UserPath -cne 'true')
                     {
-                        $results += New-Object `
-                                    -Typename $diagnosticRecordType `
-                                    -ArgumentList @(
-                                        $localizedData.ParameterBlockParameterAttributeWrongPlace, `
-                                        $parameterAst.Extent, `
-                                        $PSCmdlet.MyInvocation.InvocationName, `
-                                        'Warning',`
-                                        $null
-                                    )
+                        $invalidFormat = $true
                     }
-                    elseif ($parameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
+                    elseif ($NamedAttributeArgumentAst.ArgumentName -cne 'Mandatory')
                     {
-                        $results += New-Object `
-                                    -Typename $diagnosticRecordType  `
-                                    -ArgumentList @(
-                                        $localizedData.ParameterBlockParameterAttributeLowerCase, `
-                                        $parameterAst.Extent, `
-                                        $PSCmdlet.MyInvocation.InvocationName, `
-                                        'Warning', `
-                                        $null
-                                    )
-                    } # if
+                        $invalidFormat = $true
+                    }
+                }
+                catch
+                {
+                    $invalidFormat = $true
+                }
 
-                    if ($parameterAst.Attributes.NamedArguments.ArgumentName -eq 'Mandatory')
-                    {
-                        if ($parameterAst.Attributes[0].NamedArguments.Extent.Text -match '\$false')
-                        {
-                            $results += New-Object `
-                                -Typename $diagnosticRecordType  `
-                                -ArgumentList @(
-                                    $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat, `
-                                        $parameterAst.Extent, `
-                                        $PSCmdlet.MyInvocation.InvocationName, `
-                                        'Warning', `
-                                        $null
-                                )
-                        }
-                        elseif ($parameterAst.Attributes.NamedArguments.Extent.Text -cne 'Mandatory = $true')
-                        {
-                            $results += New-Object `
-                                -Typename $diagnosticRecordType  `
-                                -ArgumentList @(
-                                    $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat, `
-                                        $parameterAst.Extent, `
-                                        $PSCmdlet.MyInvocation.InvocationName, `
-                                        'Warning', `
-                                        $null
-                                )
-                        }
-                    } # if
+                if ($invalidFormat)
+                {
+                    $record['Message'] = $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
 
-                } # foreach parameter
-            } # foreach function
-
-            return $results
+                    $record -as $recordType
+                }
+            }
         }
-        catch
-        {
-            $PSCmdlet.ThrowTerminatingError($PSItem)
-        }
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
 
