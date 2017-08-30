@@ -333,6 +333,60 @@ Invoke-AppveyorAfterTestTask `
     -ResourceModuleName 'SharePointDsc'
 ```
 
+## Run integration tests in order
+
+This is only available for resource modules that are using the shared AppVeyor
+module model, meaning those resource modules that are calling the helper function
+`Invoke-AppveyorTestScriptTask` either without the parameter `-Type`, or has
+assigned the value `'Default'` to parameter `-Type`.
+
+>**Note:** Resource modules using the "Harness"-model (e.g SharePointDsc and
+> xStorage) must add this functionality per individual resource module.
+
+To run integration tests in order, the resource module must opt-in by calling
+helper function `Invoke-AppveyorTestScriptTask` using the switch parameter
+`-RunTestInOrder`.
+
+Also, each integration test configuration file ('*.config.ps1') must be decorated
+with an attribute `Microsoft.DscResourceKit.IntegrationTest` containing a named
+attribute argument 'OrderNumber' and be assigned a numeric value
+(`1`, `2`, `3`,..).
+The value `0` should not be used since it is reserved for DscResource.Tests,
+for making sure the common tests are always run first.
+
+Integration tests will be run in ascending order, so integration tests with
+value 1 will be run before integration tests with value 2. If an integration test
+does not have a assigned order, it will be run unordered after all ordered tests
+have been run.
+
+It is also important that the configuration file and the integration test uses
+the same resource name in the file name. For example and integration test for
+xSQLServerSetup has a configuration file named 'MSFT_xSQLServerSetup.config.ps1'
+and the integration test file is named 'MSFT_xSQLServerSetup.Integration.Tests.ps1'.
+
+Example how the configuration file could look like to make sure an integration test
+is always run as one of the first integration tests.
+
+```powershell
+[Microsoft.DscResourceKit.IntegrationTest(OrderNumber = 1)]
+param()
+
+Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
+{
+    Import-DscResource -ModuleName 'xSQLServer'
+
+    node localhost {
+        xSQLServerAlwaysOnService 'Integration_Test'
+        {
+            Ensure               = 'Present'
+            SQLServer            = $Node.ComputerName
+            SQLInstanceName      = $Node.InstanceName
+            RestartTimeout       = $Node.RestartTimeout
+        }
+    }
+}
+```
+
 ## Versions
 
 ### Unreleased
@@ -441,6 +495,8 @@ Invoke-AppveyorAfterTestTask `
 * Updated AppVeyor code so that common tests and unit tests is run on the working
   branch's tests. This is to be able to test changes to tests in pull requests
   without having to merge the pull request before seeing the result.
+* Add opt-in parameter RunTestInOrder for the helper function Invoke-AppveyorTestScriptTask
+  which enables running integration tests in order ([issue #184](https://github.com/PowerShell/DscResource.Tests/issues/184)).
 
 ### 0.2.0.0
 

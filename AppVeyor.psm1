@@ -157,8 +157,17 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter()]
         [Switch]
-        $DisableConsistency
+        $DisableConsistency,
+
+        [Parameter()]
+        [Switch]
+        $RunTestInOrder
     )
+
+    # Load the test helper module
+    $testHelperPath = Join-Path -Path $PSScriptRoot `
+                                -ChildPath 'TestHelper.psm1'
+    Import-Module -Name $testHelperPath -Force
 
     # Convert the Main Module path into an absolute path if it is relative
     if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
@@ -257,7 +266,123 @@ function Invoke-AppveyorTestScriptTask
                     }
                 }
             }
-            $results = Invoke-Pester @pesterParameters
+
+            if ($RunTestInOrder)
+            {
+                <#
+                    This is an array of test files containing path
+                    and optional order number.
+                #>
+                $testObjects = @()
+
+                $getChildItemParameters = @{
+                    Path = $env:APPVEYOR_BUILD_FOLDER
+                    Recurse = $true
+                }
+
+                # Get all tests '*.Tests.ps1'.
+                $getChildItemParameters['Filter'] = '*.Tests.ps1'
+                $testFiles = Get-ChildItem @getChildItemParameters
+
+                # Add all tests to the array with order number set to $null
+                foreach ($testFile in $testFiles)
+                {
+                    $testObjects += @(
+                        [PSCustomObject] @{
+                            TestPath = $testFile.FullName
+                            OrderNumber = $null
+                        }
+                    )
+                }
+
+                <#
+                    Make sure all common tests are always run first
+                    by setting order number to zero (0).
+                #>
+                $testObjects | Where-Object -FilterScript {
+                    $_.TestPath -match 'DSCResource.Tests'
+                } | ForEach-Object -Process {
+                    $_.OrderNumber = 0
+                }
+
+                # Get each integration test config files ('*.config.ps1').
+                $getChildItemParameters['Filter'] = '*.config.ps1'
+                $integrationTestConfigurationFiles = Get-ChildItem @getChildItemParameters
+
+                <#
+                    In each file, search for existens of attribute 'IntegrationTest' with a
+                    named attribute argument 'OrderNumber'.
+                #>
+                foreach ($integrationTestConfigurationFile in $integrationTestConfigurationFiles)
+                {
+                    $orderNumber = Get-DscIntegrationTestOrderNumber `
+                        -Path $integrationTestConfigurationFile.FullName
+
+                    if ($orderNumber)
+                    {
+                        <#
+                            Build the correct integration test file name, by
+                            replacing '.config.ps1' with '.Integration.Tests.ps1'.
+                        #>
+                        $testFileName = $integrationTestConfigurationFile.FullName `
+                            -replace '.config.ps1', '.Integration.Tests.ps1'
+
+                        <#
+                            If the test must run in order, find the correct
+                            test and add the order number to object in the array..
+                        #>
+                        ($testObjects | Where-Object -FilterScript {
+                            $_.TestPath -eq $testFileName
+                        }).OrderNumber = $orderNumber
+                    }
+                }
+
+                <#
+                    This is an array of the test files in the correct
+                    order they will be run.
+
+                    First the common tests will always run.
+                    Secondly the tests that use mocks will run (unit tests).
+                    Thirdly, those the tests that actually changes things
+                    (integration tests) will run in order.
+                #>
+                $testObjectOrder = @()
+
+                # Add tests that have OrderNumber -eq 0
+                $testObjectOrder += $testObjects | Where-Object -FilterScript {
+                    $_.OrderNumber -eq 0
+                }
+
+                # Add tests that uses mocks (unit tests).
+                $testObjectOrder += $testObjects | Where-Object -FilterScript {
+                    $null -eq $_.OrderNumber `
+                    -and $_.TestPath -notmatch 'Integration.Tests'
+                }
+
+                # Add integration tests that must run in the correct order
+                $testObjectOrder += $testObjects | Where-Object -FilterScript {
+                    $null -ne $_.OrderNumber `
+                    -and $_.OrderNumber -ne 0
+                } | Sort-Object -Property 'OrderNumber'
+
+                # Then add the rest of the integration tests.
+                $testObjectOrder += $testObjects | Where-Object -FilterScript {
+                    $null -eq $_.OrderNumber `
+                    -and $_.TestPath -match 'Integration.Tests'
+                }
+
+                # Add all the paths to the Invoke-Pester Path parameter.
+                $pesterParameters += @{
+                    Path = $testObjectOrder.TestPath
+                }
+
+                $results = Invoke-Pester @pesterParameters
+            }
+            else
+            {
+                $results = Invoke-Pester @pesterParameters
+            }
+
             break
         }
         'Harness'

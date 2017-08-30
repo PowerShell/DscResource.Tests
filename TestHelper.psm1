@@ -1253,6 +1253,72 @@ function Install-DependentModule
     } # foreach
 }
 
+<#
+    .SYNOPSIS
+        Returns the integration test order number if it exists in the
+        attribute 'Microsoft.DscResourceKit.IntegrationTest' with the
+        named attribute argument 'OrderNumber'. If it is not found, a
+        $null value will be returned.
+
+    .PARAMETER Path
+        A path to the configuration file to search for the attribute
+        'Microsoft.DscResourceKit.IntegrationTest' with the named
+        attribute argument 'OrderNumber'.
+#>
+function Get-DscIntegrationTestOrderNumber
+{
+    [CmdletBinding()]
+    [OutputType([System.UInt32])]
+    param
+    (
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path
+    )
+
+    <#
+        Will always return $null if the attribute 'Microsoft.DscResourceKit.IntegrationTest'
+        is not found with the named attribute argument 'OrderNumber'.
+    #>
+    $returnValue = $null
+
+    # Change WarningAction so it does not output a warning for the sealed class.
+    Add-Type -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Microsoft.DscResourceKit.cs') -WarningAction SilentlyContinue
+
+    $scriptBlockAst = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref] $null, [ref] $null)
+
+    $findIntegrationTestAttributeFilter = {
+        $args[0] -is [System.Management.Automation.Language.AttributeAst] `
+        -and (
+            $args[0].TypeName.FullName -eq 'IntegrationTest' `
+            -or $args[0].TypeName.FullName -eq 'Microsoft.DscResourceKit.IntegrationTest'
+        )
+    }
+
+    # Get IntegrationTest attribute in the file if it exist.
+    [System.Management.Automation.Language.Ast[]] $integrationTestAttributeAst = `
+        $scriptBlockAst.Find($findIntegrationTestAttributeFilter, $true)
+
+    if ($integrationTestAttributeAst)
+    {
+        $findOrderNumberNamedAttributeArgumentFilter = {
+            $args[0] -is [System.Management.Automation.Language.NamedAttributeArgumentAst] `
+            -and $args[0].ArgumentName -eq 'OrderNumber'
+        }
+
+        [System.Management.Automation.Language.Ast[]] $orderNumberNamedAttributeArgumentAst = `
+            $integrationTestAttributeAst.Find($findOrderNumberNamedAttributeArgumentFilter, $true)
+
+        if ($orderNumberNamedAttributeArgumentAst)
+        {
+            $returnValue = $orderNumberNamedAttributeArgumentAst.Argument.Value
+        }
+    }
+
+    return $returnValue
+}
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -1277,5 +1343,6 @@ Export-ModuleMember -Function @(
     'Test-FileHasByteOrderMark',
     'Get-RelativePathFromModuleRoot',
     'Get-ResourceModulesInConfiguration',
-    'Install-DependentModule'
+    'Install-DependentModule',
+    'Get-DscIntegrationTestOrderNumber'
 )
