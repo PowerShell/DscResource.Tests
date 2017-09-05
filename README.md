@@ -497,6 +497,8 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
   without having to merge the pull request before seeing the result.
 * Add opt-in parameter RunTestInOrder for the helper function Invoke-AppveyorTestScriptTask
   which enables running integration tests in order ([issue #184](https://github.com/PowerShell/DscResource.Tests/issues/184)).
+* Add Script Analyzer custom rule to test functions and statements so that
+  opening braces are set according to the style guideline ([issue #27](https://github.com/PowerShell/DscResource.Tests/issues/27)).
 
 ### 0.2.0.0
 

@@ -346,4 +346,884 @@ Describe "$($script:ModuleName) Unit Tests" {
             }
         }
     }
+
+    Describe 'Measure-FunctionBlockBraces' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When a functions opening brace is on the same line as the function keyword' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something {
+                        [CmdletBinding()]
+                        [OutputType([System.Boolean])]
+                        param
+                        (
+                            [Parameter(Mandatory = $true)]
+                            [ValidateNotNullOrEmpty()]
+                            [System.String]
+                            $Variable1
+                        )
+
+                        return $true
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.FunctionOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When two functions has opening brace is on the same line as the function keyword' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something {
+                    }
+
+                    function Get-SomethingElse {
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 2
+                $record[0].Message | Should Be $localizedData.FunctionOpeningBraceNotOnSameLine
+                $record[1].Message | Should Be $localizedData.FunctionOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When function opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {   [CmdletBinding()]
+                        [OutputType([System.Boolean])]
+                        param
+                        (
+                            [Parameter(Mandatory = $true)]
+                            [ValidateNotNullOrEmpty()]
+                            [System.String]
+                            $Variable1
+                        )
+
+                        return $true
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.FunctionOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When function opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+
+                        [CmdletBinding()]
+                        [OutputType([System.Boolean])]
+                        param
+                        (
+                            [Parameter(Mandatory = $true)]
+                            [ValidateNotNullOrEmpty()]
+                            [System.String]
+                            $Variable1
+                        )
+
+                        return $true
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.FunctionOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When function follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        [CmdletBinding()]
+                        [OutputType([System.Boolean])]
+                        param
+                        (
+                            [Parameter(Mandatory = $true)]
+                            [ValidateNotNullOrEmpty()]
+                            [System.String]
+                            $Variable1
+                        )
+
+                        return $true
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-IfStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When if-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($true) {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.IfStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When two if-statements has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($true) {
+                        }
+
+                        if ($true) {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 2
+                $record[0].Message | Should Be $localizedData.IfStatementOpeningBraceNotOnSameLine
+                $record[1].Message | Should Be $localizedData.IfStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When if-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($true)
+                        { return $true
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When if-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($true)
+                        {
+
+                            return $true
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When if-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($true)
+                        {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+
+        # Regression test for issue reported in review comment for PR #180.
+        Context 'When if-statement is using braces in the evaluation expression' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if (Get-Command | Where-Object -FilterScript { $_.Name -eq ''Get-Help'' } )
+                        {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-ForEachStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When foreach-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        foreach ($stringText in $myArray) {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.ForEachStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When foreach-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        foreach ($stringText in $myArray)
+                        {   $stringText
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When foreach-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        foreach ($stringText in $myArray)
+                        {
+
+                            $stringText
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When foreach-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        foreach ($stringText in $myArray)
+                        {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-DoUntilStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When DoUntil-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        do {
+                            $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoUntilStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When DoUntil-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        do
+                        { $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When DoUntil-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        do
+                        {
+
+                            $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When DoUntil-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        do
+                        {
+                            $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-DoWhileStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When DoWhile-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        do {
+                            $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoWhileStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When DoWhile-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        do
+                        { $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When DoWhile-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        do
+                        {
+
+                            $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When DoWhile-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        do
+                        {
+                            $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-WhileStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When While-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        while ($i -gt 0) {
+                            $i--
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.WhileStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When While-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        while ($i -gt 0)
+                        { $i--
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When While-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        while ($i -gt 0)
+                        {
+
+                            $i--
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When While-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        while ($i -gt 0)
+                        {
+                            $i--
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-SwitchStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When Switch-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        switch ($value) {
+                            1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.SwitchStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        # Regression test.
+        Context 'When Switch-statement has an opening brace on the same line, and also has a clause with an opening brace on the same line' {
+            It 'Should write only one error record, and the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        switch ($value) {
+                            1 { ''one'' }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.SwitchStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When Switch-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        switch ($value)
+                        {   1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When Switch-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        switch ($value)
+                        {
+
+                            1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When Switch-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        switch ($value)
+                        {
+                            1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-TryStatement' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When Try-statement has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try {
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.TryStatementOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When Try-statement opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        { $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When Try-statement opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When Try-statement follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-CatchClause' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'When Catch-clause has an opening brace on the same line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        catch {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.CatchClauseOpeningBraceNotOnSameLine
+            }
+        }
+
+        Context 'When Catch-clause opening brace is not followed by a new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        { throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByNewLine
+            }
+        }
+
+        Context 'When Catch-clause opening brace is followed by more than one new line' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        {
+
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should BeExactly 1
+                $record.Message | Should Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
+            }
+        }
+
+        Context 'When Catch-clause follows style guideline' {
+            It 'Should not write an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should BeNullOrEmpty
+            }
+        }
+    }
 }
