@@ -499,6 +499,9 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
   which enables running integration tests in order ([issue #184](https://github.com/PowerShell/DscResource.Tests/issues/184)).
 * Add Script Analyzer custom rule to test functions and statements so that
   opening braces are set according to the style guideline ([issue #27](https://github.com/PowerShell/DscResource.Tests/issues/27)).
+* When common tests are running on another repository than DscResource.Tests the
+  DscResource.Tests unit and integration tests are removed from the list of tests
+  to run ([issue #189](https://github.com/PowerShell/DscResource.Tests/issues/189)).
 
 ### 0.2.0.0
 

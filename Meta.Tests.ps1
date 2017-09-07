@@ -12,31 +12,13 @@ $errorActionPreference = 'Stop'
 $testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
 Import-Module -Name $testHelperModulePath
 
+$moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
+
 <#
     This is a workaround to be able to run these common test on DscResource.Tests
     module, for testing itself.
-    We need to determine if we are running the code on the repository
-    DscResource.Tests or some other resource module.
-
-    If the parent folder does NOT contain a module manifest we will assume that
-    DscResource.Test is the module being tested.
-    Example:
-        Current folder:  c:\source\DscResource.Tests
-        Parent folder:   c:\source
-        Module manifest: $null
-
-    If the parent folder do contain a module manifest we will assume that
-    DscResource.Test has been cloned into another resource module and it is
-    that resource module that is being tested.
-    Example:
-        Current folder:  c:\source\xSQLServer\DscResource.Tests
-        Parent folder:   c:\source\xSQLServer
-        Module manifest: c:\source\xSQLServer\xSQLServer.psd1
 #>
-$moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
-
-$moduleManifestExistInModuleRootFilePath = Get-ChildItem -Path $moduleRootFilePath -Filter '*.psd1'
-if (-not $moduleManifestExistInModuleRootFilePath)
+if (Test-IsRepositoryDscResourceTests)
 {
     $moduleRootFilePath = $PSScriptRoot
 

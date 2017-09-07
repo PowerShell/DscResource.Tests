@@ -1319,6 +1319,67 @@ function Get-DscIntegrationTestOrderNumber
     return $returnValue
 }
 
+<#
+    .SYNOPSIS
+        Returns $true if the current repository being tested is
+        DscResource.Tests, otherwise the value returned will be
+        $false.
+
+    .NOTES
+        There are two scenarios.
+
+        1. Testing DscResource.Tests; path C:\Projects\DscResource.Tests,
+           or V:\Source\GitHub\DscResource.Tests (or any other path used
+           by users).
+        2. Testing a DSC resource module (ie. xStorage); path
+           C:\Projects\xStorage\DscResource.Tests,
+           or V:\Source\GitHub\xStorage\DscResource.Tests (or any other path
+           used by users).
+
+        In both these scenarios, when the tests are run, the $PSScriptRoot
+        (current folder) is set to one of the above paths, that is
+        $PSScriptRoot (current folder) will always be set to the DscResource.Tests
+        folder.
+
+        The following logic will determine if we are running the code on the
+        repository DscResource.Tests or some other resource module.
+
+        If the parent folder of $PSScriptRoot does NOT contain a module manifest
+        we will assume that DscResource.Test is the module being tested.
+        Example:
+            Current folder:  c:\source\DscResource.Tests
+            Parent folder:   c:\source
+            Module manifest: $null
+
+        If the parent folder of $PSScriptRoot do contain a module manifest we
+        will assume that DscResource.Test has been cloned into another resource
+        module and it is that resource module that is being tested.
+        Example:
+            Current folder:  c:\source\xSQLServer\DscResource.Tests
+            Parent folder:   c:\source\xSQLServer
+            Module manifest: c:\source\xSQLServer\xSQLServer.psd1
+#>
+function Test-IsRepositoryDscResourceTests
+{
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param
+    (
+    )
+
+    $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
+
+    $moduleManifestExistInModuleRootFilePath = Get-ChildItem -Path $moduleRootFilePath -Filter '*.psd1'
+    if (-not $moduleManifestExistInModuleRootFilePath)
+    {
+        return $true
+    }
+    else
+    {
+        return $false
+    }
+}
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -1344,5 +1405,6 @@ Export-ModuleMember -Function @(
     'Get-RelativePathFromModuleRoot',
     'Get-ResourceModulesInConfiguration',
     'Install-DependentModule',
-    'Get-DscIntegrationTestOrderNumber'
+    'Get-DscIntegrationTestOrderNumber',
+    'Test-IsRepositoryDscResourceTests'
 )

@@ -267,6 +267,27 @@ function Invoke-AppveyorTestScriptTask
                 }
             }
 
+            $getChildItemParameters = @{
+                Path = $env:APPVEYOR_BUILD_FOLDER
+                Recurse = $true
+            }
+
+            # Get all tests '*.Tests.ps1'.
+            $getChildItemParameters['Filter'] = '*.Tests.ps1'
+            $testFiles = Get-ChildItem @getChildItemParameters
+
+            <#
+                If it is another repository other than DscResource.Tests
+                then remove the DscResource.Tests unit tests from the list
+                of tests to run. Issue #189.
+            #>
+            if (-not (Test-IsRepositoryDscResourceTests))
+            {
+                $testFiles = $testFiles | Where-Object -FilterScript {
+                    $_.FullName -notmatch 'DSCResource.Tests\\Tests'
+                }
+            }
+
             if ($RunTestInOrder)
             {
                 <#
@@ -274,15 +295,6 @@ function Invoke-AppveyorTestScriptTask
                     and optional order number.
                 #>
                 $testObjects = @()
-
-                $getChildItemParameters = @{
-                    Path = $env:APPVEYOR_BUILD_FOLDER
-                    Recurse = $true
-                }
-
-                # Get all tests '*.Tests.ps1'.
-                $getChildItemParameters['Filter'] = '*.Tests.ps1'
-                $testFiles = Get-ChildItem @getChildItemParameters
 
                 # Add all tests to the array with order number set to $null
                 foreach ($testFile in $testFiles)
@@ -380,6 +392,10 @@ function Invoke-AppveyorTestScriptTask
             }
             else
             {
+                $pesterParameters += @{
+                    Path = $testFiles.FullName
+                }
+
                 $results = Invoke-Pester @pesterParameters
             }
 
