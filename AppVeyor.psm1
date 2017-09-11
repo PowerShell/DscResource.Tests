@@ -529,20 +529,25 @@ function Invoke-AppveyorAfterTestTask
     [CmdletBinding(DefaultParametersetName = 'Default')]
     param
     (
+        [Parameter()]
         [ValidateSet('Default','Wiki')]
         [String]
         $Type = 'Default',
 
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
 
+        [Parameter()]
         [String]
         $ResourceModuleName = (($env:APPVEYOR_REPO_NAME -split '/')[1]),
 
+        [Parameter()]
         [String]
         $Author = 'Microsoft',
 
+        [Parameter()]
         [String]
         $Owners = 'Microsoft'
     )
@@ -577,7 +582,7 @@ function Invoke-AppveyorAfterTestTask
         Compress-Archive -Path (Join-Path -Path $wikiContentPath -ChildPath '*') `
                          -DestinationPath $zipFileName
         Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
-            Push-AppveyorArtifact $_.FullName -FileName $_.Name
+            Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
         }
 
         # Remove the readme files that are used to generate documentation so they aren't shipped
@@ -589,9 +594,9 @@ function Invoke-AppveyorAfterTestTask
     # Set the Module Version in the Manifest to the AppVeyor build version
     $manifestPath = Join-Path -Path $MainModulePath `
                               -ChildPath "$ResourceModuleName.psd1"
-    $manifestContent = Get-Content -Path $ManifestPath -Raw
+    $manifestContent = Get-Content -Path $manifestPath -Raw
     $regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
-    $manifestContent = $manifestContent -replace $regex,"ModuleVersion = '$env:APPVEYOR_BUILD_VERSION'"
+    $manifestContent = $manifestContent -replace $regex,$env:APPVEYOR_BUILD_VERSION
     Set-Content -Path $manifestPath -Value $manifestContent -Force
 
     # Zip and Publish the Main Module Folder content
@@ -601,10 +606,10 @@ function Invoke-AppveyorAfterTestTask
                      -DestinationPath $zipFileName
     New-DscChecksum -Path $env:APPVEYOR_BUILD_FOLDER -Outpath $env:APPVEYOR_BUILD_FOLDER
     Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
-        Push-AppveyorArtifact $_.FullName -FileName $_.Name
+        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
     }
     Get-ChildItem -Path "$zipFileName.checksum" | ForEach-Object -Process {
-        Push-AppveyorArtifact $_.FullName -FileName $_.Name
+        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
     }
 
     # Create the Nuspec file for the Nuget Package in the Main Module Folder
@@ -636,7 +641,7 @@ function Invoke-AppveyorAfterTestTask
     $nugetPackageName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                   -ChildPath "$ResourceModuleName.$($env:APPVEYOR_BUILD_VERSION).nupkg"
     Get-ChildItem $nugetPackageName | ForEach-Object -Process {
-        Push-AppveyorArtifact $_.FullName -FileName $_.Name
+        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
     }
 
     # Execute custom after test task if defined
