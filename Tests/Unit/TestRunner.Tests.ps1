@@ -42,7 +42,7 @@ Describe "$($script:ModuleName) Unit Tests" {
                 Pop-Location
             }
 
-            Assert-VerifiableMocks
+            Assert-VerifiableMock
         }
     }
 }

@@ -507,6 +507,7 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
   to run ([issue #189](https://github.com/PowerShell/DscResource.Tests/issues/189)).
 * Fix ModuleVersion number value inserted into manifest in Nuget package produced
   in Invoke-AppveyorAfterTestTask ([issue #193](https://github.com/PowerShell/DscResource.Tests/issues/193)).
+* Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
 
 ### 0.2.0.0
 
