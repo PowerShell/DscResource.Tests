@@ -508,6 +508,8 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
 * Fix ModuleVersion number value inserted into manifest in Nuget package produced
   in Invoke-AppveyorAfterTestTask ([issue #193](https://github.com/PowerShell/DscResource.Tests/issues/193)).
 * Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
+* Improved WikiPages.psm1 to include the EmbeddedInstance to the datatype in the
+  generated wiki page ([issue #201](https://github.com/PowerShell/DscResource.Tests/issues/201))
 
 ### 0.2.0.0
 

@@ -72,15 +72,19 @@ function New-DscResourceWikiSite
                 {
                     $dataType += '[]'
                 }
+                if ($property.EmbeddedInstance -eq 'MSFT_Credential')
+                {
+                    $dataType = 'PSCredential'
+                }
                 $null = $output.Append("| **$($property.Name)** " + `
                     "| $($property.State) " + `
                     "| $dataType " + `
                     "| $($property.Description) |")
                 if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
-                    $null = $output.Append(($property.ValueMap -Join ", "))
+                    $null = $output.Append(($property.ValueMap -Join ', '))
                 }
-                $null = $output.AppendLine("|")
+                $null = $output.AppendLine('|')
             }
 
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
@@ -100,15 +104,15 @@ function New-DscResourceWikiSite
                 foreach ($exampleFile in $exampleFiles)
                 {
                     $exampleContent = Get-Content -Path $exampleFile.FullName -Raw
-                    $helpStart = $exampleContent.IndexOf("<#")
-                    $helpEnd = $exampleContent.IndexOf("#>") + 2
+                    $helpStart = $exampleContent.IndexOf('<#')
+                    $helpEnd = $exampleContent.IndexOf('#>') + 2
                     $help = $exampleContent.Substring($helpStart, $helpEnd - $helpStart)
                     $helpOriginal = $help
                     $help += [Environment]::NewLine + '````powershell'
-                    $help = $help.Replace("    ", "")
+                    $help = $help.Replace('    ', '')
                     $exampleContent = $exampleContent.Replace($helpOriginal, $help)
-                    $exampleContent = $exampleContent -replace "<#"
-                    $exampleContent = $exampleContent -replace "#>"
+                    $exampleContent = $exampleContent -replace '<#'
+                    $exampleContent = $exampleContent -replace '#>'
                     $exampleContent = $exampleContent.Replace(".EXAMPLE", `
                                                             "### Example $exampleCount`n")
                     $exampleContent += '````'
