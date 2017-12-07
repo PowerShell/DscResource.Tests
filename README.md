@@ -510,6 +510,13 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
 * Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
 * Improved WikiPages.psm1 to include the EmbeddedInstance to the datatype in the
   generated wiki page ([issue #201](https://github.com/PowerShell/DscResource.Tests/issues/201))
+* Added basic support for analyzing TypeDefinitionAst related code e.g. Enum & Class definitions to include
+  Basic Brace newline rules
+  * Created new unit tests to validate the Analyzer rules pass or fail as expected for these new rules
+* Added Test-IsClass Cmdlet to determine if particular Ast objects are members of a Class or not
+  * Created new Unit Tests to validate the functionality of said cmdlet
+* Modified current Parameter, and AttributeArgument Analyzer Rules to check for Class membership and properly validate in those cases as well as the current Function based Cmdlets
+  * Created new unit tests to validate the new Analyzer rules pass or fail as expected for Class based resources
 
 ### 0.2.0.0
 

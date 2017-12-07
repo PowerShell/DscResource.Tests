@@ -165,6 +165,48 @@ Describe "$($script:ModuleName) Unit Tests" {
                 $record.Message | Should Be $localizedData.ParameterBlockParameterAttributeMissing
             }
         }
+
+        Context 'When Parameter is part of a method in a class' {
+            It 'Should not return any records' {
+                $definition = '
+                class Resource
+                {
+                    [void] Get_TargetResource($ParameterName1,$ParameterName2)
+                    {
+                    }
+                }
+            '
+
+                $record = Invoke-ScriptAnalyzer -ScriptDefinition $definition -CustomRulePath $modulePath
+                $record | Should Be $null
+            }
+        }
+
+        Context 'When Parameter is part of a script block that is part of a property in a class' {
+            it 'Should return records for the Parameter in the script block' {
+                $definition = '
+                class Resource
+                {
+                    [void] Get_TargetResource($ParameterName1,$ParameterName2)
+                    {
+                    }
+                    
+                    [Func[Int,Int]] $MakeInt = {
+                        [Parameter(Mandatory=$true)]
+                        Param
+                        (
+                            [int] $Input
+                        ) 
+                        $Input * 2
+                    }
+                }
+            '
+                    $record = Invoke-ScriptAnalyzer -ScriptDefinition $definition -CustomRulePath $modulePath
+                    ($record | Measure-Object).Count | Should Be 1
+                    $record.Message | Should Be $localizedData.ParameterBlockParameterAttributeMissing
+                    
+            }
+        }
     }
 
     Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
@@ -302,6 +344,82 @@ Describe "$($script:ModuleName) Unit Tests" {
                 '
 
                 Invoke-ScriptAnalyzer -ScriptDefinition $definition -CustomRulePath $modulePath | Should BeNullOrEmpty
+            }
+
+            Context 'When Mandatory Attribute NamedParameter is in a class' {
+                It 'Should not return any records' {
+                    $definition = '
+                    [DscResource()]
+                    class Resource
+                    {
+                        [DscProperty(Key)]
+                        [string] $DscKeyString
+                        
+                        [DscProperty(Mandatory)]
+                        [int] $DscNum
+
+                        [Resource] Get()
+                        {
+                            return $this
+                        }
+
+                        [void] Set()
+                        {
+                        }
+
+                        [bool] Test()
+                        {
+                            return $true
+                        }
+                    }
+                '
+                    $record = Invoke-ScriptAnalyzer -ScriptDefinition $definition -CustomRulePath $modulePath
+                    $record | Should Be $null
+                }
+            }
+
+            Context 'When Mandatory Attribute NamedParameter is in script block in a property in a class' {
+                It 'Should return records for NameParameter in the ScriptBlock only' {
+                    $definition = '
+                    [DscResource()]
+                    class Resource
+                    {
+                        [DscProperty(Key)]
+                        [string] $DscKeyString
+                        
+                        [DscProperty(Mandatory)]
+                        [int] $DscNum
+
+                        [Resource] Get()
+                        {
+                            return $this
+                        }
+
+                        [void] Set()
+                        {
+                        }
+
+                        [bool] Test()
+                        {
+                            return $true
+                        }
+
+                        [Func[Int,Int]] $MakeInt = {
+                            [Parameter(Mandatory=$true)]
+                            Param
+                            (
+                                [Parameter(Mandatory)]
+                                [int] $Input
+                            ) 
+                            $Input * 2
+                        }    
+                    }
+                '
+    
+                    $record = Invoke-ScriptAnalyzer -ScriptDefinition $definition -CustomRulePath $modulePath
+                    ($record | Measure-Object).Count | Should Be 1
+                    $record.Message | Should Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                }
             }
         }
 
@@ -1223,6 +1341,117 @@ Describe "$($script:ModuleName) Unit Tests" {
 
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 $record | Should BeNullOrEmpty
+            }
+        }
+    }
+
+    Describe 'Measure-TypeDefinition' {
+        BeforeEach {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+        }
+
+        Context 'Enum' {
+            Context 'When Enum has an opening brace on the same line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    enum Test {
+                        Good
+                        Bad
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.EnumOpeningBraceNotOnSameLine
+                }            
+            }
+
+            Context 'When Enum Opening brace is not followed by a new line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    enum Test 
+                    { Good
+                        Bad
+                    }
+                '
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.EnumOpeningBraceShouldBeFollowedByNewLine
+                }
+            }
+
+            Context 'When Enum opening brace is followed by more than one new line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    enum Test 
+                    {
+                        
+                        Good
+                        Bad
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                }
+            }
+        }
+        
+        Context 'Class' {
+            Context 'When Class has an opening brace on the same line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    class Test {
+                        [int] $Good
+                        [Void] Bad()
+                        {
+                        }
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.ClassOpeningBraceNotOnSameLine
+                }
+            }
+
+            Context 'When Class Opening brace is not followed by a new line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    class Test 
+                    {   [int] $Good
+                        [Void] Bad() 
+                        {
+                        }
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.ClassOpeningBraceShouldBeFollowedByNewLine
+                }
+            }
+
+            Context 'When Class opening brace is followed by more than one new line' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    class Test 
+                    {
+
+                        [int] $Good
+                        [Void] Bad()
+                        {
+                        }
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should BeExactly 1
+                    $record.Message | Should Be $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                }
             }
         }
     }

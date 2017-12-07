@@ -15,25 +15,25 @@ $script:diagnosticRecord = @{
 }
 
 <#
-.SYNOPSIS
-    Validates the [Parameter()] attribute for each parameter.
+    .SYNOPSIS
+        Validates the [Parameter()] attribute for each parameter.
 
-.DESCRIPTION
-    All parameters in a param block must contain a [Parameter()] attribute
-    and it must be the first attribute for each parameter and must start with
-    a capital letter P.
+    .DESCRIPTION
+        All parameters in a param block must contain a [Parameter()] attribute
+        and it must be the first attribute for each parameter and must start with
+        a capital letter P.
 
-.EXAMPLE
-    Measure-ParameterBlockParameterAttribute -ParameterAst $parameterAst
+    .EXAMPLE
+        Measure-ParameterBlockParameterAttribute -ParameterAst $parameterAst
 
-.INPUTS
-    [System.Management.Automation.Language.ParameterAst]
+    .INPUTS
+        [System.Management.Automation.Language.ParameterAst]
 
-.OUTPUTS
-    [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+    .OUTPUTS
+        [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
 
-.NOTES
-    None
+    .NOTES
+        None
 #>
 function Measure-ParameterBlockParameterAttribute
 {
@@ -50,24 +50,32 @@ function Measure-ParameterBlockParameterAttribute
     try
     {
         $script:diagnosticRecord['Extent'] = $ParameterAst.Extent
-
-        if ($ParameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
+        [System.Boolean] $inAClass = Test-IsInClass -Ast $ParameterAst
+        
+        <# 
+            If we are in a class the parameter attributes are not valid in Classes
+            the ParameterValidation attributes are however
+        #>
+        if (!$inAClass)
         {
-            $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeMissing
+            if ($ParameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeMissing
 
-            $script:diagnosticRecord -as $script:diagnosticRecordType
-        }
-        elseif ($ParameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
-        {
-            $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeWrongPlace
+                $script:diagnosticRecord -as $script:diagnosticRecordType
+            }
+            elseif ($ParameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeWrongPlace
 
-            $script:diagnosticRecord -as $script:diagnosticRecordType
-        }
-        elseif ($ParameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
-        {
-            $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeLowerCase
+                $script:diagnosticRecord -as $script:diagnosticRecordType
+            }
+            elseif ($ParameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeLowerCase
 
-            $script:diagnosticRecord -as $script:diagnosticRecordType
+                $script:diagnosticRecord -as $script:diagnosticRecordType
+            }
         }
     }
     catch
@@ -77,24 +85,24 @@ function Measure-ParameterBlockParameterAttribute
 }
 
 <#
-.SYNOPSIS
-    Validates use of the Mandatory named argument within a Parameter attribute.
+    .SYNOPSIS
+        Validates use of the Mandatory named argument within a Parameter attribute.
 
-.DESCRIPTION
-    If a parameter attribute contains the mandatory attribute the
-    mandatory attribute must be formatted correctly.
+    .DESCRIPTION
+        If a parameter attribute contains the mandatory attribute the
+        mandatory attribute must be formatted correctly.
 
-.EXAMPLE
-    Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $namedAttributeArgumentAst
+    .EXAMPLE
+        Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $namedAttributeArgumentAst
 
-.INPUTS
-    [System.Management.Automation.Language.NamedAttributeArgumentAst]
+    .INPUTS
+        [System.Management.Automation.Language.NamedAttributeArgumentAst]
 
-.OUTPUTS
-    [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+    .OUTPUTS
+        [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
 
-.NOTES
-    None
+    .NOTES
+        None
 #>
 function Measure-ParameterBlockMandatoryNamedArgument
 {
@@ -110,41 +118,50 @@ function Measure-ParameterBlockMandatoryNamedArgument
 
     try
     {
-        if ($NamedAttributeArgumentAst.ArgumentName -eq 'Mandatory')
-        {
-            $script:diagnosticRecord['Extent'] = $NamedAttributeArgumentAst.Extent
+        [System.Boolean] $inAClass = Test-IsInClass -Ast $NamedAttributeArgumentAst
 
-            if ($NamedAttributeArgumentAst)
+        <# 
+            Parameter Attributes are not valid in classes, and DscProperty does
+            not use the (Mandatory = $true) format just DscProperty(Mandatory)
+        #>
+        if (!$inAClass)
+        {
+            if ($NamedAttributeArgumentAst.ArgumentName -eq 'Mandatory')
             {
-                $invalidFormat = $false
-                try
+                $script:diagnosticRecord['Extent'] = $NamedAttributeArgumentAst.Extent
+
+                if ($NamedAttributeArgumentAst)
                 {
-                    $value = $NamedAttributeArgumentAst.Argument.SafeGetValue()
-                    if ($value -eq $false)
+                    $invalidFormat = $false
+                    try
                     {
-                        $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+                        $value = $NamedAttributeArgumentAst.Argument.SafeGetValue()
+                        if ($value -eq $false)
+                        {
+                            $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+
+                            $script:diagnosticRecord -as $script:diagnosticRecordType
+                        }
+                        elseif ($NamedAttributeArgumentAst.Argument.VariablePath.UserPath -cne 'true')
+                        {
+                            $invalidFormat = $true
+                        }
+                        elseif ($NamedAttributeArgumentAst.ArgumentName -cne 'Mandatory')
+                        {
+                            $invalidFormat = $true
+                        }
+                    }
+                    catch
+                    {
+                        $invalidFormat = $true
+                    }
+
+                    if ($invalidFormat)
+                    {
+                        $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
 
                         $script:diagnosticRecord -as $script:diagnosticRecordType
                     }
-                    elseif ($NamedAttributeArgumentAst.Argument.VariablePath.UserPath -cne 'true')
-                    {
-                        $invalidFormat = $true
-                    }
-                    elseif ($NamedAttributeArgumentAst.ArgumentName -cne 'Mandatory')
-                    {
-                        $invalidFormat = $true
-                    }
-                }
-                catch
-                {
-                    $invalidFormat = $true
-                }
-
-                if ($invalidFormat)
-                {
-                    $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
-
-                    $script:diagnosticRecord -as $script:diagnosticRecordType
                 }
             }
         }
@@ -652,7 +669,7 @@ function Measure-SwitchStatement
         {
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
-        }
+        } # if
         elseif (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
         {
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByNewLine
@@ -715,7 +732,7 @@ function Measure-TryStatement
         {
             $script:diagnosticRecord['Message'] = $localizedData.TryStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
-        }
+        } # if
 
         if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
         {
@@ -791,6 +808,92 @@ function Measure-CatchClause
         {
             $script:diagnosticRecord['Message'] = $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
+    }
+}
+
+<#
+    .SYNOPSIS
+        Validates the Class and Enum of PowerShell.
+
+    .DESCRIPTION
+        Each Class or Enum must be formatted correctly.
+
+    .EXAMPLE
+        Measure-TypeDefinition -TypeDefinitionAst $ScriptBlockAst
+
+    .INPUTS
+        [System.Management.Automation.Language.TypeDefinitionAst]
+
+    .OUTPUTS
+        [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
+   .NOTES
+        None
+#>
+function Measure-TypeDefinition
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.Language.TypeDefinitionAst]
+        $TypeDefinitionAst
+    )
+
+    try
+    {
+        $script:diagnosticRecord['Extent'] = $TypeDefinitionAst.Extent
+
+        $testParameters = @{
+            StatementBlock = $TypeDefinitionAst.Extent
+        }
+        
+        if ($TypeDefinitionAst.IsEnum)
+        {
+            if (Test-StatementOpeningBraceOnSameLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceNotOnSameLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+
+            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceShouldBeFollowedByNewLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+
+            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+        } # if
+        elseif ($TypeDefinitionAst.IsClass)
+        {
+            if (Test-StatementOpeningBraceOnSameLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceNotOnSameLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+
+            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceShouldBeFollowedByNewLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+
+            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
         } # if
     }
     catch

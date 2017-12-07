@@ -35,4 +35,10 @@ TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine = Opening brace on try-
 CatchClauseOpeningBraceNotOnSameLine = Catch-clause should not have the open brace on the same line as the clause. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-before-braces
 CatchClauseOpeningBraceShouldBeFollowedByNewLine = Opening brace on catch-clause should be followed by a new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
 CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine = Opening brace on catch-clause should only be followed by one new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
+EnumOpeningBraceNotOnSameLine = Enum should not have the open brace on the same line as the declaration. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-before-braces
+EnumOpeningBraceShouldBeFollowedByNewLine = Opening brace on Enum should be followed by a new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
+EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine = Opening brace on Enum should only be followed by one new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
+ClassOpeningBraceNotOnSameLine = Class should not have the open brace on the same line as the declaration. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-before-braces
+ClassOpeningBraceShouldBeFollowedByNewLine = Opening brace on Class should be followed by a new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
+ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine = Opening brace on Class should only be followed by one new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
 '@
