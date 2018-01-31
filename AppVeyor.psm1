@@ -34,7 +34,7 @@ else
 #>
 function Invoke-AppveyorInstallTask
 {
-    [CmdletBinding(DefaultParametersetName='Default')]
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
         [Version]
@@ -526,7 +526,7 @@ function Invoke-AppveyorTestScriptTask
 function Invoke-AppveyorAfterTestTask
 {
 
-    [CmdletBinding(DefaultParametersetName = 'Default')]
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
         [Parameter()]
@@ -672,7 +672,7 @@ function Write-Info
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory=$true, Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [string]
         $Message
     )
@@ -696,7 +696,7 @@ function Push-TestArtifact
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory=$true, Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [string]
         $Path
     )

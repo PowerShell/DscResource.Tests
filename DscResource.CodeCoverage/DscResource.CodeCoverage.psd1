@@ -27,7 +27,7 @@
     Copyright = '(c) 2017 Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description = 'This module is used to assist in Code Coverage for PowerShell DSC resoruces'
+    Description = 'This module is used to assist in Code Coverage for PowerShell DSC resources'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion = '4.0'

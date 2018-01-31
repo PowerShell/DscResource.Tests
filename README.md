@@ -361,22 +361,22 @@ have been run.
 
 It is also important that the configuration file and the integration test uses
 the same resource name in the file name. For example and integration test for
-xSQLServerSetup has a configuration file named 'MSFT_xSQLServerSetup.config.ps1'
-and the integration test file is named 'MSFT_xSQLServerSetup.Integration.Tests.ps1'.
+SqlSetup has a configuration file named 'MSFT_SqlSetup.config.ps1'
+and the integration test file is named 'MSFT_SqlSetup.Integration.Tests.ps1'.
 
-Example how the configuration file could look like to make sure an integration test
-is always run as one of the first integration tests.
+Example showing how the configuration file could look like to make sure an
+integration test is always run as one of the first integration tests.
 
 ```powershell
 [Microsoft.DscResourceKit.IntegrationTest(OrderNumber = 1)]
 param()
 
-Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
+Configuration MSFT_SqlAlwaysOnService_EnableAlwaysOn_Config
 {
-    Import-DscResource -ModuleName 'xSQLServer'
+    Import-DscResource -ModuleName 'SqlServerDsc'
 
     node localhost {
-        xSQLServerAlwaysOnService 'Integration_Test'
+        SqlAlwaysOnService 'Integration_Test'
         {
             Ensure               = 'Present'
             SQLServer            = $Node.ComputerName
@@ -517,6 +517,10 @@ Configuration MSFT_xSQLServerAlwaysOnService_EnableAlwaysOn_Config
   * Created new Unit Tests to validate the functionality of said cmdlet
 * Modified current Parameter, and AttributeArgument Analyzer Rules to check for Class membership and properly validate in those cases as well as the current Function based Cmdlets
   * Created new unit tests to validate the new Analyzer rules pass or fail as expected for Class based resources
+* Minor code cleanup in AppVeyor.psm1.
+* Updated documentation in README.md and comment-based help in TestHelp.psm1 to
+  use the new name of the renamed SqlServerDsc resource module.
+* Fixed minor typo in manifest for the CodeCoverage module.
 
 ### 0.2.0.0
 

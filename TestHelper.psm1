@@ -235,14 +235,13 @@ function Install-ModuleFromPowerShellGallery
 
     .EXAMPLE
         $TestEnvironment = Initialize-TestEnvironment `
-            -DSCModuleName 'xSQLServer' `
-            -DSCResourceName 'xSQLServerAlwaysOnAvailabilityGroupDatabaseMembership' `
+            -DSCModuleName 'SqlServerDsc' `
+            -DSCResourceName 'SqlAGDatabase' `
             -TestType Unit
             -ResourceType Class
 
         This command will initialize the test environment for Unit testing
-        the xSQLServerAlwaysOnAvailabilityGroupDatabaseMembership class-based DSC
-        resource in the xSQLServer DSC module.
+        the SqlAGDatabase class-based DSC resource in the SqlServer DSC module.
 
     .EXAMPLE
         $TestEnvironment = Initialize-TestEnvironment `
@@ -1355,9 +1354,9 @@ function Get-DscIntegrationTestOrderNumber
         will assume that DscResource.Test has been cloned into another resource
         module and it is that resource module that is being tested.
         Example:
-            Current folder:  c:\source\xSQLServer\DscResource.Tests
-            Parent folder:   c:\source\xSQLServer
-            Module manifest: c:\source\xSQLServer\xSQLServer.psd1
+            Current folder:  c:\source\SqlServerDsc\DscResource.Tests
+            Parent folder:   c:\source\SqlServerDsc
+            Module manifest: c:\source\SqlServerDsc\SqlServerDsc.psd1
 #>
 function Test-IsRepositoryDscResourceTests
 {
