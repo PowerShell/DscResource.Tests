@@ -521,6 +521,7 @@ Configuration MSFT_SqlAlwaysOnService_EnableAlwaysOn_Config
 * Updated documentation in README.md and comment-based help in TestHelp.psm1 to
   use the new name of the renamed SqlServerDsc resource module.
 * Fixed minor typo in manifest for the CodeCoverage module.
+* Added Invoke-AppveyorTestScriptTask cmdlet functionality for CodeCoverage for Class based resources ([issue #173](https://github.com/PowerShell/DscResource.Tests/issues/173))
 
 ### 0.2.0.0
 

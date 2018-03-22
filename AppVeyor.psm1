@@ -247,23 +247,27 @@ function Invoke-AppveyorTestScriptTask
                 Write-Warning -Message 'Code coverage statistics are being calculated. This will slow the start of the tests while the code matrix is built. Please be patient.'
 
                 # Only add code path for DSCResources if they exist.
-                if (Test-Path -Path "$MainModulePath\DSCResources" )
+                $codeCoveragePaths = @(
+                    "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
+                )
+
+                # Define the folders to check, if found add the path for codecoverage
+                $possibleModulePaths = @(
+                    'DSCResources',
+                    'DSCClassResources'
+                )
+
+                foreach ($possibleModulePath in $possibleModulePaths)
                 {
-                    $pesterParameters += @{
-                        CodeCoverage = @(
-                            "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
-                            "$env:APPVEYOR_BUILD_FOLDER\DSCResources\*.psm1"
-                            "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
-                        )
+                    if (Test-Path -Path $MainModulePath\$possibleModulePath)
+                    {
+                        $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\*.psm1"
+                        $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\**\*.psm1"
                     }
                 }
-                else
-                {
-                    $pesterParameters += @{
-                        CodeCoverage = @(
-                            "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
-                        )
-                    }
+
+                $pesterParameters += @{
+                    CodeCoverage = $codeCoveragePaths
                 }
             }
 
@@ -387,7 +391,7 @@ function Invoke-AppveyorTestScriptTask
                 $pesterParameters += @{
                     Path = $testObjectOrder.TestPath
                 }
-
+                               
                 $results = Invoke-Pester @pesterParameters
             }
             else
