@@ -60,7 +60,6 @@ function New-Nuspec
 
         [String]
         $Tags
-
     )
 
     $currentYear = (Get-Date).Year
@@ -353,7 +352,7 @@ function Initialize-TestEnvironment
 
     $newPSModulePath = "$moduleParentFilePath;$newPSModulePath"
 
-    $env:PSModulePath = $newPSModulePath
+    Set-PSModulePath -Path $newPSModulePath
 
     if ($TestType -ieq 'Integration')
     {
@@ -361,7 +360,7 @@ function Initialize-TestEnvironment
             For integration tests we have to set the machine's PSModulePath because otherwise the
             DSC LCM won't be able to find the resource module being tested or may use the wrong one.
         #>
-        [System.Environment]::SetEnvironmentVariable('PSModulePath', $newPSModulePath, [System.EnvironmentVariableTarget]::Machine)
+        Set-PSModulePath -Path $newPSModulePath -Machine
 
         # Reset the DSC LCM
         Reset-DSC
@@ -387,11 +386,11 @@ function Initialize-TestEnvironment
 
 <#
     .SYNOPSIS
-        Restores the enviroment after running unit or integration tests
+        Restores the environment after running unit or integration tests
         on a DSC resource.
 
         This restores the following changes made by calling
-        Initialize-TestEnvironemt:
+        Initialize-TestEnvironment:
         1. Restores the $env:PSModulePath if it was changed.
         2. Restores the PowerShell execution policy.
         3. Resets the DSC LCM if running Integration tests.
@@ -424,12 +423,12 @@ function Restore-TestEnvironment
     # Restore PSModulePath
     if ($TestEnvironment.OldPSModulePath -ne $env:PSModulePath)
     {
-        $env:PSModulePath = $TestEnvironment.OldPSModulePath
+        Set-PSModulePath -Path $TestEnvironment.OldPSModulePath
 
         if ($TestEnvironment.TestType -eq 'Integration')
         {
             # Restore the machine PSModulePath for integration tests.
-            [System.Environment]::SetEnvironmentVariable('PSModulePath', $TestEnvironment.OldPSModulePath, [System.EnvironmentVariableTarget]::Machine)
+            Set-PSModulePath -Path $TestEnvironment.OldPSModulePath -Machine
         }
     }
 
@@ -830,7 +829,7 @@ function Get-SuppressedPSSARuleNameList
 
     $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
 
-    # Overall file attrbutes
+    # Overall file attributes
     $attributeAsts = $fileAst.FindAll({$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $true)
 
     foreach ($attributeAst in $attributeAsts)
@@ -847,7 +846,7 @@ function Get-SuppressedPSSARuleNameList
 <#
     .SYNOPSIS
         Downloads and installs a specific version of Nuget.exe to be used to produce
-        DSC Resouce NUPKG files.
+        DSC Resource NUPKG files.
 
         This allows control over the version of Nuget.exe that is used. This helps
         resolve an issue with different versions of Nuget.exe formatting the version
@@ -859,7 +858,7 @@ function Get-SuppressedPSSARuleNameList
         The path to the download Nuget.exe to.
 
     .PARAMETER Uri
-        The URI to use to dowload Nuget.exe from.
+        The URI to use to download Nuget.exe from.
 #>
 function Install-NugetExe
 {
@@ -894,7 +893,7 @@ function Get-PesterDescribeName
 <#
     .SYNOPSIS
         Gets the opt-in status of the current pester Describe
-        block.  Writes a warning if the test is not opted-in.
+        block. Writes a warning if the test is not opted-in.
 
     .PARAMETER OptIns
         An array of what is opted-in
@@ -1201,10 +1200,30 @@ function Install-DependentModule
     # Check any additional modules required are installed
     foreach ($requiredModule in $Module)
     {
-        if (-not (Get-Module @requiredModule -ListAvailable -ErrorAction SilentlyContinue))
+        $getModuleParameters = @{
+            Name = $requiredModule.Name
+            ListAvailable = $true
+            ErrorAction = 'SilentlyContinue'
+        }
+
+        if ($requiredModule.ContainsKey('Version'))
+        {
+            $requiredModuleExist = `
+                Get-Module @getModuleParameters |
+                    Where-Object -FilterScript {
+                        $_.Version -eq $requiredModule.Version
+                    }
+        }
+        else
+        {
+            $requiredModuleExist = Get-Module @getModuleParameters
+        }
+
+        if (-not ($requiredModuleExist))
         {
             # The required module is missing from this machine
-            if ($requiredModule.ContainsKey('Version')) {
+            if ($requiredModule.ContainsKey('Version'))
+            {
                 $requiredModuleName = ('{0} version {1}' -f $requiredModule.Name, $requiredModule.Version)
             }
             else
@@ -1379,6 +1398,50 @@ function Test-IsRepositoryDscResourceTests
     }
 }
 
+<#
+    .SYNOPSIS
+        The is a wrapper to set $env:PSModulePath both in current session and
+        machine wide.
+        This is needed to be able to mock the function in the unit tests.
+
+    .PARAMETER Path
+        A string with all the paths separated by semi-colons.
+
+    .PARAMETER Machine
+        If set the PSModulePath will be changed machine wide. If not set, only
+        the current session will be changed.
+
+    .EXAMPLE
+        Set-PSModulePath -Path '<Path 1>;<Path 2>'
+
+    .EXAMPLE
+        Set-PSModulePath -Path '<Path 1>;<Path 2>' -Machine
+#>
+function Set-PSModulePath
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path,
+
+        [Parameter()]
+        [Switch]
+        $Machine
+    )
+
+    if ($Machine.IsPresent)
+    {
+        [System.Environment]::SetEnvironmentVariable('PSModulePath', $Path, [System.EnvironmentVariableTarget]::Machine)
+    }
+    else
+    {
+        $env:PSModulePath = $Path
+    }
+}
+
 Export-ModuleMember -Function @(
     'New-Nuspec', `
     'Install-ModuleFromPowerShellGallery', `
@@ -1405,5 +1468,6 @@ Export-ModuleMember -Function @(
     'Get-ResourceModulesInConfiguration',
     'Install-DependentModule',
     'Get-DscIntegrationTestOrderNumber',
-    'Test-IsRepositoryDscResourceTests'
+    'Test-IsRepositoryDscResourceTests',
+    'Set-PSModulePath'
 )

@@ -521,6 +521,13 @@ Configuration MSFT_SqlAlwaysOnService_EnableAlwaysOn_Config
 * Updated documentation in README.md and comment-based help in TestHelp.psm1 to
   use the new name of the renamed SqlServerDsc resource module.
 * Fixed minor typo in manifest for the CodeCoverage module.
+* Added a wrapper Set-PSModulePath for setting $env:PSModulePath to be able to
+  write unit tests for the helper functions with more code coverage.
+* Minor typos and cleanup in helper functions.
+* Fixed a bug in Install-DependentModule when calling the helper function using
+  a specific version to install. Now Get-Module will no longer throw an error
+  that it does not have a parameter named 'Version'.
+* Added unit test for helper function in TestHelper to increase code coverage.
 * Added Invoke-AppveyorTestScriptTask cmdlet functionality for CodeCoverage for Class based resources ([issue #173](https://github.com/PowerShell/DscResource.Tests/issues/173))
 
 ### 0.2.0.0
