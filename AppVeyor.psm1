@@ -17,6 +17,10 @@ else
     $customTaskModuleLoaded = $false
 }
 
+# Load the test helper module.
+$testHelperPath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
+Import-Module -Name $testHelperPath -Force
+
 <#
     .SYNOPSIS
         Prepares the AppVeyor build environment to perform tests and packaging on a
@@ -40,11 +44,6 @@ function Invoke-AppveyorInstallTask
         [Version]
         $PesterMaximumVersion
     )
-
-    # Load the test helper module
-    $testHelperPath = Join-Path -Path $PSScriptRoot `
-                                -ChildPath 'TestHelper.psm1'
-    Import-Module -Name $testHelperPath -Force
 
     Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
@@ -116,7 +115,28 @@ function Invoke-AppveyorInstallTask
         If not specified it will default to 'Invoke-TestHarness'.
 
     .PARAMETER CodeCovIo
-        This will switch on reporting of code coverage to codecov.io.  Require -CodeCoverage when running with -type default.
+        This will switch on reporting of code coverage to codecov.io.
+        Require -CodeCoverage when running with -type default.
+
+    .PARAMETER DisableConsistency
+        This will switch off monitoring (consistency) for the Local Configuration
+        Manager (LCM), setting ConfigurationMode to 'ApplyOnly', on the node
+        running tests.
+
+    .PARAMETER RunTestInOrder
+        This will cause the integration tests to be run in order. First, the
+        common tests will run, followed by the unit tests. Finally the integration
+        tests will be run in the order defined.
+        Each integration test configuration file ('*.config.ps1') must be decorated
+        with an attribute `Microsoft.DscResourceKit.IntegrationTest` containing
+        a named attribute argument 'OrderNumber' and be assigned a numeric value
+        (`1`, `2`, `3`,..). If the integration test is not decorated with the
+        attribute, then that test will run among the last tests, after all the
+        integration test with a specific order has run.
+
+    .PARAMETER RunInContainer
+        This enables running unit tests in a Docker Windows container. The parameter
+        can only be used when the parameter RunTestInOrder is also used.
 #>
 function Invoke-AppveyorTestScriptTask
 {
@@ -161,13 +181,12 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter()]
         [Switch]
-        $RunTestInOrder
-    )
+        $RunTestInOrder,
 
-    # Load the test helper module
-    $testHelperPath = Join-Path -Path $PSScriptRoot `
-                                -ChildPath 'TestHelper.psm1'
-    Import-Module -Name $testHelperPath -Force
+        [Parameter()]
+        [Switch]
+        $RunInContainer
+    )
 
     # Convert the Main Module path into an absolute path if it is relative
     if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
@@ -236,13 +255,20 @@ function Invoke-AppveyorTestScriptTask
                 OutputFile   = $testResultsFile
                 PassThru     = $True
             }
+
             if ($ExcludeTag.Count -gt 0)
             {
                 $pesterParameters += @{
                     ExcludeTag = $ExcludeTag
                 }
             }
-            if ($CodeCoverage)
+
+            <#
+                Only add CodeCoverage parameter at this point if we are not running
+                unit tests in a container. If unit tests are running in a container
+                then the container logic will handle this.
+            #>
+            if ($CodeCoverage -and -not $RunInContainer.IsPresent)
             {
                 Write-Warning -Message 'Code coverage statistics are being calculated. This will slow the start of the tests while the code matrix is built. Please be patient.'
 
@@ -259,7 +285,7 @@ function Invoke-AppveyorTestScriptTask
 
                 foreach ($possibleModulePath in $possibleModulePaths)
                 {
-                    if (Test-Path -Path $MainModulePath\$possibleModulePath)
+                    if (Test-Path -Path "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath")
                     {
                         $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\*.psm1"
                         $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\**\*.psm1"
@@ -300,7 +326,7 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 $testObjects = @()
 
-                # Add all tests to the array with order number set to $null
+                # Add all tests to the array with order number set to $null.
                 foreach ($testFile in $testFiles)
                 {
                     $testObjects += @(
@@ -357,10 +383,11 @@ function Invoke-AppveyorTestScriptTask
                     This is an array of the test files in the correct
                     order they will be run.
 
-                    First the common tests will always run.
-                    Secondly the tests that use mocks will run (unit tests).
-                    Thirdly, those the tests that actually changes things
-                    (integration tests) will run in order.
+                    - First the common tests will always run.
+                    - Secondly the tests that use mocks will run (unit tests),
+                      unless they should be run in a container.
+                    - Finally, those the tests that actually changes things
+                      (integration tests) will run in order.
                 #>
                 $testObjectOrder = @()
 
@@ -369,10 +396,127 @@ function Invoke-AppveyorTestScriptTask
                     $_.OrderNumber -eq 0
                 }
 
-                # Add tests that uses mocks (unit tests).
-                $testObjectOrder += $testObjects | Where-Object -FilterScript {
-                    $null -eq $_.OrderNumber `
-                    -and $_.TestPath -notmatch 'Integration.Tests'
+                <#
+                    If we should run unit test in a Docker Windows container, then
+                    that should be kicked off first.
+                #>
+                if ($RunInContainer.IsPresent)
+                {
+                    # Import the module containing the container helper functions.
+                    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.Container')
+
+                    Write-Info -Message 'Using a Docker Windows container to run unit tests.'
+
+                    # Filter out tests that uses mocks (unit tests).
+                    $testObjectOrderContainer += $testObjects | Where-Object -FilterScript {
+                        $null -eq $_.OrderNumber `
+                        -and $_.TestPath -notmatch 'Integration.Tests'
+                    }
+
+                    $containerName = 'unittest'
+                    $newContainerParameters = @{
+                        Name = $containerName
+                        TestPath = $testObjectOrderContainer.TestPath
+                        ProjectPath = $env:APPVEYOR_BUILD_FOLDER
+                    }
+
+                    <#
+                        If code coverage was chosen, then evaluate the files
+                        needed to be able to calculate coverage for the files
+                        tested in the container. The rest of the files are left
+                        for the tests running in the build worker.
+                    #>
+                    if ($CodeCoverage)
+                    {
+                        # Read all the test files to get an object for each.
+                        $testFile = Get-ChildItem -Path $testObjectOrderContainer.TestPath -File
+
+                        $moduleFilePath = @(
+                            '{0}\*.psm1' -f $env:APPVEYOR_BUILD_FOLDER
+                            '{0}\DSCResources\*.psm1' -f $env:APPVEYOR_BUILD_FOLDER
+                            '{0}\DSCResources\**\*.psm1' -f $env:APPVEYOR_BUILD_FOLDER
+                        )
+
+                        <#
+                            Read all module files. This array list will end up
+                            with only the module files that should be used for
+                            code coverage in the build worker.
+                        #>
+                        [System.Collections.ArrayList] $moduleFile = `
+                            Get-ChildItem -Path $moduleFilePath -File -Filter '*.psm1'
+
+                        <#
+                            This will contain all the modules files that will be
+                            used for code coverage in the container.
+                        #>
+                        $codeCoverageFile = @()
+
+                        foreach ($currentTestFile in $testFile)
+                        {
+                            $scriptBaseName = $currentTestFile.BaseName -replace '\.Tests'
+
+                            $coverageFile = $moduleFile | Where-Object -FilterScript {
+                                $_.FullName -match "$scriptBaseName\.psm1"
+                            }
+
+                            if ($coverageFile)
+                            {
+                                $codeCoverageFile += $coverageFile.FullName
+
+                                $moduleFile.Remove($coverageFile)
+                            }
+                        }
+
+                        <#
+                            Here the code coverage is assigned. The container
+                            get the module files it needs for calculating
+                            code coverage ($codeCoverageFile), and the build
+                            worker gets the remaining module files to calculate
+                            code coverage on ($moduleFile.FullName).
+                        #>
+                        $newContainerParameters['CodeCoverage'] = $codeCoverageFile
+                        $pesterParameters['CodeCoverage'] = $moduleFile.FullName
+                    }
+
+                    $containerIdentifier = New-Container @newContainerParameters
+
+                    <#
+                        This will always start the container. If for some reason
+                        the container fails, the problem will be handled after
+                        waiting for the container to finish (or fail). At that
+                        point if the container exits with a code other than 0,
+                        then the docker logs will be gathered and sent as an
+                        artifact. If PowerShell.exe returned an error record then
+                        that will be thrown.
+
+                        We could have waited here for X seconds to check
+                        whether the container seems to have started the task
+                        (and not exited with an error code). But to save seconds
+                        we assume that the container will always be able to start
+                        the task successfully.
+                    #>
+                    Start-Container -ContainerIdentifier $containerIdentifier | Out-Null
+
+                    Write-Info -Message 'Container is started. Build worker will continue run other tests.'
+
+                    <#
+                        If we run in a container then the result file that is
+                        generated by the test running in the build worker should
+                        use a different name than the default, to differentiate
+                        it from the container test result files.
+                    #>
+                    $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
+                                                 -ChildPath 'worker_TestsResults.xml'
+
+                    $pesterParameters['OutputFile'] = $testResultsFile
+                }
+                else
+                {
+                    # Add tests that uses mocks (unit tests).
+                    $testObjectOrder += $testObjects | Where-Object -FilterScript {
+                        $null -eq $_.OrderNumber `
+                        -and $_.TestPath -notmatch 'Integration.Tests'
+                    }
                 }
 
                 # Add integration tests that must run in the correct order
@@ -391,8 +535,138 @@ function Invoke-AppveyorTestScriptTask
                 $pesterParameters += @{
                     Path = $testObjectOrder.TestPath
                 }
-                               
+
+                <#
+                    This runs the tests on the build worker.
+
+                    If the option was to run tests in a container, then this
+                    will only run the remaining tests. The name of the result
+                    file that is generated by this test run was changed by the
+                    container logic, to differentiate the test result from the
+                    container test result.
+                #>
                 $results = Invoke-Pester @pesterParameters
+
+                <#
+                    If we ran unit test in a Docker Windows container, then
+                    we need to wait for the container to finish running tests.
+                #>
+                if ($RunInContainer.IsPresent)
+                {
+                    $waitContainerParameters = @{
+                        ContainerIdentifier = $containerIdentifier
+
+                        <#
+                            Wait 1 hour for the container to finish the tests.
+                            If the container has not returned before that time,
+                            the test will fail.
+                        #>
+                        Timeout = 3600
+                    }
+
+                    $containerExitCode = Wait-Container @waitContainerParameters
+
+                    if ($containerExitCode -ne 0)
+                    {
+                        $containerErrorObject = Get-ContainerLog -ContainerIdentifier $containerIdentifier
+
+                        # Upload the Docker Windows container log.
+                        $containerDockerLogFileName = '{0}-DockerLog.txt' -f $containerName
+                        $containerDockerLogPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath $containerDockerLogFileName
+                        $containerErrorObject | Out-File -FilePath $containerDockerLogPath -Encoding ascii
+                        Push-TestArtifact -Path $containerDockerLogPath
+
+                        Write-Warning -Message ('The container named ''{0}'' failed with exit code {1}. See artifact ''{2}'' for the logs. Throwing the error reported by Docker (in the log output):' -f $containerName, $containerExitCode, $containerDockerLogFileName)
+
+                        <#
+                            Loop thru the output and throw if PowerShell, that was
+                            started in the container, returned an error record.
+                            All other other output is ignored (sent to Out-Null).
+                        #>
+                        $containerErrorObject | ForEach-Object -Process {
+                            if ($_ -is [System.Management.Automation.ErrorRecord])
+                            {
+                                throw $_
+                            }
+                        } | Out-Null
+
+                        <#
+                            No error record was found that could be thrown above.
+                            Write a warning that we couldn't find an error.
+                        #>
+                        Write-Warning -Message 'Container exited with an error, but no error record was found in the container log, so the error could not be caught.'
+                    }
+
+                    Write-Info -Message ('Container named ''{0}'' has finish running tests.' -f $containerName)
+
+                    <#
+                        Get the <container>_Transcript.txt from the container
+                        and upload it as an artifact.
+                    #>
+                    $containerTestsTranscriptFilePath = Join-Path `
+                        -Path $env:APPVEYOR_BUILD_FOLDER `
+                        -ChildPath ('{0}_Transcript.txt' -f $containerName)
+
+                    $copyItemFromContainerParameters = @{
+                        ContainerIdentifier = $containerIdentifier
+                        Path = $containerTestsTranscriptFilePath
+                        Destination = $env:APPVEYOR_BUILD_FOLDER
+                    }
+
+                    Copy-ItemFromContainer @copyItemFromContainerParameters
+                    Push-TestArtifact -Path $containerTestsTranscriptFilePath
+
+                    <#
+                        Get the <container>TestsResults.xml from the container
+                        and upload it as an artifact.
+                    #>
+                    $containerTestsResultsFilePath = Join-Path `
+                        -Path $env:APPVEYOR_BUILD_FOLDER `
+                        -ChildPath ('{0}_TestsResults.xml' -f $containerName)
+
+                    $copyItemFromContainerParameters['Path'] = $containerTestsResultsFilePath
+                    Copy-ItemFromContainer @copyItemFromContainerParameters
+                    Push-TestArtifact -Path $containerTestsResultsFilePath
+
+                    <#
+                        Get the <container>TestsResults.json from the container
+                        and upload it as an artifact.
+                    #>
+                    $containerTestsResultsJsonPath = Join-Path `
+                        -Path $env:APPVEYOR_BUILD_FOLDER `
+                        -ChildPath ('{0}_TestsResults.json' -f $containerName)
+
+                    $copyItemFromContainerParameters['Path'] = $containerTestsResultsJsonPath
+                    Copy-ItemFromContainer @copyItemFromContainerParameters
+                    Push-TestArtifact -Path $containerTestsResultsJsonPath
+
+                    Write-Info -Message ('Start listing test results from container named ''{0}''.' -f $containerName)
+
+                    $containerPesterResult = Get-Content -Path $containerTestsResultsJsonPath | ConvertFrom-Json
+
+                    # Output the final unit test results.
+                    $outTestResultParameters = @{
+                        TestResult = $containerPesterResult.TestResult
+                        WaitForAppVeyorConsole = $true
+                        Timeout = 5
+                    }
+
+                    Out-TestResult @outTestResultParameters
+
+                    # Output the missed commands when code coverage is used.
+                    if ($CodeCoverage.IsPresent)
+                    {
+                        $outMissedCommandParameters = @{
+                            MissedCommand = $containerPesterResult.CodeCoverage.MissedCommands
+                            WaitForAppVeyorConsole = $true
+                            Timeout = 5
+                        }
+
+                        Out-MissedCommand @outMissedCommandParameters
+                    }
+
+                    Write-Info -Message ('End of test results from container named ''{0}''.' -f $containerName)
+                }
             }
             else
             {
@@ -405,6 +679,7 @@ function Invoke-AppveyorTestScriptTask
 
             break
         }
+
         'Harness'
         {
             # Copy the DSCResource.Tests folder into the folder containing the resource PSD1 file.
@@ -423,13 +698,21 @@ function Invoke-AppveyorTestScriptTask
             Remove-Item -Path $dscTestsPath -Force -Recurse
             break
         }
+
         default
         {
             throw "An unhandled type '$Type' was specified."
         }
     }
 
-    foreach ($result in $results.TestResult)
+    $pesterTestResult = $results.TestResult
+
+    if ($RunInContainer.IsPresent)
+    {
+        $pesterTestResult += $containerPesterResult.TestResult
+    }
+
+    foreach ($result in $pesterTestResult)
     {
         [string] $describeName = $result.Describe -replace '\\', '/'
         [string] $contextName = $result.Context -replace '\\', '/'
@@ -467,16 +750,45 @@ function Invoke-AppveyorTestScriptTask
 
     if ($CodeCovIo.IsPresent)
     {
-        if ($results.CodeCoverage)
+        if ($CodeCoverage.IsPresent)
         {
-            Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
-            Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
-            $jsonPath = Export-CodeCovIoJson -CodeCoverage $results.CodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
-            Invoke-UploadCoveCoveIoReport -Path $jsonPath
+            # Get the code coverage result from build worker test run.
+            $entireCodeCoverage = $results.CodeCoverage
+
+            # Check whether we run in a container, and the build worker reported coverage
+            if ($RunInContainer.IsPresent -and $entireCodeCoverage)
+            {
+                # Concatenate the code coverage result from the container test run.
+                $containerCodeCoverage = $containerPesterResult.CodeCoverage
+                $entireCodeCoverage.NumberOfCommandsAnalyzed += $containerCodeCoverage.NumberOfCommandsAnalyzed
+                $entireCodeCoverage.NumberOfFilesAnalyzed += $containerCodeCoverage.NumberOfFilesAnalyzed
+                $entireCodeCoverage.NumberOfCommandsExecuted += $containerCodeCoverage.NumberOfCommandsExecuted
+                $entireCodeCoverage.NumberOfCommandsMissed += $containerCodeCoverage.NumberOfCommandsMissed
+                $entireCodeCoverage.MissedCommands += $containerCodeCoverage.MissedCommands
+                $entireCodeCoverage.HitCommands += $containerCodeCoverage.HitCommands
+                $entireCodeCoverage.AnalyzedFiles += $containerCodeCoverage.AnalyzedFiles
+            }
+            elseif ($RunInContainer.IsPresent)
+            {
+                # The container was the only one reporting code coverage.
+                $entireCodeCoverage = $containerPesterResult.CodeCoverage
+            }
+
+            if ($entireCodeCoverage)
+            {
+                Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
+                Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
+                $jsonPath = Export-CodeCovIoJson -CodeCoverage $entireCodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
+                Invoke-UploadCoveCoveIoReport -Path $jsonPath
+            }
+            else
+            {
+                Write-Warning -Message 'Could not create CodeCov.io report because Pester results object did not contain a CodeCoverage object'
+            }
         }
         else
         {
-            Write-Warning -Message 'Could not create CodeCov.io report because pester results object did not contain a CodeCoverage object'
+            Write-Warning -Message 'Could not create CodeCov.io report because code coverage was not enabled when calling Invoke-AppveyorTestScriptTask.'
         }
     }
 
@@ -484,9 +796,17 @@ function Invoke-AppveyorTestScriptTask
 
     Write-Info -Message 'Done running tests.'
 
-    if ($results.FailedCount -gt 0)
+    $pesterFailedCount = $results.FailedCount
+
+    if ($RunInContainer -and $containerPesterResult.FailedCount)
     {
-        throw "$($results.FailedCount) tests failed."
+        Write-Warning -Message ('The tests that ran in the container named ''{0}'' report errors. Please look at the artifact ''{1}'' for more detailed errors.' -f $containerName, $testsTranscriptFileName)
+        $pesterFailedCount += $containerPesterResult.FailedCount
+    }
+
+    if ($pesterFailedCount -gt 0)
+    {
+        throw ('{0} tests failed.' -f $pesterFailedCount)
     }
 
     Write-Info -Message 'Test Script Task Complete.'
@@ -658,30 +978,6 @@ function Invoke-AppveyorAfterTestTask
     }
 
     Write-Info -Message 'After Test Task Complete.'
-}
-
-<#
-    .SYNOPSIS
-        Writes information to the build log
-
-    .PARAMETER Message
-        The Message to write
-
-    .EXAMPLE
-        Write-Info -Message "Some build info"
-
-#>
-function Write-Info
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string]
-        $Message
-    )
-
-    Write-Host -ForegroundColor Yellow  "[Build Info] [$([datetime]::UtcNow)] $message"
 }
 
 <#

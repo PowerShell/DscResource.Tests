@@ -4,7 +4,6 @@ $script:moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Paren
 Import-Module -Name (Join-Path -Path $script:moduleRootPath -ChildPath "$($script:ModuleName).psm1") -Force
 
 InModuleScope $script:ModuleName {
-
     Describe 'TestHelper\Get-DscIntegrationTestOrderNumber' {
         BeforeAll {
             # Set up TestDrive
@@ -30,21 +29,21 @@ InModuleScope $script:ModuleName {
         Context 'When configuration file does not contain a attribute' {
             It 'Should not return any value' {
                 $result = Get-DscIntegrationTestOrderNumber -Path $filePath_NoAttribute
-                $result | Should BeNullOrEmpty
+                $result | Should -BeNullOrEmpty
             }
         }
 
         Context 'When configuration file contain a attribute but without the correct named attribute argument' {
             It 'Should not return any value' {
                 $result = Get-DscIntegrationTestOrderNumber -Path $filePath_WrongAttribute
-                $result | Should BeNullOrEmpty
+                $result | Should -BeNullOrEmpty
             }
         }
 
         Context 'When configuration file does contain a attribute and with the correct named attribute argument' {
             It 'Should not return any value' {
                 $result = Get-DscIntegrationTestOrderNumber -Path $filePath_CorrectAttribute
-                $result | Should BeExactly 2
+                $result | Should -BeExactly 2
             }
         }
     }
@@ -1093,6 +1092,86 @@ InModuleScope $script:ModuleName {
                 $testFilePath | Should -FileContentMatchExactly ('<tags>{0}</tags>' -f $mockTags)
                 $testFilePath | Should -FileContentMatchExactly '<requireLicenseAcceptance>true</requireLicenseAcceptance>'
                 $testFilePath | Should -FileContentMatchExactly ('<copyright>Copyright {0}</copyright>' -f (Get-Date).Year)
+            }
+        }
+    }
+
+    Describe 'TestHelper\Get-LocalizedData' {
+        $mockTestPath = {
+            return $mockTestPathReturnValue
+        }
+
+        $mockImportLocalizedData = {
+            $BaseDirectory | Should -Be $mockExpectedLanguagePath
+        }
+
+        BeforeEach {
+            Mock -CommandName 'Test-Path' -MockWith $mockTestPath -Verifiable
+            Mock -CommandName 'Import-LocalizedData' -MockWith $mockImportLocalizedData -Verifiable
+        }
+
+        Context 'When loading localized data for Swedish' {
+            $mockExpectedLanguagePath = 'sv-SE'
+            $mockTestPathReturnValue = $true
+
+            It 'Should call Import-LocalizedData with sv-SE language' {
+                Mock -CommandName 'Join-Path' -MockWith {
+                    return 'sv-SE'
+                } -Verifiable
+
+                { Get-LocalizedData -ModuleName 'DummyResource' -ModuleRoot $TestDrive } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Join-Path' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Test-Path' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Import-LocalizedData' -Exactly -Times 1 -Scope It
+            }
+
+            $mockExpectedLanguagePath = 'en-US'
+            $mockTestPathReturnValue = $false
+
+            It 'Should call Import-LocalizedData and fallback to en-US if sv-SE language does not exist' {
+                Mock -CommandName 'Join-Path' -MockWith {
+                    return $ChildPath
+                } -Verifiable
+
+                { Get-LocalizedData -ModuleName 'DummyResource' -ModuleRoot $TestDrive } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Join-Path' -Exactly -Times 2 -Scope It
+                Assert-MockCalled -CommandName 'Test-Path' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Import-LocalizedData' -Exactly -Times 1 -Scope It
+            }
+        }
+
+        Context 'When loading localized data for English' {
+            Mock -CommandName 'Join-Path' -MockWith {
+                return 'en-US'
+            } -Verifiable
+
+            $mockExpectedLanguagePath = 'en-US'
+            $mockTestPathReturnValue = $true
+
+            It 'Should call Import-LocalizedData with en-US language' {
+                { Get-LocalizedData -ModuleName 'DummyResource' -ModuleRoot $TestDrive } | Should -Not -Throw
+            }
+        }
+
+        Assert-VerifiableMock
+    }
+
+    Describe 'TestHelper\Write-Info' {
+        Context 'When writing a message to console' {
+            BeforeAll {
+                $testMessageText = 'UnitTestTestMessage'
+
+                Mock -CommandName 'Write-Host' -ParameterFilter {
+                    $Message -match $testMessageText
+                }
+            }
+
+            It 'Should call the correct Cmdlets and not throw' {
+                { Write-Info -Message $testMessageText -ForegroundColor 'Red' } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Write-Host' -Exactly -Times 1 -Scope It
             }
         }
     }

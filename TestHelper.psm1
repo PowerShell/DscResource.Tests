@@ -1442,21 +1442,94 @@ function Set-PSModulePath
     }
 }
 
+<#
+    .SYNOPSIS
+        Writes a message to the console in a standard format.
+
+    .PARAMETER Message
+        The message to write to the console.
+
+    .PARAMETER ForegroundColor
+        The text color to use when writing the message to the console. Defaults
+        to 'Yellow'.
+#>
+function Write-Info
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        [System.String]
+        $Message,
+
+        [Parameter()]
+        [System.String]
+        $ForegroundColor = 'Yellow'
+    )
+
+    Write-Host -ForegroundColor $ForegroundColor -Object "[Build Info] [UTC $([System.DateTime]::UtcNow)] $message"
+}
+
+<#
+    .SYNOPSIS
+        Retrieves the localized string data based on the machine's culture.
+        Falls back to en-US strings if the machine's culture is not supported.
+
+    .PARAMETER ModuleName
+        The name of the module as it appears before '.strings.psd1' of the localized string file.
+        For example:
+            For module: DscResource.Container
+
+    .PARAMETER ModuleRoot
+        The module root path where to expect to find the culture folder.
+#>
+function Get-LocalizedData
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $ModuleName,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $ModuleRoot
+    )
+
+    $localizedStringFileLocation = Join-Path -Path $ModuleRoot -ChildPath $PSUICulture
+
+    if (-not (Test-Path -Path $localizedStringFileLocation))
+    {
+        # Fallback to en-US
+        $localizedStringFileLocation = Join-Path -Path $ModuleRoot -ChildPath 'en-US'
+    }
+
+    Import-LocalizedData `
+        -BindingVariable 'localizedData' `
+        -FileName "$ModuleName.strings.psd1" `
+        -BaseDirectory $localizedStringFileLocation
+
+    return $localizedData
+}
+
 Export-ModuleMember -Function @(
-    'New-Nuspec', `
-    'Install-ModuleFromPowerShellGallery', `
-    'Initialize-TestEnvironment', `
-    'Restore-TestEnvironment', `
-    'Get-ClassResourceNameFromFile', `
-    'Test-ModuleContainsScriptResource', `
-    'Test-ModuleContainsClassResource', `
-    'Get-Psm1FileList', `
-    'Get-FileParseErrors', `
-    'Get-TextFilesList', `
-    'Test-FileInUnicode', `
-    'Get-ModuleScriptResourceNames', `
-    'Import-PSScriptAnalyzer', `
-    'Import-xDscResourceDesigner', `
+    'New-Nuspec',
+    'Install-ModuleFromPowerShellGallery',
+    'Initialize-TestEnvironment',
+    'Restore-TestEnvironment',
+    'Get-ClassResourceNameFromFile',
+    'Test-ModuleContainsScriptResource',
+    'Test-ModuleContainsClassResource',
+    'Get-Psm1FileList',
+    'Get-FileParseErrors',
+    'Get-TextFilesList',
+    'Test-FileInUnicode',
+    'Get-ModuleScriptResourceNames',
+    'Import-PSScriptAnalyzer',
+    'Import-xDscResourceDesigner',
     'Get-SuppressedPSSARuleNameList',
     'Reset-DSC',
     'Install-NugetExe',
@@ -1469,5 +1542,7 @@ Export-ModuleMember -Function @(
     'Install-DependentModule',
     'Get-DscIntegrationTestOrderNumber',
     'Test-IsRepositoryDscResourceTests',
-    'Set-PSModulePath'
+    'Set-PSModulePath',
+    'Write-Info',
+    'Get-LocalizedData'
 )

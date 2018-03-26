@@ -387,6 +387,48 @@ Configuration MSFT_SqlAlwaysOnService_EnableAlwaysOn_Config
 }
 ```
 
+## Run unit tests in a Docker Windows container
+
+If the function `Invoke-AppveyorTestScriptTask` is called with *both*
+parameters `-RunInOrder` and `-RunInContainer`, then all the unit
+tests located in the folder '\Tests\Unit' will be run in a container.
+The common tests and integration tests will then be run on the AppVeyor
+build worker. This make it possible to run integration tests and unit
+tests in parallell.
+
+The Pester output from the container, including errors will be sent to
+the console in a Pester like format, and they will also be added to the
+list of tests in AppVeyor portal. There is transcript from the
+test run that is uploaded as artifact in AppVeyor which can contain more
+detailed errors why the one test failed.
+> **Note:** The transcript catches more output than Pester normally writes
+> to the console since it sees all errors that Pester catches with
+> `| Should -Throw`.
+
+If the container returns an exit code other than 0, the Docker log for the
+container is gathered and uploaded as an artifact. This is intended to enable
+a more detailed error of what happened to be displayed.
+The Docker log will be searched for any error records. If any are found then
+an exception will be thrown which will stop the the tests in the build worker.
+
+### Artifacts when running tests in a container
+
+These are the artifacts that differ when running tests using a container.
+
+* unittest_Transcript.txt - Contains the transcript from the test run that
+  was done in the container.
+* unittest_TestResults.xml - Contains the Pester output in the NUnitXML
+  format from the tests that was tested in the container.
+* unittest_TestResults.json - Contains the serialized object that Pester
+  returned after it finished the test run in the container.
+* unittest_DockerLog.txt - If the container exits with any other exit code
+  than 0 a Docker log is gathered and uploaded as an artifact. This is
+  intended to enable a more detailed view of the error.
+  If the container exits with exit code 0 then the Docker log will *not* be
+  uploaded.
+* worker_TestsResults - Contains the Pester output in the NUnitXML format
+  from the tests that was tested in the build worker.
+
 ## Versions
 
 ### Unreleased
@@ -529,6 +571,15 @@ Configuration MSFT_SqlAlwaysOnService_EnableAlwaysOn_Config
   that it does not have a parameter named 'Version'.
 * Added unit test for helper function in TestHelper to increase code coverage.
 * Added Invoke-AppveyorTestScriptTask cmdlet functionality for CodeCoverage for Class based resources ([issue #173](https://github.com/PowerShell/DscResource.Tests/issues/173))
+* Add opt-in parameter RunInContainer for the helper function Invoke-AppveyorTestScriptTask
+  which enables running unit tests in a Docker Windows container. The RunInContainer
+  parameter can only be used when the parameter RunTestInOrder is also used.
+* Moved helper function Write-Info to the TestHelpers module so it could be reused
+  by other modules. The string was changed to output 'UTC' before the time to
+  clarify that it is UTC time, and optional parameter 'ForegroundColor' was added
+  so that it is possible to change the color of the text that is written.
+* Added module DscResource.Container which contain logic to handle the container
+  testing when unit tests are run in a Docker Windows container.
 
 ### 0.2.0.0
 
