@@ -43,7 +43,7 @@ $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'Ds
 $repoRootPath = $moduleRootFilePath
 $repoRootPathFound = $false
 while (-not $repoRootPathFound `
-    -and -not ([String]::IsNullOrEmpty((Split-Path -Path $repoRootPath -Parent))))
+        -and -not ([String]::IsNullOrEmpty((Split-Path -Path $repoRootPath -Parent))))
 {
     if (Get-ChildItem -Path $repoRootPath -Filter '.git' -Directory -Force)
     {
@@ -58,8 +58,8 @@ while (-not $repoRootPathFound `
 if (-not $repoRootPathFound)
 {
     Write-Warning -Message ('The root folder of the DSC Resource repository could ' + `
-        'not be located. This may prevent some markdown files from being checked for ' + `
-        'errors. Please ensure this repository has been cloned using Git.')
+            'not be located. This may prevent some markdown files from being checked for ' + `
+            'errors. Please ensure this repository has been cloned using Git.')
     $repoRootPath = $moduleRootFilePath
 }
 
@@ -170,18 +170,19 @@ Describe 'Common Tests - File Formatting' {
         $markdownFileExtensions = @('.md')
 
         $markdownFiles = $textFiles |
-                            Where-Object { $markdownFileExtensions -contains $_.Extension }
+            Where-Object { $markdownFileExtensions -contains $_.Extension }
 
         foreach ($markdownFile in $markdownFiles)
         {
             $filePathOutputName = Get-RelativePathFromModuleRoot `
-                                    -FilePath $markdownFile.FullName `
-                                    -ModuleRootFilePath $moduleRootFilePath
+                -FilePath $markdownFile.FullName `
+                -ModuleRootFilePath $moduleRootFilePath
 
             It ('Markdown file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) {
                 $markdownFileHasBom = Test-FileHasByteOrderMark -FilePath $markdownFile.FullName
 
-                if ($markdownFileHasBom) {
+                if ($markdownFileHasBom)
+                {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
@@ -203,14 +204,15 @@ Describe 'Common Tests - Validate Script Files' -Tag 'Script' {
     foreach ($scriptFile in $scriptFiles)
     {
         $filePathOutputName = Get-RelativePathFromModuleRoot `
-                                -FilePath $scriptFile.FullName `
-                                -ModuleRootFilePath $moduleRootFilePath
+            -FilePath $scriptFile.FullName `
+            -ModuleRootFilePath $moduleRootFilePath
 
         Context $filePathOutputName {
             It ('Script file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) -Skip:(!$optIn) {
                 $scriptFileHasBom = Test-FileHasByteOrderMark -FilePath $scriptFile.FullName
 
-                if ($scriptFileHasBom) {
+                if ($scriptFileHasBom)
+                {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
@@ -226,8 +228,8 @@ Describe 'Common Tests - .psm1 File Parsing' {
     foreach ($psm1File in $psm1Files)
     {
         $filePathOutputName = Get-RelativePathFromModuleRoot `
-                                -FilePath $psm1File.FullName `
-                                -ModuleRootFilePath $moduleRootFilePath
+            -FilePath $psm1File.FullName `
+            -ModuleRootFilePath $moduleRootFilePath
 
         Context $filePathOutputName {
             It ('Module file ''{0}'' should not contain parse errors' -f $filePathOutputName) {
@@ -257,14 +259,15 @@ Describe 'Common Tests - Validate Module Files' -Tag 'Module' {
     foreach ($moduleFile in $moduleFiles)
     {
         $filePathOutputName = Get-RelativePathFromModuleRoot `
-                                -FilePath $moduleFile.FullName `
-                                -ModuleRootFilePath $moduleRootFilePath
+            -FilePath $moduleFile.FullName `
+            -ModuleRootFilePath $moduleRootFilePath
 
         Context $filePathOutputName {
             It ('Module file ''{0}'' should not have Byte Order Mark (BOM)' -f $filePathOutputName) -Skip:(!$optIn) {
                 $moduleFileHasBom = Test-FileHasByteOrderMark -FilePath $moduleFile.FullName
 
-                if ($moduleFileHasBom) {
+                if ($moduleFileHasBom)
+                {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
@@ -342,14 +345,17 @@ Describe 'Common Tests - Script Resource Schema Validation' {
 
 <#
     PSSA = PS Script Analyzer
-    Only the first and last tests here will pass/fail correctly at the moment. The other 3 tests
-    will currently always pass, but print warnings based on the problems they find.
-    These automatic passes are here to give contributors time to fix the PSSA
-    problems before we turn on these tests. These 'automatic passes' should be removed
-    along with the first test (which is replaced by the following 3) around Jan-Feb
-    2017.
-    Issue #161 has been raised to adddress this:
-    https://github.com/PowerShell/DscResource.Tests/issues/161
+
+    The following PSSA tests will always fail if any violations are found:
+    - Common Tests - Error-Level Script Analyzer Rules
+    - Common Tests - Custom Script Analyzer Rules
+
+    The following PSSA tests will only fail if a violation is found and
+    a matching option is found in the opt-in file.
+    - Common Tests - Required Script Analyzer Rules
+    - Common Tests - Flagged Script Analyzer Rules
+    - Common Tests - New Error-Level Script Analyzer Rules
+    - Common Tests - Custom Script Analyzer Rules
 #>
 Describe 'Common Tests - PS Script Analyzer on Resource Files' {
 
@@ -412,9 +418,9 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
         foreach ($dscResourcesPsm1File in $dscResourcesPsm1Files)
         {
             $invokeScriptAnalyzerParameters = @{
-                Path                = $dscResourcesPsm1File.FullName
-                ErrorAction         = 'SilentlyContinue'
-                Recurse             = $true
+                Path        = $dscResourcesPsm1File.FullName
+                ErrorAction = 'SilentlyContinue'
+                Recurse     = $true
             }
 
             Context $dscResourcesPsm1File.Name {
@@ -453,14 +459,14 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
 
-                    <#
-                        Automatically passing this test since it may break several resource modules at the moment.
-                        Automatic pass to be removed Jan-Feb 2017.
-                        Issue #161 has been raised to adddress this:
-                        https://github.com/PowerShell/DscResource.Tests/issues/161
-                    #>
-                    $requiredPssaRulesOutput = $null
-                    $requiredPssaRulesOutput | Should Be $null
+                    if ($null -ne $requiredPssaRulesOutput -and (Get-OptInStatus -OptIns $optIns -Name 'Common Tests - Required Script Analyzer Rules'))
+                    {
+                        <#
+                            If opted into 'Common Tests - Required Script Analyzer Rules' then
+                            test that there were no violations
+                        #>
+                        $requiredPssaRulesOutput | Should Be $null
+                    }
                 }
 
                 It 'Should pass all flagged PS Script Analyzer rules' {
@@ -479,14 +485,14 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
 
-                    <#
-                        Automatically passing this test since it may break several resource modules at the moment.
-                        Automatic pass to be removed Jan-Feb 2017.
-                        Issue #161 has been raised to adddress this:
-                        https://github.com/PowerShell/DscResource.Tests/issues/161
-                    #>
-                    $flaggedPssaRulesOutput = $null
-                    $flaggedPssaRulesOutput | Should Be $null
+                    if ($null -ne $flaggedPssaRulesOutput -and (Get-OptInStatus -OptIns $optIns -Name 'Common Tests - Flagged Script Analyzer Rules'))
+                    {
+                        <#
+                            If opted into 'Common Tests - Flagged Script Analyzer Rules' then
+                            test that there were no violations
+                        #>
+                        $flaggedPssaRulesOutput | Should Be $null
+                    }
                 }
 
                 It 'Should pass any recently-added, error-level PS Script Analyzer rules' {
@@ -507,14 +513,14 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
 
-                    <#
-                        Automatically passing this test since it may break several resource modules at the moment.
-                        Automatic pass to be removed Jan-Feb 2017.
-                        Issue #161 has been raised to adddress this:
-                        https://github.com/PowerShell/DscResource.Tests/issues/161
-                    #>
-                    $newErrorPssaRulesOutput = $null
-                    $newErrorPssaRulesOutput | Should Be $null
+                    if ($null -ne $newErrorPssaRulesOutput -and (Get-OptInStatus -OptIns $optIns -Name 'Common Tests - New Error-Level Script Analyzer Rules'))
+                    {
+                        <#
+                            If opted into 'Common Tests - New Error-Level Script Analyzer Rules' then
+                            test that there were no violations
+                        #>
+                        $newErrorPssaRulesOutput | Should Be $null
+                    }
                 }
 
                 It 'Should not suppress any required PS Script Analyzer rules' {
@@ -555,14 +561,14 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
 
-                    <#
-                        Automatically passing this test since it may break several resource modules at the moment.
-                        Automatic pass to be removed Jan-Feb 2017.
-                        Issue #161 has been raised to adddress this:
-                        https://github.com/PowerShell/DscResource.Tests/issues/161
-                    #>
-                    $customPssaRulesOutput = $null
-                    $customPssaRulesOutput | Should Be $null
+                    if ($null -ne $customPssaRulesOutput -and (Get-OptInStatus -OptIns $optIns -Name 'Common Tests - Custom Script Analyzer Rules'))
+                    {
+                        <#
+                            If opted into 'Common Tests - Custom Script Analyzer Rules' then
+                            test that there were no violations
+                        #>
+                        $customPssaRulesOutput | Should Be $null
+                    }
                 }
             }
         }
@@ -598,10 +604,10 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
             # Copies all module files into the destination module folder.
             Copy-Item -Path (Join-Path -Path $moduleRootFilePath -ChildPath '*') `
-                      -Destination $powershellModulePath `
-                      -Exclude @('node_modules','.*') `
-                      -Recurse `
-                      -Force
+                -Destination $powershellModulePath `
+                -Exclude @('node_modules', '.*') `
+                -Recurse `
+                -Force
         }
 
         $exampleFile = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter '*.ps1' -Recurse
@@ -617,7 +623,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                         $mockConfigurationData = @{
                             AllNodes = @(
                                 @{
-                                    NodeName = 'localhost'
+                                    NodeName                    = 'localhost'
                                     PSDscAllowPlainTextPassword = $true
                                 }
                             )
@@ -639,30 +645,30 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                             $exampleCommand = Get-Command -Name Example -ErrorAction SilentlyContinue
                             if ($exampleCommand)
                             {
-                                    $params = @{}
+                                $params = @{}
 
-                                    # Each credential parameter in the Example function is assigned the mocked credential. 'PsDscRunAsCredential' is not assigned because that broke the example.
-                                    $credentialParameterToMockCredentialFor = $exampleCommand.Parameters.Keys | Where-Object {
-                                        $_ -like '*Account' `
+                                # Each credential parameter in the Example function is assigned the mocked credential. 'PsDscRunAsCredential' is not assigned because that broke the example.
+                                $credentialParameterToMockCredentialFor = $exampleCommand.Parameters.Keys | Where-Object {
+                                    $_ -like '*Account' `
                                         -or ($_ -like '*Credential' -and $_ -ne 'PsDscRunAsCredential') `
                                         -or $_ -like '*Passphrase'
-                                    }
+                                }
 
-                                    foreach ($currentParameter in $credentialParameterToMockCredentialFor)
-                                    {
-                                        $params.Add($currentParameter, $mockCredential)
-                                    }
+                                foreach ($currentParameter in $credentialParameterToMockCredentialFor)
+                                {
+                                    $params.Add($currentParameter, $mockCredential)
+                                }
 
-                                    <#
+                                <#
                                         If there is a $ConfigurationData variable that was dot-sources.
                                         Then use that as the configuration data instead of the mocked confgiuration data.
                                     #>
-                                    if (Get-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue)
-                                    {
-                                        $mockConfigurationData = $ConfigurationData
-                                    }
+                                if (Get-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue)
+                                {
+                                    $mockConfigurationData = $ConfigurationData
+                                }
 
-                                    Example @params -ConfigurationData $mockConfigurationData -OutputPath 'TestDrive:\' -ErrorAction Continue -WarningAction SilentlyContinue | Out-Null
+                                Example @params -ConfigurationData $mockConfigurationData -OutputPath 'TestDrive:\' -ErrorAction Continue -WarningAction SilentlyContinue | Out-Null
                             }
                             else
                             {
@@ -688,8 +694,8 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
             # Restore the load of the module to ensure future tests have access to it
             Import-Module -Name (Join-Path -Path $moduleRootFilePath `
-                                           -ChildPath "$moduleName.psd1") `
-                          -Global
+                    -ChildPath "$moduleName.psd1") `
+                -Global
         }
     }
 }
@@ -700,11 +706,11 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
     if (Get-Command -Name 'npm' -ErrorAction SilentlyContinue)
     {
         $npmParametersForStartProcess = @{
-            FilePath = 'npm'
-            ArgumentList = ''
+            FilePath         = 'npm'
+            ArgumentList     = ''
             WorkingDirectory = $PSScriptRoot
-            Wait = $true
-            WindowStyle = 'Hidden'
+            Wait             = $true
+            WindowStyle      = 'Hidden'
         }
 
         Context 'When installing markdown validation dependencies' {
@@ -806,9 +812,9 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             catch [System.Exception]
             {
                 Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
-                                        "be sure that you have installed nodejs and have " + `
-                                        "run 'npm install -g gulp' in order to have this " + `
-                                        "text execute.")
+                        "be sure that you have installed nodejs and have " + `
+                        "run 'npm install -g gulp' in order to have this " + `
+                        "text execute.")
             }
 
             if ($optIn)
@@ -871,7 +877,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 {
                     # Remove folder node_modules that npm created.
                     $npmNodeModulesPath = (Join-Path -Path $PSScriptRoot -ChildPath 'node_modules')
-                    if( Test-Path -Path $npmNodeModulesPath)
+                    if ( Test-Path -Path $npmNodeModulesPath)
                     {
                         Remove-Item -Path $npmNodeModulesPath -Recurse -Force
                     }
@@ -882,7 +888,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
     else
     {
         Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
-                                "be sure that you have installed nodejs and npm in order " + `
-                                "to have this text execute.")
+                "be sure that you have installed nodejs and npm in order " + `
+                "to have this text execute.")
     }
 }

@@ -213,6 +213,26 @@ New tests may run but only produce errors.  Once you fix the test, please copy
 `.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
 any new problem in the area, this will cause the tests to fail, not just warn.
 
+The following opt-in flags are available:
+
+* **Common Tests - Validate Module Files**: run tests to validate module files
+  have correct BOM.
+* **Common Tests - Validate Markdown Files**: run tests to validate markdown
+  files do not violate markdown rules. Markdown rules can be suppressed in
+  .markdownlint.json file.
+* **Common Tests - Validate Example Files**: run tests to validate that examples
+  can be compiled without error.
+* **Common Tests - Validate Script Files**: run tests to validate script files
+  have correct BOM.
+* **Common Tests - Required Script Analyzer Rules**: fail tests if any required
+  script analyzer rules are violated.
+* **Common Tests - Flagged Script Analyzer Rules**: fail tests if any flagged
+  script analyzer rules are violated.
+* **Common Tests - New Error-Level Script Analyzer Rules**: fail tests if any
+  new error-level script analyzer rules are violated.
+* **Common Tests - Custom Script Analyzer Rules**: fail tests if any
+  custom script analyzer rules are violated.
+
 ### Using AppVeyor.psm1 with eXperiemental DSC Resources
 
 An example ```AppVeyor.yml``` file used in an 'experimental' DSC Resource where the
@@ -580,6 +600,11 @@ These are the artifacts that differ when running tests using a container.
   so that it is possible to change the color of the text that is written.
 * Added module DscResource.Container which contain logic to handle the container
   testing when unit tests are run in a Docker Windows container.
+* Added Get-OptInStatus function to enable retrieving of an opt-in status
+  by name. This is required for implementation of PSSA opt-in rules where
+  the describe block contains multiple opt-ins in a single block.
+* Added new opt-in flags to allow enforcement of script analyzer rules ([issue #161](https://github.com/PowerShell/DscResource.Tests/issues/161))
+* Updated year in DscResources.Tests.psd1 manifest to 2018.
 
 ### 0.2.0.0
 

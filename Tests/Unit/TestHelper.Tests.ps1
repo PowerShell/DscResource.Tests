@@ -405,6 +405,22 @@ InModuleScope $script:ModuleName {
         }
     }
 
+    Describe 'TestHelper\Get-OptInStatus' {
+        Context 'When querying for the status of an opted-in test' {
+            It 'Should return $true when querying for the it status of an opted-in test' {
+                $result = Get-OptInStatus -OptIns @('Opt-In') -Name 'Opt-In'
+                $result | Should -Be $true
+            }
+        }
+
+        Context 'When querying for the status of an opted-out test' {
+            It 'Should return $false when querying for the it of an opted-out test' {
+                $result = Get-OptInStatus -OptIns @('Opt-Out') -Name 'Opt-In'
+                $result | Should -Be $false
+            }
+        }
+    }
+
     Describe 'TestHelper\Install-NuGetExe' {
         Context 'When downloading NuGet' {
             BeforeAll {

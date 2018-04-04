@@ -902,12 +902,14 @@ function Get-PesterDescribeOptInStatus
 {
     param
     (
-        [string[]]$OptIns
+        [Parameter(Mandatory = $true)]
+        [System.String[]]
+        $OptIns
     )
 
     $describeName = Get-PesterDescribeName
     $optIn = $OptIns -icontains $describeName
-    if(!$optIn)
+    if (-not $optIn)
     {
         $message = @"
 Describe $describeName will not fail unless you opt-in.
@@ -925,21 +927,64 @@ of the repo in the following format:
 
 <#
     .SYNOPSIS
-        Gets the value of the Name parameter for the specified command in the stack
+        Gets the opt-in status of an option with the specified name. Writes
+        a warning if the test is not opted-in.
+
+    .PARAMETER OptIns
+        An array of what is opted-in.
+
+    .PARAMETER Name
+        The name of the opt-in option to check the status of.
+#>
+function Get-OptInStatus
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String[]]
+        $OptIns,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Name
+    )
+
+    $optIn = $OptIns -icontains $Name
+    if (-not $optIn)
+    {
+        $message = @"
+$Name will not fail unless you opt-in.
+To opt-in, create a '.MetaTestOptIn.json' at the root
+of the repo in the following format:
+[
+     "$Name"
+]
+"@
+        Write-Warning -Message $message
+    }
+
+    return $optIn
+}
+
+<#
+    .SYNOPSIS
+        Gets the value of the Name parameter for the specified command in the stack.
 
     .PARAMETER Command
-        The name of the command to find the Name parameter for
+        The name of the command to find the Name parameter for.
 #>
 function Get-CommandNameParameterValue
 {
-    Param(
-        [Parameter(Mandatory=$true)]
-        [string] $Command
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Command
     )
 
-    $commandStackItem = (Get-PSCallStack).Where{$_.Command -eq $Command}
+    $commandStackItem = (Get-PSCallStack).Where{ $_.Command -eq $Command }
     $commandArgumentNameValues = $commandStackItem.Arguments.TrimStart('{',' ').TrimEnd('}',' ') -split '\s*,\s*'
-    $nameParameterValue = ($commandArgumentNameValues.Where{ $_ -like 'name=*'} -split '=')[-1]
+    $nameParameterValue = ($commandArgumentNameValues.Where{ $_ -like 'name=*' } -split '=')[-1]
     return $nameParameterValue
 }
 
@@ -960,17 +1005,21 @@ function Get-CommandNameParameterValue
         will return
             C:\Users\foo\Documents\WindowsPowerShell\Modules
 #>
-function Get-PSModulePathItem {
-    param(
-        [Parameter(Mandatory, Position = 0)]
-        [string] $Prefix
+function Get-PSModulePathItem
+{
+    param
+    (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Prefix
     )
 
     $item = $env:PSModulePath.Split(';') |
         Where-Object -FilterScript { $_ -like "$Prefix*" } |
         Select-Object -First 1
 
-    if (!$item) {
+    if (-not $item)
+    {
         Write-Error -Message "Cannot find the requested item in the PowerShell module path.`n`$env:PSModulePath = $env:PSModulePath"
     }
 
@@ -1534,6 +1583,7 @@ Export-ModuleMember -Function @(
     'Reset-DSC',
     'Install-NugetExe',
     'Get-PesterDescribeOptInStatus',
+    'Get-OptInStatus',
     'Get-UserProfilePSModulePathItem',
     'Get-PSHomePSModulePathItem',
     'Test-FileHasByteOrderMark',

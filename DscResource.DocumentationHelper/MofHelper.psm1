@@ -42,17 +42,17 @@ function Get-MofSchemaObject
     $currentComment = ""
     $currentlyInCommentBlock = $false
     $partialLine = $null
-    foreach($textLine in $contents)
+    foreach ($textLine in $contents)
     {
         if ($textLine.StartsWith("/*"))
         {
             $currentlyInCommentBlock = $true
         }
-        elseif($textLine.StartsWith("*/"))
+        elseif ($textLine.StartsWith("*/"))
         {
             $currentlyInCommentBlock = $false
         }
-        elseif($currentlyInCommentBlock -eq $true)
+        elseif ($currentlyInCommentBlock -eq $true)
         {
             # Ignore lines in comment blocks
         }
@@ -103,7 +103,7 @@ function Get-MofSchemaObject
         }
         else
         {
-            if($partialLine)
+            if ($partialLine)
             {
                 [string] $currentLine = $partialLine + $textLine
                 $partialLine = $null
@@ -130,7 +130,7 @@ function Get-MofSchemaObject
             $metadataObjects = @()
 
             # Does this assume that the metadata is on the same line?
-            if($length -gt 0)
+            if ($length -gt 0)
             {
                 $metadata = $currentLine.Substring($start, $end - $start)
                 $metadataObjects = $metadata.Split(",")
