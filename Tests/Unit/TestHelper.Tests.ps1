@@ -403,6 +403,17 @@ InModuleScope $script:ModuleName {
                 $result | Should -Be $false
             }
         }
+
+        # Regression test for empty array (or null value).
+        Context 'When querying for the status of an opted-in test, but there were no opt-ins read from .MetaTestOptIn.json' {
+            It 'Should not throw an error' {
+                Mock -Command Write-Warning
+
+                { Get-PesterDescribeOptInStatus -OptIns @() } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Write-Warning
+            }
+        }
     }
 
     Describe 'TestHelper\Get-OptInStatus' {
@@ -417,6 +428,17 @@ InModuleScope $script:ModuleName {
             It 'Should return $false when querying for the it of an opted-out test' {
                 $result = Get-OptInStatus -OptIns @('Opt-Out') -Name 'Opt-In'
                 $result | Should -Be $false
+            }
+        }
+
+        # Regression test for empty array (or null value).
+        Context 'When querying for the status of an opted-in test, but there were no opt-ins read from .MetaTestOptIn.json' {
+            It 'Should not throw an error' {
+                Mock -Command Write-Warning
+
+                { Get-OptInStatus -OptIns @() -Name 'Opt-In' } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Write-Warning
             }
         }
     }

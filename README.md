@@ -605,6 +605,8 @@ These are the artifacts that differ when running tests using a container.
   the describe block contains multiple opt-ins in a single block.
 * Added new opt-in flags to allow enforcement of script analyzer rules ([issue #161](https://github.com/PowerShell/DscResource.Tests/issues/161))
 * Updated year in DscResources.Tests.psd1 manifest to 2018.
+* Fixed bug where common test would throw an error if there were no
+  .MetaTestOptIn.json file or it was empty (no opt-ins).
 
 ### 0.2.0.0
 

@@ -902,7 +902,7 @@ function Get-PesterDescribeOptInStatus
 {
     param
     (
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [System.String[]]
         $OptIns
     )
@@ -940,7 +940,7 @@ function Get-OptInStatus
 {
     param
     (
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [System.String[]]
         $OptIns,
 
