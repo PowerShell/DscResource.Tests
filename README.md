@@ -607,6 +607,14 @@ These are the artifacts that differ when running tests using a container.
 * Updated year in DscResources.Tests.psd1 manifest to 2018.
 * Fixed bug where common test would throw an error if there were no
   .MetaTestOptIn.json file or it was empty (no opt-ins).
+* Added more tests for custom Script Analazyer rules to increased code coverage.
+  These new tests call the Measure-functions directly.
+* Changed so that DscResource.Tests repository can analyze code coverage for the
+  helper modules ([issue #208](https://github.com/PowerShell/DscResource.Tests/issues/208)).
+* Importing of the TestHelper.psm1 module is now done at the top of the script of
+  AppVeyor.psm1. Previously it was imported in each helper function. This was done
+  to make it easier to mock the helper functions inside the TestHelper.psm1 module
+  when testing AppVeyor.psm1.
 
 ### 0.2.0.0
 

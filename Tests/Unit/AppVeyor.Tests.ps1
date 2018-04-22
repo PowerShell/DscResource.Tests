@@ -1,20 +1,19 @@
 $script:ModuleName = 'AppVeyor'
 $script:moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+
 if ($null -eq $env:APPVEYOR_BUILD_FOLDER)
 {
     $env:APPVEYOR_BUILD_FOLDER = 'C:\projects\dscresource-tests'
 }
 
 Import-Module -Name (Join-Path -Path $script:moduleRootPath -ChildPath "$($script:ModuleName).psm1") -Force
-Import-Module -Name (Join-Path -Path $script:moduleRootPath -ChildPath 'TestHelper.psm1') -Force
-
 InModuleScope $script:ModuleName {
     # Added functions that are specific to AppVeyor environment so mocks would not fail
     Function Add-AppveyorTest { }
     Function Resolve-CoverageInfo { }
     Function Invoke-UploadCoveCoveIoReport { }
 
-    Describe 'AppVoyer\Invoke-AppveyorTestScriptTask' { 
+    Describe 'AppVeyor\Invoke-AppveyorTestScriptTask' { 
         Context 'When CodeCoverage requires additional directories' {
             $pesterReturnedValues = @{
                 PassedCount = 1
@@ -35,6 +34,9 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Write-Verbose
                 Mock -CommandName Write-Warning
                 Mock -CommandName Write-Info
+                Mock -CommandName Test-IsRepositoryDscResourceTests -MockWith {
+                    return $false
+                }
             } # End BeforeAll
             AfterEach {
                 Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
@@ -71,5 +73,5 @@ InModuleScope $script:ModuleName {
                 Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
             } # End It Both DSCResources and DSCClassResources
         } # End Context When CodeCoverage requires additional directories
-    } # End Describe AppVoyer\Invoke-AppveyorTestScriptTask
+    } # End Describe AppVeyor\Invoke-AppveyorTestScriptTask
 } # End InModuleScope

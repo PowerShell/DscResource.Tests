@@ -1,3 +1,5 @@
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+
 <#
     .SYNOPSIS
         This module provides functions for building and testing DSC Resources in AppVeyor.
@@ -277,18 +279,33 @@ function Invoke-AppveyorTestScriptTask
                     "$env:APPVEYOR_BUILD_FOLDER\*.psm1"
                 )
 
-                # Define the folders to check, if found add the path for codecoverage
-                $possibleModulePaths = @(
-                    'DSCResources',
-                    'DSCClassResources'
-                )
-
-                foreach ($possibleModulePath in $possibleModulePaths)
+                if (Test-IsRepositoryDscResourceTests)
                 {
-                    if (Test-Path -Path "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath")
+                    <#
+                        The repository being tested is DscResource.Tests.
+                        DscResource.Tests need a different set of paths for
+                        code coverage.
+                    #>
+                    $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\**\*.psm1"
+                }
+                else
+                {
+                    <#
+                        Define the folders to check, if found add the path for
+                        code coverage.
+                    #>
+                    $possibleModulePaths = @(
+                        'DSCResources',
+                        'DSCClassResources'
+                    )
+
+                    foreach ($possibleModulePath in $possibleModulePaths)
                     {
-                        $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\*.psm1"
-                        $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\**\*.psm1"
+                        if (Test-Path -Path "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath")
+                        {
+                            $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\*.psm1"
+                            $codeCoveragePaths += "$env:APPVEYOR_BUILD_FOLDER\$possibleModulePath\**\*.psm1"
+                        }
                     }
                 }
 
