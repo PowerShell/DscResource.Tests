@@ -1022,6 +1022,10 @@ function Get-PSModulePathItem
     {
         Write-Error -Message "Cannot find the requested item in the PowerShell module path.`n`$env:PSModulePath = $env:PSModulePath"
     }
+    else
+    {
+        $item = $item.TrimEnd('\')
+    }
 
     return $item
 }

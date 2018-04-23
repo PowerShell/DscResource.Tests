@@ -615,6 +615,7 @@ These are the artifacts that differ when running tests using a container.
   AppVeyor.psm1. Previously it was imported in each helper function. This was done
   to make it easier to mock the helper functions inside the TestHelper.psm1 module
   when testing AppVeyor.psm1.
+* Changed Get-PSModulePathItem to trim end back slash ([issue #217](https://github.com/PowerShell/DscResource.Tests/issues/217))
 
 ### 0.2.0.0
 
