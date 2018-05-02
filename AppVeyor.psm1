@@ -47,7 +47,10 @@ function Invoke-AppveyorInstallTask
         $PesterMaximumVersion
     )
 
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    if (Find-PackageProvider -Name 'Nuget' -ErrorAction 'SilentlyContinue')
+    {
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    }
 
     # Install Nuget.exe to enable package creation
     $nugetExePath = Join-Path -Path $env:TEMP `
@@ -729,6 +732,7 @@ function Invoke-AppveyorTestScriptTask
         $pesterTestResult += $containerPesterResult.TestResult
     }
 
+    Write-Info -Message 'Adding test result to AppVeyor test pane.'
     foreach ($result in $pesterTestResult)
     {
         [string] $describeName = $result.Describe -replace '\\', '/'
@@ -760,7 +764,38 @@ function Invoke-AppveyorTestScriptTask
             }
         }
 
-        Add-AppveyorTest @addAppVeyorTestParameters
+        <#
+            This is a workaround until AppVeyor PowerShell module is supported
+            on PowerShell Core.
+        #>
+        if ($PSVersionTable.PSEdition -eq 'Core')
+        {
+            $requestObject = @{
+                testName = $addAppVeyorTestParameters.Name
+                testFramework = $addAppVeyorTestParameters.Framework
+                fileName = $addAppVeyorTestParameters.Filename
+                outcome = $addAppVeyorTestParameters.Outcome
+                durationMilliseconds = $addAppVeyorTestParameters.Duration
+            }
+
+            if ($result.FailureMessage)
+            {
+                $requestObject['ErrorMessage'] = $addAppVeyorTestParameters.ErrorMessage
+                $requestObject['ErrorStackTrace'] = $addAppVeyorTestParameters.ErrorStackTrace
+            }
+
+            <#
+                ConvertTo-Json will handle all escaping for us, like escaping
+                double quotes and backslashes.
+            #>
+            $requestBody = $requestObject | ConvertTo-Json
+
+            Invoke-RestMethod -Method Post -Uri "$env:APPVEYOR_API_URL/api/tests" -Body $requestBody -ContentType 'application/json' | Out-Null
+        }
+        else
+        {
+            Add-AppveyorTest @addAppVeyorTestParameters
+        }
     }
 
     Push-TestArtifact -Path $testResultsFile
@@ -923,7 +958,7 @@ function Invoke-AppveyorAfterTestTask
         Compress-Archive -Path (Join-Path -Path $wikiContentPath -ChildPath '*') `
                          -DestinationPath $zipFileName
         Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
-            Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
+            Push-TestArtifact -Path $_.FullName -FileName $_.Name
         }
 
         # Remove the readme files that are used to generate documentation so they aren't shipped
@@ -947,10 +982,10 @@ function Invoke-AppveyorAfterTestTask
                      -DestinationPath $zipFileName
     New-DscChecksum -Path $env:APPVEYOR_BUILD_FOLDER -Outpath $env:APPVEYOR_BUILD_FOLDER
     Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
-        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
+        Push-TestArtifact -Path $_.FullName -FileName $_.Name
     }
     Get-ChildItem -Path "$zipFileName.checksum" | ForEach-Object -Process {
-        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
+        Push-TestArtifact -Path $_.FullName -FileName $_.Name
     }
 
     # Create the Nuspec file for the Nuget Package in the Main Module Folder
@@ -982,7 +1017,7 @@ function Invoke-AppveyorAfterTestTask
     $nugetPackageName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
                                   -ChildPath "$ResourceModuleName.$($env:APPVEYOR_BUILD_VERSION).nupkg"
     Get-ChildItem $nugetPackageName | ForEach-Object -Process {
-        Push-AppveyorArtifact -Path $_.FullName -FileName $_.Name
+        Push-TestArtifact -Path $_.FullName -FileName $_.Name
     }
 
     # Execute custom after test task if defined
@@ -1014,8 +1049,12 @@ function Push-TestArtifact
     param
     (
         [Parameter(Mandatory = $true, Position = 0)]
-        [string]
-        $Path
+        [String]
+        $Path,
+
+        [Parameter()]
+        [String]
+        $FileName
     )
 
     $resolvedPath = (Resolve-Path $Path).ProviderPath
@@ -1027,8 +1066,40 @@ function Push-TestArtifact
         (New-Object 'System.Net.WebClient').UploadFile($url, $resolvedPath)
         #>
 
-        Write-Info -Message "Uploading Test Artifact: $resolvedPath"
-        Push-AppveyorArtifact $resolvedPath
+        $uploadingInformationMessage = "Uploading Test Artifact '$resolvedPath'"
+        if ($FileName)
+        {
+            $uploadingInformationMessage = '{0}{1}' -f $uploadingInformationMessage, ", using filename '$FileName'"
+        }
+        $uploadingInformationMessage = '{0}{1}' -f $uploadingInformationMessage, '.'
+
+        Write-Info -Message $uploadingInformationMessage
+
+        # This is a workaround until AppVeyor module is supported on Core
+        if ($PSVersionTable.PSEdition -eq 'Core')
+        {
+            if ($FileName)
+            {
+                & appveyor PushArtifact $resolvedPath -FileName $FileName
+            }
+            else
+            {
+                & appveyor PushArtifact $resolvedPath
+            }
+        }
+        else
+        {
+            $pushAppVeyorArtifactParameters = @{
+                Path = $resolvedPath
+            }
+
+            if ($FileName)
+            {
+                $pushAppVeyorArtifactParameters['FileName'] = $FileName
+            }
+
+            Push-AppveyorArtifact @pushAppVeyorArtifactParameters
+        }
     }
     else
     {

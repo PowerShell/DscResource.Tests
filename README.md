@@ -616,6 +616,18 @@ These are the artifacts that differ when running tests using a container.
   to make it easier to mock the helper functions inside the TestHelper.psm1 module
   when testing AppVeyor.psm1.
 * Changed Get-PSModulePathItem to trim end back slash ([issue #217](https://github.com/PowerShell/DscResource.Tests/issues/217))
+* Updated to support running unit tests on PowerShell Core:
+  * Updated helper function Test-FileHasByteOrderMark to use `AsByteStream`.
+  * Install-PackageProvider will only run if `Find-PackageProvider -Name 'Nuget'`
+    returns a package. Currently it is not found on the AppVeyor build worker for
+    PowerShell Core.
+  * Adding tests to AppVeyor test pane is done by using the RestAPI because the
+    cmdlet Add-AppveyorTest is not supported on PowerShell Core yet.
+  * All Push-AppveyorArtifact has been changed to use the helper function
+    Push-TestArtifact instead.
+  * The helper function Push-TestArtifact uses 'appveyor.exe' to upload
+    artifacts because the cmdlet Push-AppveyorArtifact is not supported on
+    PowerShell Core.
 
 ### 0.2.0.0
 
