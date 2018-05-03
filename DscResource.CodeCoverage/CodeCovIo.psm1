@@ -329,11 +329,13 @@ function Invoke-UploadCoveCoveIoReport
         Push-TestArtifact -Path $resolvedResultFile
     }
 
-    # Set the location of Python, install the pip and get the CodeCov script, and upload the code coverage report to CodeCov
-    $ENV:PATH = 'C:\\Python34;C:\\Python34\\Scripts;' + $ENV:PATH
-    $null = python -m pip install --upgrade pip
-    $null = pip install git+git://github.com/codecov/codecov-python.git
-    $uploadResults = codecov -f $resolvedResultFile -X gcov
+    <#
+        See this link for information around codecov.exe
+        https://github.com/codecov/codecov-exe
+    #>
+    $uploadResults = & choco install codecov --yes
+
+    $uploadResults += codecov -f $resolvedResultFile --required
 
     if ($env:APPVEYOR_REPO_BRANCH)
     {

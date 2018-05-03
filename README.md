@@ -628,6 +628,8 @@ These are the artifacts that differ when running tests using a container.
   * The helper function Push-TestArtifact uses 'appveyor.exe' to upload
     artifacts because the cmdlet Push-AppveyorArtifact is not supported on
     PowerShell Core.
+* Fix codecov no longer generates an error message when uploading test coverage
+  ([issue #203](https://github.com/PowerShell/DscResource.Tests/issues/203)).
 
 ### 0.2.0.0
 
