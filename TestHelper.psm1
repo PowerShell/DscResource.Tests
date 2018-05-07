@@ -4,6 +4,23 @@
 #>
 
 <#
+    Test if type Microsoft.DscResourceKit.Test is loaded into the session,
+    if not load all the helper types.
+#>
+if (-not ('Microsoft.DscResourceKit.Test' -as [Type]))
+{
+    <#
+        This loads the types:
+            Microsoft.DscResourceKit.Test
+            Microsoft.DscResourceKit.UnitTest
+            Microsoft.DscResourceKit.IntegrationTest
+
+        Change WarningAction so it does not output a warning for the sealed class.
+    #>
+    Add-Type -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Microsoft.DscResourceKit.cs') -WarningAction SilentlyContinue
+}
+
+<#
     .SYNOPSIS
         Creates a nuspec file for a nuget package at the specified path.
 
@@ -1348,7 +1365,7 @@ function Install-DependentModule
         $null value will be returned.
 
     .PARAMETER Path
-        A path to the configuration file to search for the attribute
+        A path to the test file (.Tests.ps1) file to search for the attribute
         'Microsoft.DscResourceKit.IntegrationTest' with the named
         attribute argument 'OrderNumber'.
 #>
@@ -1369,9 +1386,6 @@ function Get-DscIntegrationTestOrderNumber
         is not found with the named attribute argument 'OrderNumber'.
     #>
     $returnValue = $null
-
-    # Change WarningAction so it does not output a warning for the sealed class.
-    Add-Type -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Microsoft.DscResourceKit.cs') -WarningAction SilentlyContinue
 
     $scriptBlockAst = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref] $null, [ref] $null)
 
@@ -1400,6 +1414,102 @@ function Get-DscIntegrationTestOrderNumber
         if ($orderNumberNamedAttributeArgumentAst)
         {
             $returnValue = $orderNumberNamedAttributeArgumentAst.Argument.Value
+        }
+    }
+
+    return $returnValue
+}
+
+<#
+    .SYNOPSIS
+        Returns the container name and the container image to use for the test
+        if found.
+        If the attribute 'Microsoft.DscResourceKit.IntegrationTest' or
+        'Microsoft.DscResourceKit.UnitTest' exists with at least one of the named
+        attribute arguments 'ContainerName' or 'ContainerImage' they will be
+        returned.
+        If neither attribute is not found, a $null value will be returned.
+
+    .PARAMETER Path
+        A path to the test file (.Tests.ps1) to search for the attribute
+        'Microsoft.DscResourceKit.IntegrationTest' or
+        'Microsoft.DscResourceKit.UnitTest'.
+
+    .OUTPUTS
+        Returns a hash table containing container name and the container image
+        name, or $null if neither attribute could be found.
+
+        @{
+            ContainerName = [System.String or $null]
+            ContainerImage = [System.String or $null]
+        }
+#>
+function Get-DscTestContainerInformation
+{
+    [CmdletBinding()]
+    [OutputType([System.Collections.Hashtable])]
+    param
+    (
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $Path
+    )
+
+    $returnValue = $null
+
+    $scriptBlockAst = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref] $null, [ref] $null)
+
+    $findIntegrationTestAttributeFilter = {
+        $args[0] -is [System.Management.Automation.Language.AttributeAst] `
+        -and (
+            $args[0].TypeName.FullName -eq 'IntegrationTest' `
+            -or $args[0].TypeName.FullName -eq 'Microsoft.DscResourceKit.IntegrationTest' `
+            -or $args[0].TypeName.FullName -eq 'UnitTest' `
+            -or $args[0].TypeName.FullName -eq 'Microsoft.DscResourceKit.UnitTest'
+        )
+    }
+
+    # Get IntegrationTest attribute in the file if it exist.
+    [System.Management.Automation.Language.Ast[]] $integrationTestAttributeAst = `
+        $scriptBlockAst.Find($findIntegrationTestAttributeFilter, $true)
+
+    if ($integrationTestAttributeAst)
+    {
+        $findAttributeArgumentFilter = {
+            $args[0] -is [System.Management.Automation.Language.NamedAttributeArgumentAst] `
+        }
+
+        [System.Management.Automation.Language.Ast[]] $attributeArgumentAst = `
+            $integrationTestAttributeAst.FindAll($findAttributeArgumentFilter, $true)
+
+        foreach ($currentAttributeArgumentAst in $attributeArgumentAst)
+        {
+            if ($currentAttributeArgumentAst.ArgumentName -in ('ContainerName','ContainerImage'))
+            {
+                # Only initiate the hash table if $returnValue is $null.
+                if (-not $returnValue)
+                {
+                    # Build the has table to return.
+                    $returnValue = @{
+                        ContainerName = $null
+                        ContainerImage = $null
+                    }
+                }
+
+                switch ($currentAttributeArgumentAst.ArgumentName)
+                {
+                    'ContainerName'
+                    {
+                        $returnValue['ContainerName'] = $currentAttributeArgumentAst.Argument.Value
+                    }
+
+                    'ContainerImage'
+                    {
+                        $returnValue['ContainerImage'] = $currentAttributeArgumentAst.Argument.Value
+                    }
+                }
+            }
         }
     }
 
@@ -1614,5 +1724,6 @@ Export-ModuleMember -Function @(
     'Test-IsRepositoryDscResourceTests',
     'Set-PSModulePath',
     'Write-Info',
-    'Get-LocalizedData'
+    'Get-LocalizedData',
+    'Get-DscTestContainerInformation'
 )

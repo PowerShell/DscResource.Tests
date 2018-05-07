@@ -159,10 +159,20 @@ function New-Container
     }
 
     # Make sure we have the correct container images available.
-    [System.String[]] $dockerImages = docker images --format "{{.Repository}}"
-    if (-not $dockerImages.Contains($ImageName))
+    if ($ImageName -match ':')
     {
-        Write-Info ($script:localizedData.DockerIsNotAvailable -f $ImageName)
+        $dockerImagesFormat = '{{.Repository}}:{{.Tag}}'
+    }
+    else
+    {
+        $dockerImagesFormat = '{{.Repository}}'
+    }
+
+    [System.String[]] $dockerImages = docker images --format $dockerImagesFormat
+    if ($ImageName -match ':latest$' -or (-not $dockerImages.Contains($ImageName)))
+    {
+        Write-Info -Message ($script:localizedData.DownloadingImage -f $ImageName)
+
         <#
             Pulling the latest image. Using Out-Null so it does
             not output download information.
@@ -205,7 +215,7 @@ function New-Container
     <#
         There are a max limit to how long a command or encoded command can be, so
         we have to write the script to a file and upload that to the container,
-        and then the powershell.exe -EncodedCommand can kick of that script.
+        and then the powershell.exe -EncodedCommand can kick off that script.
 
         The start script will be uploaded after the container is create below.
     #>

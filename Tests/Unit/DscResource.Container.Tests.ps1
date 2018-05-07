@@ -64,6 +64,12 @@ InModuleScope -ModuleName 'DscResource.Container' {
             -and $args[2] -eq '{{.Repository}}'
     }
 
+    $mockDockerImagesWithTag_ParameterFilter = {
+        $args[0] -eq 'images' `
+            -and $args[1] -eq '--format' `
+            -and $args[2] -eq '{{.Repository}}:{{.Tag}}'
+    }
+
     $mockDockerPull_ParameterFilter = {
         $args[0] -eq 'pull' `
             -and $args[1] -eq $mockDynamicContainerImageName
@@ -670,6 +676,8 @@ InModuleScope -ModuleName 'DscResource.Container' {
             $mockIdentifier = '1A3'
             $mockName = 'TestContainer'
             $mockImageName = 'microsoft/windowsservercore'
+            $mockImageNameWithTag = 'microsoft/windowsservercore:1709'
+            $mockImageNameWithLatestTag = 'microsoft/windowsservercore:latest'
             $mockTestPath = @('C:\Test1.Tests.ps1', 'C:\Test2.Tests.ps1')
             $mockCodeCoverage = @('C:\Test1.psm1', 'C:\Test2.psm1')
         }
@@ -697,9 +705,14 @@ InModuleScope -ModuleName 'DscResource.Container' {
                 }
 
                 Mock -CommandName 'docker' -ParameterFilter $mockDockerPull_ParameterFilter
+
                 Mock -CommandName 'docker' -MockWith {
                     return @('wrong images')
                 } -ParameterFilter $mockDockerImages_ParameterFilter
+
+                Mock -CommandName 'docker' -MockWith {
+                    return @('wrong images')
+                } -ParameterFilter $mockDockerImagesWithTag_ParameterFilter
 
                 Mock -CommandName 'docker' -MockWith {
                     return $mockIdentifier
@@ -710,35 +723,148 @@ InModuleScope -ModuleName 'DscResource.Container' {
                 Remove-Item -Path 'Function:\docker'
             }
 
-            BeforeEach {
-                $mockDynamicContainerName = $mockName
-                $mockDynamicContainerImageName = $mockImageName
-            }
-
-            It 'Should create the container without throwing' {
-                $newContainerParameters = @{
-                    Name         = $mockName
-                    ImageName    = $mockImageName
-                    TestPath     = $mockTestPath
-                    ProjectPath  = $TestDrive
-                    CodeCoverage = $mockCodeCoverage
+            Context 'When image does not contain a tag' {
+                BeforeEach {
+                    $mockDynamicContainerName = $mockName
+                    $mockDynamicContainerImageName = $mockImageName
                 }
 
-                { New-Container @newContainerParameters } | Should -Not -Throw
-                $mockStartFilePath | Should -Exist
+                It 'Should create the container without throwing' {
+                    $newContainerParameters = @{
+                        Name         = $mockName
+                        ImageName    = $mockImageName
+                        TestPath     = $mockTestPath
+                        ProjectPath  = $TestDrive
+                        CodeCoverage = $mockCodeCoverage
+                    }
 
-                Assert-MockCalled -CommandName 'docker' `
-                    -ParameterFilter $mockDockerImages_ParameterFilter -Exactly -Times 1 -Scope It
+                    { New-Container @newContainerParameters } | Should -Not -Throw
+                    $mockStartFilePath | Should -Exist
 
-                Assert-MockCalled -CommandName 'docker' `
-                    -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerImages_ParameterFilter -Exactly -Times 1 -Scope It
 
-                Assert-MockCalled -CommandName 'docker' `
-                    -ParameterFilter $mockDockerCreate_ParameterFilter -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerImagesWithTag_ParameterFilter -Exactly -Times 0 -Scope It
 
-                Assert-MockCalled -CommandName 'Copy-ItemToContainer' -Exactly -Times 2 -Scope It
-                Assert-MockCalled -CommandName 'Out-File' -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 1 -Scope It
 
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerCreate_ParameterFilter -Exactly -Times 1 -Scope It
+
+                    Assert-MockCalled -CommandName 'Copy-ItemToContainer' -Exactly -Times 2 -Scope It
+                    Assert-MockCalled -CommandName 'Out-File' -Exactly -Times 1 -Scope It
+                }
+
+                Context 'When the container image already exists' {
+                    BeforeAll {
+                        Mock -CommandName 'docker' -MockWith {
+                            return @($mockImageName)
+                        } -ParameterFilter $mockDockerImages_ParameterFilter
+                    }
+
+                    It 'Should not pull the container image' {
+                        $newContainerParameters = @{
+                            Name         = $mockName
+                            ImageName    = $mockImageName
+                            TestPath     = $mockTestPath
+                            ProjectPath  = $TestDrive
+                            CodeCoverage = $mockCodeCoverage
+                        }
+
+                        { New-Container @newContainerParameters } | Should -Not -Throw
+
+                        Assert-MockCalled -CommandName 'docker' `
+                            -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 0 -Scope It
+                    }
+                }
+            }
+
+            Context 'When image does not contain a tag' {
+                BeforeEach {
+                    $mockDynamicContainerName = $mockName
+                    $mockDynamicContainerImageName = $mockImageNameWithTag
+                }
+
+                It 'Should create the container without throwing' {
+                    $newContainerParameters = @{
+                        Name         = $mockName
+                        ImageName    = $mockImageNameWithTag
+                        TestPath     = $mockTestPath
+                        ProjectPath  = $TestDrive
+                        CodeCoverage = $mockCodeCoverage
+                    }
+
+                    { New-Container @newContainerParameters } | Should -Not -Throw
+                    $mockStartFilePath | Should -Exist
+
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerImages_ParameterFilter -Exactly -Times 0 -Scope It
+
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerImagesWithTag_ParameterFilter -Exactly -Times 1 -Scope It
+
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 1 -Scope It
+
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerCreate_ParameterFilter -Exactly -Times 1 -Scope It
+
+                    Assert-MockCalled -CommandName 'Copy-ItemToContainer' -Exactly -Times 2 -Scope It
+                    Assert-MockCalled -CommandName 'Out-File' -Exactly -Times 1 -Scope It
+                }
+
+                Context 'When the container image already exists' {
+                    BeforeAll {
+                        Mock -CommandName 'docker' -MockWith {
+                            return @($mockImageNameWithTag)
+                        } -ParameterFilter $mockDockerImagesWithTag_ParameterFilter
+                    }
+
+                    It 'Should not pull the container image' {
+                        $newContainerParameters = @{
+                            Name         = $mockName
+                            ImageName    = $mockImageNameWithTag
+                            TestPath     = $mockTestPath
+                            ProjectPath  = $TestDrive
+                            CodeCoverage = $mockCodeCoverage
+                        }
+
+                        { New-Container @newContainerParameters } | Should -Not -Throw
+
+                        Assert-MockCalled -CommandName 'docker' `
+                            -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 0 -Scope It
+                    }
+                }
+            }
+
+            Context 'When the container image already exist, but the tag is ''latest''' {
+                BeforeAll {
+                    Mock -CommandName 'docker' -MockWith {
+                        return @($mockImageNameWithLatestTag)
+                    } -ParameterFilter $mockDockerImagesWithTag_ParameterFilter
+                }
+
+                BeforeEach {
+                    $mockDynamicContainerName = $mockName
+                    $mockDynamicContainerImageName = $mockImageNameWithLatestTag
+                }
+
+                It 'Should always pull the container image' {
+                    $newContainerParameters = @{
+                        Name         = $mockName
+                        ImageName    = $mockImageNameWithLatestTag
+                        TestPath     = $mockTestPath
+                        ProjectPath  = $TestDrive
+                        CodeCoverage = $mockCodeCoverage
+                    }
+
+                    { New-Container @newContainerParameters } | Should -Not -Throw
+
+                    Assert-MockCalled -CommandName 'docker' `
+                        -ParameterFilter $mockDockerPull_ParameterFilter -Exactly -Times 1 -Scope It
+                }
             }
         }
 
