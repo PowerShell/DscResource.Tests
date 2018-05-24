@@ -683,6 +683,12 @@ These are the artifacts that differ when running tests using a container.
   * If 'latest' tag is used on the image name, 'docker pull' will be called to
     make sure the local revision of 'latest' is actually the latest revision on
     Docker Hub. If it isn't, then the latest image will be pulled from Docker Hub.
+* Updated AppVeyor.Tests
+  * Mock for Resolve-CoverageInfo was removed since it was not used.
+  * Moved importing of DscResource.CodeCoverage module to top of AppVeyor.psm1
+    for easier mocking.
+* Codecov is once again uploaded for "Harness"-model resource modules
+  ([issue #229](https://github.com/PowerShell/DscResource.Tests/issues/229)).
 
 ### 0.2.0.0
 

@@ -1,4 +1,5 @@
 Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
 
 <#
     .SYNOPSIS
@@ -146,35 +147,35 @@ function Invoke-AppveyorTestScriptTask
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
+        [Parameter()]
         [ValidateSet('Default','Harness')]
         [String]
         $Type = 'Default',
 
+        [Parameter(ParameterSetName = 'Harness')]
         [ValidateNotNullOrEmpty()]
         [String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
 
-        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
+        [Parameter(ParameterSetName = 'Default')]
+        [Parameter(ParameterSetName = 'Harness')]
         [Switch]
         $CodeCoverage,
 
+        [Parameter(ParameterSetName = 'Default')]
         [Parameter(ParameterSetName = 'Harness')]
-        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
         [Switch]
         $CodeCovIo,
 
-        [Parameter(ParameterSetName = 'DefaultCodeCoverage')]
         [Parameter(ParameterSetName = 'Default')]
         [String[]]
         $ExcludeTag = @('Examples','Markdown'),
 
-        [Parameter(ParameterSetName = 'Harness',
-            Mandatory = $true)]
+        [Parameter(ParameterSetName = 'Harness')]
         [String]
         $HarnessModulePath = 'Tests\TestHarness.psm1',
 
-        [Parameter(ParameterSetName = 'Harness',
-            Mandatory = $true)]
+        [Parameter(ParameterSetName = 'Harness')]
         [String]
         $HarnessFunctionName = 'Invoke-TestHarness',
 
@@ -182,7 +183,7 @@ function Invoke-AppveyorTestScriptTask
         [Switch]
         $DisableConsistency,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Default')]
         [Switch]
         $RunTestInOrder
     )
@@ -243,6 +244,12 @@ function Invoke-AppveyorTestScriptTask
             Install-DependentModule -Module $requiredModules
         }
     }
+
+    <#
+        Initiate the test container array so that even if no containers is
+        started the logic can correctly evaluate that using $testContainer.Count
+    #>
+    $testContainer = @()
 
     switch ($Type)
     {
@@ -444,8 +451,6 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 if ($testObjectUsingContainer)
                 {
-                    $testContainer = @()
-
                     # Get unique container names with the corresponding container image.
                     $uniqueContainersFromTestObjects = $testObjectUsingContainer |
                         Sort-Object -Property 'ContainerName' -Unique
@@ -910,55 +915,47 @@ function Invoke-AppveyorTestScriptTask
 
     if ($CodeCovIo.IsPresent)
     {
-        if ($CodeCoverage.IsPresent)
-        {
-            # Get the code coverage result from build worker test run.
-            $entireCodeCoverage = $results.CodeCoverage
+        # Get the code coverage result from build worker test run.
+        $entireCodeCoverage = $results.CodeCoverage
 
-            # Check whether we run in a container, and the build worker reported coverage
-            if ($testContainer.Count -gt 0)
+        # Check whether we run in a container, and the build worker reported coverage
+        if ($testContainer.Count -gt 0)
+        {
+            # Loop thru each container result and add it to the main coverage.
+            foreach ($currentContainer in $testContainer)
             {
-                # Loop thru each container result and add it to the main coverage.
-                foreach ($currentContainer in $testContainer)
+                if ($entireCodeCoverage)
                 {
-                    if ($entireCodeCoverage)
+                    # Concatenate the code coverage result from the container test run.
+                    $containerCodeCoverage = $currentContainer.PesterResult.CodeCoverage
+                    if ($containerCodeCoverage)
                     {
-                        # Concatenate the code coverage result from the container test run.
-                        $containerCodeCoverage = $currentContainer.PesterResult.CodeCoverage
-                        if ($containerCodeCoverage)
-                        {
-                            $entireCodeCoverage.NumberOfCommandsAnalyzed += $containerCodeCoverage.NumberOfCommandsAnalyzed
-                            $entireCodeCoverage.NumberOfFilesAnalyzed += $containerCodeCoverage.NumberOfFilesAnalyzed
-                            $entireCodeCoverage.NumberOfCommandsExecuted += $containerCodeCoverage.NumberOfCommandsExecuted
-                            $entireCodeCoverage.NumberOfCommandsMissed += $containerCodeCoverage.NumberOfCommandsMissed
-                            $entireCodeCoverage.MissedCommands += $containerCodeCoverage.MissedCommands
-                            $entireCodeCoverage.HitCommands += $containerCodeCoverage.HitCommands
-                            $entireCodeCoverage.AnalyzedFiles += $containerCodeCoverage.AnalyzedFiles
-                        }
-                    }
-                    else
-                    {
-                        # The container was the first to report code coverage.
-                        $entireCodeCoverage = $currentContainer.PesterResult.CodeCoverage
+                        $entireCodeCoverage.NumberOfCommandsAnalyzed += $containerCodeCoverage.NumberOfCommandsAnalyzed
+                        $entireCodeCoverage.NumberOfFilesAnalyzed += $containerCodeCoverage.NumberOfFilesAnalyzed
+                        $entireCodeCoverage.NumberOfCommandsExecuted += $containerCodeCoverage.NumberOfCommandsExecuted
+                        $entireCodeCoverage.NumberOfCommandsMissed += $containerCodeCoverage.NumberOfCommandsMissed
+                        $entireCodeCoverage.MissedCommands += $containerCodeCoverage.MissedCommands
+                        $entireCodeCoverage.HitCommands += $containerCodeCoverage.HitCommands
+                        $entireCodeCoverage.AnalyzedFiles += $containerCodeCoverage.AnalyzedFiles
                     }
                 }
+                else
+                {
+                    # The container was the first to report code coverage.
+                    $entireCodeCoverage = $currentContainer.PesterResult.CodeCoverage
+                }
             }
+        }
 
-            if ($entireCodeCoverage)
-            {
-                Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
-                Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
-                $jsonPath = Export-CodeCovIoJson -CodeCoverage $entireCodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
-                Invoke-UploadCoveCoveIoReport -Path $jsonPath
-            }
-            else
-            {
-                Write-Warning -Message 'Could not create CodeCov.io report because Pester results object did not contain a CodeCoverage object'
-            }
+        if ($entireCodeCoverage)
+        {
+            Write-Info -Message 'Uploading CodeCoverage to CodeCov.io...'
+            $jsonPath = Export-CodeCovIoJson -CodeCoverage $entireCodeCoverage -repoRoot $env:APPVEYOR_BUILD_FOLDER
+            Invoke-UploadCoveCoveIoReport -Path $jsonPath
         }
         else
         {
-            Write-Warning -Message 'Could not create CodeCov.io report because code coverage was not enabled when calling Invoke-AppveyorTestScriptTask.'
+            Write-Warning -Message 'Could not create CodeCov.io report because Pester results object did not contain a CodeCoverage object'
         }
     }
 
