@@ -1372,4 +1372,32 @@ InModuleScope $script:ModuleName {
             }
         }
     }
+
+    Describe 'TestHelper\Get-PublishFileName' {
+        Context 'When filename starts with a numeric value followed by a slash (-)' {
+            BeforeAll {
+                $mockName = 'MyFile'
+                $mockPath = Join-Path -Path $TestDrive -ChildPath "99-$mockName.ps1"
+                New-Item -Path $mockPath -ItemType File -Force
+            }
+
+            It 'Should return the correct name' {
+                $getPublishFileNameResult = Get-PublishFileName -Path $mockPath
+                $getPublishFileNameResult | Should -Be $mockName
+            }
+        }
+
+        Context 'When filename does not start with a numeric value followed by a slash (-)' {
+            BeforeAll {
+                $mockName = 'MyFile'
+                $mockPath = Join-Path -Path $TestDrive -ChildPath "$mockName.ps1"
+                New-Item -Path $mockPath -ItemType File -Force
+            }
+
+            It 'Should return the correct name' {
+                $getPublishFileNameResult = Get-PublishFileName -Path $mockPath
+                $getPublishFileNameResult | Should -Be $mockName
+            }
+        }
+    }
 }

@@ -689,6 +689,15 @@ These are the artifacts that differ when running tests using a container.
     for easier mocking.
 * Codecov is once again uploaded for "Harness"-model resource modules
   ([issue #229](https://github.com/PowerShell/DscResource.Tests/issues/229)).
+* Changed Example common test
+  * Added support for examples to have mandatory parameters.
+  * Added support for all credential parameters, regardless of parameter name.
+  * Added support to use the same name both for filename and configuration name.
+    Supporting filenames starting with or without a numeric value and a dash,
+    e.g '99-MyExample.ps1', or 'MyExample.ps'. Any filename starting with a
+    numeric value followed by a dash will be removed. This is to support
+    configurations to be able to compile in Azure Automation, but still support
+    auto-documentation.
 
 ### 0.2.0.0
 

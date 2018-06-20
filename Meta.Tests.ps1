@@ -631,6 +631,12 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
                         try
                         {
+                            <#
+                                Set this first because it is used in the final block,
+                                and must be set otherwise it fails on not being assigned.
+                            #>
+                            $existingCommandName = $null
+
                             # Get the list of additional modules required by the example
                             $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $exampleToValidate.FullName |
                                 Where-Object -Property Name -ne $moduleName
@@ -642,43 +648,94 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
                             . $exampleToValidate.FullName
 
-                            $exampleCommand = Get-Command -Name Example -ErrorAction SilentlyContinue
-                            if ($exampleCommand)
+                            <#
+                                Test for either a configuration named 'Example',
+                                or parse the name from the filename and try that
+                                as the configuration name (requirement for Azure
+                                Automation).
+                            #>
+                            $commandName = @('Example')
+                            $azureCommandName = Get-PublishFileName -Path $exampleToValidate.FullName
+                            $commandName += $azureCommandName
+
+                            # Get the first one that matches.
+                            $existingCommand = Get-ChildItem -Path 'function:' |
+                                Where-Object { $_.Name -in $commandName } |
+                                Select-Object -First 1
+
+                            if ($existingCommand)
                             {
-                                $params = @{}
+                                $existingCommandName = $existingCommand.Name
 
-                                # Each credential parameter in the Example function is assigned the mocked credential. 'PsDscRunAsCredential' is not assigned because that broke the example.
-                                $credentialParameterToMockCredentialFor = $exampleCommand.Parameters.Keys | Where-Object {
-                                    $_ -like '*Account' `
-                                        -or ($_ -like '*Credential' -and $_ -ne 'PsDscRunAsCredential') `
-                                        -or $_ -like '*Passphrase'
-                                }
-
-                                foreach ($currentParameter in $credentialParameterToMockCredentialFor)
+                                $exampleCommand = Get-Command -Name $existingCommandName -ErrorAction SilentlyContinue
+                                if ($exampleCommand)
                                 {
-                                    $params.Add($currentParameter, $mockCredential)
-                                }
+                                    $exampleParameters = @{}
 
-                                <#
+                                    # Remove any common parameters that are available.
+                                    $commandParameters = $exampleCommand.Parameters.Keys | Where-Object -FilterScript {
+                                        ($_ -notin [System.Management.Automation.PSCmdlet]::CommonParameters) -and `
+                                        ($_ -notin [System.Management.Automation.PSCmdlet]::OptionalCommonParameters)
+                                    }
+
+                                    foreach ($parameterName in $commandParameters)
+                                    {
+                                        $parameterType = $exampleCommand.Parameters[$parameterName].ParameterType.FullName
+
+                                        <#
+                                            Each credential parameter in the Example function is assigned the
+                                            mocked credential. 'PsDscRunAsCredential' is not assigned because
+                                            that brakes the example.
+                                        #>
+                                        if ($parameterName -ne 'PsDscRunAsCredential' `
+                                                -and $parameterType -eq 'System.Management.Automation.PSCredential')
+                                        {
+                                            $exampleParameters.Add($parameterName, $mockCredential)
+                                        }
+                                        else
+                                        {
+                                            <#
+                                                Check for mandatory parameters.
+                                                Assume the parameters are all in the 'all' parameter set.
+                                            #>
+                                            $isParameterMandatory = $exampleCommand.Parameters[$parameterName].ParameterSets['__AllParameterSets'].IsMandatory
+                                            if ($isParameterMandatory)
+                                            {
+                                                <#
+                                                    Convert '1' to the type that the parameter expects.
+                                                    Using '1' since it can be converted to String, Numeric
+                                                    and Boolean.
+                                                #>
+                                                $exampleParameters.Add($parameterName, ('1' -as $parameterType))
+                                            }
+                                        }
+                                    }
+
+                                    <#
                                         If there is a $ConfigurationData variable that was dot-sources.
-                                        Then use that as the configuration data instead of the mocked confgiuration data.
+                                        Then use that as the configuration data instead of the mocked configuration data.
                                     #>
-                                if (Get-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue)
-                                {
-                                    $mockConfigurationData = $ConfigurationData
-                                }
+                                    if (Get-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue)
+                                    {
+                                        $mockConfigurationData = $ConfigurationData
+                                    }
 
-                                Example @params -ConfigurationData $mockConfigurationData -OutputPath 'TestDrive:\' -ErrorAction Continue -WarningAction SilentlyContinue | Out-Null
+                                    & $exampleCommand.Name @exampleParameters -ConfigurationData $mockConfigurationData -OutputPath 'TestDrive:\' -ErrorAction Continue -WarningAction SilentlyContinue | Out-Null
+                                }
                             }
                             else
                             {
-                                throw "The example '$exampleDescriptiveName' does not contain a function 'Example'."
+                                throw "The example '$exampleDescriptiveName' does not contain a configuration named 'Example' or '$azureCommandName'."
                             }
+
                         }
                         finally
                         {
                             # Remove the function we dot-sourced so next example file doesn't use the previous Example-function.
-                            Remove-Item -Path function:Example -ErrorAction SilentlyContinue
+                            if ($existingCommandName)
+                            {
+                                Remove-Item -Path "function:$existingCommandName" -ErrorAction SilentlyContinue
+                            }
 
                             # Remove the variable $ConfigurationData if it existed in the file we dot-sourced so next example file doesn't use the previous examples configuration.
                             Remove-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue
