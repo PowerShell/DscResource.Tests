@@ -1228,4 +1228,92 @@ function Push-TestArtifact
     }
 }
 
+<#
+    .SYNOPSIS
+        Performs the deploy tasks for the AppVeyor build process.
+
+        This includes:
+        1. Optional: Publish examples that opt-in to being published to
+           PowerShell Gallery.
+
+    .PARAMETER OptIn
+        This controls the deploy steps that will be executed.
+        If not specified will default to opt-in for all deploy tasks.
+
+    .PARAMETER ModuleRootPath
+        This is the relative path of the folder that contains the repository
+        being deployed. If not specified it will default to the root folder
+        of the repository ($env:APPVEYOR_BUILD_FOLDER).
+
+    .PARAMETER MainModulePath
+        This is the relative path of the folder that contains the Examples
+        folder. If not specified it will default to the root folder of the
+        repository ($env:APPVEYOR_BUILD_FOLDER).
+
+    .PARAMETER ResourceModuleName
+        Name of the resource module being deployed.
+        If not specified will default to GitHub repository name.
+
+    .PARAMETER Branch
+        Name of the branch or branches to execute the deploy tasks on.
+        If not specified will default to the branch 'master'.
+        The default value is normally correct, but can be changed for
+        debug purposes.
+#>
+function Invoke-AppVeyorDeployTask
+{
+
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    param
+    (
+        [Parameter()]
+        [ValidateSet('PublishExample')]
+        [String[]]
+        $OptIn = @(
+            'PublishExample'
+        ),
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $ModuleRootPath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $ResourceModuleName = (($env:APPVEYOR_REPO_NAME -split '/')[1]),
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String[]]
+        $Branch = @(
+            'master'
+        )
+    )
+
+    # Will only publish examples on pull request merge to master.
+    if ($OptIn -contains 'PublishExample' -and $Branch -contains $env:APPVEYOR_REPO_BRANCH)
+    {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.GalleryDeploy')
+
+        $startGalleryDeployParameters = @{
+            ResourceModuleName = $ResourceModuleName
+            Path = (Join-Path -Path $MainModulePath -ChildPath 'Examples')
+            Branch = $env:APPVEYOR_REPO_BRANCH
+            ModuleRootPath = $ModuleRootPath
+        }
+
+        Start-GalleryDeploy @startGalleryDeployParameters
+    }
+    else
+    {
+        Write-Info -Message 'Skip publish examples to Gallery. Either not opt-in, or building on the wrong branch.'
+    }
+}
+
 Export-ModuleMember -Function *

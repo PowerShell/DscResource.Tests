@@ -196,6 +196,80 @@ try
                 } # End It Both DSCResources and DSCClassResources
             } # End Context When CodeCoverage requires additional directories
         } # End Describe AppVeyor\Invoke-AppveyorTestScriptTask
+
+        Describe 'AppVeyor\Invoke-AppVeyorDeployTask' {
+            BeforeAll {
+                # Stub for the function so we don't need to import the module.
+                function Start-GalleryDeploy
+                {
+                }
+
+                Mock -CommandName Write-Info
+                Mock -CommandName Start-GalleryDeploy
+                Mock -CommandName Import-Module -ParameterFilter {
+                    $Name -match 'DscResource\.GalleryDeploy'
+                }
+
+                $mockBranchName = 'MockTestBranch'
+
+                # Remember the previous setting
+                if ($env:APPVEYOR_REPO_BRANCH)
+                {
+                    $oldAppVeyorRepoBranch = $env:APPVEYOR_REPO_BRANCH
+                }
+
+                $env:APPVEYOR_REPO_BRANCH = $mockBranchName
+            }
+
+            AfterAll {
+                if ($oldAppVeyorRepoBranch)
+                {
+                    $env:APPVEYOR_REPO_BRANCH = $oldAppVeyorRepoBranch
+                }
+                else
+                {
+                    Remove-Item -Path 'env:APPVEYOR_REPO_BRANCH'
+                }
+            }
+
+            Context 'When not opt-in for publishing examples' {
+                It 'Should not call Start-GalleryDeploy' {
+                    { Invoke-AppVeyorDeployTask -OptIn @() -Branch $mockBranchName } | Should -Not -Throw
+
+                    Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                        $Name -match 'DscResource\.GalleryDeploy'
+                    } -Exactly -Times 0 -Scope It
+
+                    Assert-MockCalled -CommandName Start-GalleryDeploy -Exactly -Times 0 -Scope It
+                }
+            }
+
+            Context 'When opt-in for publishing examples, but building on the wrong branch' {
+                It 'Should not call Start-GalleryDeploy' {
+                    { Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch 'WrongBranch' } |
+                        Should -Not -Throw
+
+                    Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                        $Name -match 'DscResource\.GalleryDeploy'
+                    } -Exactly -Times 0 -Scope It
+
+                    Assert-MockCalled -CommandName Start-GalleryDeploy -Exactly -Times 0 -Scope It
+                }
+            }
+
+            Context 'When opt-in for publishing examples and building on the correct branch' {
+                It 'Should call Start-GalleryDeploy' {
+                    { Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch $mockBranchName } |
+                        Should -Not -Throw
+
+                    Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                        $Name -match 'DscResource\.GalleryDeploy'
+                    } -Exactly -Times 1 -Scope It
+
+                    Assert-MockCalled -CommandName Start-GalleryDeploy -Exactly -Times 1 -Scope It
+                }
+            }
+        }
     } # End InModuleScope
 }
 finally

@@ -206,6 +206,10 @@ This module provides functions for building and testing DSC Resources in AppVeyo
   * Publish the Test Results artefact to AppVeyor.
   * Zip and publish the DSC Resource content to AppVeyor.
   It should be called in the _test_script_ AppVeyor phase.
+* **Invoke-AppVeyorDeployTask**: This task is used to perform the following tasks.
+  It should be called under the deploy AppVeyor phase (the `deploy_script:`
+  keyword in the *appveyor.yml*).
+  * [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
 
 ### Phased Meta test Opt-In
 
@@ -475,6 +479,149 @@ These are the artifacts that differ when running tests using a container.
 * worker_TestsResults - Contains the Pester output in the NUnitXML format
   from the tests that was tested in the build worker.
 
+## Deploy
+
+To run the deploy steps the following must be added to the appveyor.yml. The
+default is to opt-in for all the deploy tasks. See comment-based help for
+the optional parameters.
+
+```yml
+deploy_script:
+  - ps: |
+        Invoke-AppVeyorDeployTask
+```
+
+### Publish examples to PowerShell Gallery
+
+This deploy task is a default opt-in. To opt-out, change the appveyor.yml
+to not include the opt-in task *PublishExample*,
+e.g. `Invoke-AppVeyorDeployTask -OptIn @()`.
+
+By opt-in for the task *PublishExample* allows the test framework to publish the
+examples in the AppVeyor deploy step, but only if it is a 'master' branch build
+(`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
+
+> **Note:** It is possible to override the deploy branch in appveyor.yml,
+> e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.
+> But if building on any other branch than 'master' the task will do a dry run
+> (using `-WhatIf`).
+
+By adding script metadata to an example (see `New-ScriptFileInfo`) the resource
+module automatically opt-in to publish that example (if already opt-in for the
+deploy tasks in the appveyor.yml).
+
+#### Requirements/dependencies for publishing to PowerShell Gallery
+
+* Publish only on 'master' build.
+* Must have opt-in for the example validation common test.
+* Publish only an example that passes `Test-ScriptFileInfo`.
+* Publish only an example that does not already exist (for example has a newer
+  version).
+* Publish only an example which is located under '\Examples' folder.
+* Publish only an example where file name ends with 'Config'.
+* Publish only an example that where filename and configuration name are the same.
+  *Published examples must have the same configuration name as the file name to
+  be able to deploy in Azure Automation.*
+  * Example files are allowed to begin, be prefixed, with numeric value followed
+    by a dash (e.g. '1-', '2-') to support auto-documentation. The prefix will
+    be removed from the name when publishing, so the filename will appear without
+    the prefix in PowerShell Gallery.
+* Publish only examples that have a unique GUID within the resource module.
+  *Note: This is only validated within the resource module, the validation
+  does not validate this against PowerShell Gallery. This is to prevent
+  simple copy/paste mistakes within the same resource module.*
+* Publish only an example where the configuration name contains only letters,
+  numbers, and underscores. Where the name starts with a letter, and ends with a
+  letter or a number.
+
+#### PowerShell Gallery API key
+
+For the Publish-Script to work each repo that opt-in must have the PowerShell
+Gallery account API key as a secure environment variable in appveyor.yml.
+For DSC Resource Kit resource modules, this should be the same API key, since
+it must be encrypted by an account that has permission to the AppVeyor PowerShell
+organization account.
+
+> **Note:** This key can only be used for resource modules under DSC Resource Kit.
+
+```yml
+environment:
+  gallery_api:
+    secure: 9ekJzfsPCDBkyLrfmov83XbbhZ6E2N3z+B/Io8NbDetbHc6hWS19zsDmy7t0Vvxv
+```
+
+> **Note:** There was a problem running `Test-ScriptFileInfo` on the AppVeyor
+> build worker, because the build worker has the setting `core.autocrlf=input`
+> which result in the files checked out only have LF as line-ending character.
+> `Test-ScriptFileInfo` is unable to parse the files with just LF, to solve this
+> the following need to be added to the appveyor.yml.
+>
+> ```yml
+> init:
+>   # Needed for publishing of examples, build worker defaults to core.autocrlf=input.
+>   - git config --global core.autocrlf true
+> ```
+
+#### Contributor responsibilities
+
+Contributors that add or change an example to be published must make sure that
+
+* The example filename is short but descriptive and ends with 'Config'.
+  * If the example is for a single resource, then the resource name could be
+    prefixed in the filename (and configuration name) followed by an underscore
+    (e.g. xScript_WatchFileContentConfig.ps1). *The thought is to easier find
+    related examples.*
+* The `Node` block is targeting 'localhost' (or equivalent).
+* The filename and configuration name match (see requirements/dependencies above).
+* The example contains script metadata with all required properties present.
+* The example has an unique GUID in the script metadata.
+* The example have comment-based help with at least `.DESCRIPTION`.
+* The example script metadata version and release notes is updated accordingly.
+* (Optional) The example has a `#Requires` statement.
+
+##### Example of script metadata, #Requires statement and comment-based help
+
+> **Note:** The `.PRIVATEDATA` in the script metadata is optional and it is
+> for a future implementation to be able to run integration test on the examples.
+
+```powershell
+<#PSScriptInfo
+.VERSION 1.0.4
+.GUID 124cf79c-d637-4e50-8199-5cf4efb3572d
+.AUTHOR Microsoft Corporation
+.COMPANYNAME Microsoft Corporation
+.COPYRIGHT
+.TAGS DSCConfiguration
+.LICENSEURI https://github.com/PowerShell/xPSDesiredStateConfiguration/blob/master/LICENSE
+.PROJECTURI https://github.com/PowerShell/xPSDesiredStateConfiguration
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES xPSDesiredStateConfiguration
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES First version.
+.PRIVATEDATA 2016-Datacenter,2016-Datacenter-Server-Core
+#>
+
+#Requires -module @{ModuleName = 'xPSDesiredStateConfiguration';ModuleVersion = '8.2.0.0'}
+
+<#
+    .SYNOPSIS
+        Creates a file at the given file path with the specified content through
+        the xScript resource.
+
+    .DESCRIPTION
+        Creates a file at the given file path with the specified content through
+        the xScript resource.
+
+    .PARAMETER FilePath
+        The path at which to create the file. Defaults to $env:TEMP.
+
+    .PARAMETER FileContent
+        The content to set for the new file.
+        Defaults to 'Just some sample text to write to the file'.
+#>
+```
+
 ## Versions
 
 ### Unreleased
@@ -698,6 +845,8 @@ These are the artifacts that differ when running tests using a container.
     numeric value followed by a dash will be removed. This is to support
     configurations to be able to compile in Azure Automation, but still support
     auto-documentation.
+* Add support for publishing examples configurations to PowerShell Gallery if
+  opt-in ([issue #234](https://github.com/PowerShell/DscResource.Tests/issues/234)).
 
 ### 0.2.0.0
 

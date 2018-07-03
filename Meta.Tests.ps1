@@ -594,20 +594,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
         #>
         if ($env:APPVEYOR -eq $true)
         {
-            $psHomePSModulePathItem = Get-PSHomePSModulePathItem
-            $powershellModulePath = Join-Path -Path $psHomePSModulePathItem -ChildPath $moduleName
-
-            Write-Verbose -Message ('Copying module from ''{0}'' to ''{1}''' -f $moduleRootFilePath, $powershellModulePath) -Verbose
-
-            # Creates the destination module folder.
-            New-Item -Path $powershellModulePath -ItemType Directory -Force
-
-            # Copies all module files into the destination module folder.
-            Copy-Item -Path (Join-Path -Path $moduleRootFilePath -ChildPath '*') `
-                -Destination $powershellModulePath `
-                -Exclude @('node_modules', '.*') `
-                -Recurse `
-                -Force
+            $powershellModulePath = Copy-ResourceModuleToPSModulePath -ResourceModuleName $moduleName -ModuleRootPath $moduleRootFilePath
         }
 
         $exampleFile = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Examples') -Filter '*.ps1' -Recurse

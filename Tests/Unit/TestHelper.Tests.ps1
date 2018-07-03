@@ -1400,4 +1400,20 @@ InModuleScope $script:ModuleName {
             }
         }
     }
+
+    Describe 'TestHelper\Copy-ResourceModuleToPSModulePath' {
+        Context 'When a module is copied' {
+            BeforeAll {
+                Mock -CommandName New-Item
+                Mock -CommandName Copy-Item
+            }
+
+            It 'Should call the correct mocks' {
+                { Copy-ResourceModuleToPSModulePath -ResourceModuleName 'a' -ModuleRootPath $TestDrive } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName New-Item -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Copy-Item -Exactly -Times 1 -Scope It
+            }
+        }
+    }
 }
