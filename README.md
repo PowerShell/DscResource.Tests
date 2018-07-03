@@ -226,6 +226,10 @@ The following opt-in flags are available:
   .markdownlint.json file.
 * **Common Tests - Validate Example Files**: run tests to validate that examples
   can be compiled without error.
+* **Common Tests - Validate Example Files To Be Published**: run tests to
+  validate that examples can be published successfully to PowerShell Gallery.
+  See requirements under
+  [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery).
 * **Common Tests - Validate Script Files**: run tests to validate script files
   have correct BOM.
 * **Common Tests - Required Script Analyzer Rules**: fail tests if any required
@@ -847,6 +851,10 @@ Contributors that add or change an example to be published must make sure that
     auto-documentation.
 * Add support for publishing examples configurations to PowerShell Gallery if
   opt-in ([issue #234](https://github.com/PowerShell/DscResource.Tests/issues/234)).
+* Added new opt-in common test 'Common Tests - Validate Example Files To Be Published'.
+  This common test verifies that the examples those name ending with '*Config'
+  passes testing of script meta data, and that there are no duplicate GUID's in
+  the script meta data (within the examples in the repository).
 
 ### 0.2.0.0
 
