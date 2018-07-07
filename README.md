@@ -855,6 +855,9 @@ Contributors that add or change an example to be published must make sure that
   This common test verifies that the examples those name ending with '*Config'
   passes testing of script meta data, and that there are no duplicate GUID's in
   the script meta data (within the examples in the repository).
+* Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
+  from getting documentation files from variable `$MainModulePath` defined in
+  AppVeyor.yml ([issue #245](https://github.com/PowerShell/DscResource.Tests/issues/245))
 
 ### 0.2.0.0
 

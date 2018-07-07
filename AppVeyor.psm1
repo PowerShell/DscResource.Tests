@@ -1059,7 +1059,7 @@ function Invoke-AppveyorAfterTestTask
     if ($Type -eq 'Wiki')
     {
         # Write the PowerShell help files
-        $docoPath = Join-Path -Path $MainModuleFolder `
+        $docoPath = Join-Path -Path $MainModulePath `
                               -ChildPath 'en-US'
         New-Item -Path $docoPath -ItemType Directory
 
@@ -1083,7 +1083,7 @@ function Invoke-AppveyorAfterTestTask
         }
 
         # Remove the readme files that are used to generate documentation so they aren't shipped
-        $readmePaths = Join-Path -Path $MainModuleFolder `
+        $readmePaths = Join-Path -Path $MainModulePath `
                                  -ChildPath '**\readme.md'
         Get-ChildItem -Path $readmePaths -Recurse | Remove-Item -Confirm:$false
     }
