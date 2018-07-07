@@ -288,8 +288,6 @@ deploy_script:
 
 ## Encrypt credentials in integration tests
 
-1. On the call to `Invoke-AppveyorTestScriptTask`, make sure you have
-   `-Encrypt` specified. This will decrypt the credentials.
 1. Any configuration used for an integration test must have the *CertificateFile*
    property pointing to path stored in `$env:DscPublicCertificatePath`.
 
