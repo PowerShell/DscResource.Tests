@@ -9,7 +9,7 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeC
 #>
 
 $customTasksModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                   -ChildPath '.AppVeyor\CustomAppVeyorTasks.psm1'
+    -ChildPath '.AppVeyor\CustomAppVeyorTasks.psm1'
 if (Test-Path -Path $customTasksModulePath)
 {
     Import-Module -Name $customTasksModulePath
@@ -33,7 +33,8 @@ Import-Module -Name $testHelperPath -Force
         1. Installs Nuget Package Provider DLL.
         2. Installs Nuget.exe to the AppVeyor Build Folder.
         3. Installs the Pester PowerShell Module.
-        4. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
+        4. Installs self-signed certificate for encrypting credentials in configurations.
+        5. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
            in resource module repository.
 
     .EXAMPLE
@@ -55,11 +56,11 @@ function Invoke-AppveyorInstallTask
 
     # Install Nuget.exe to enable package creation
     $nugetExePath = Join-Path -Path $env:TEMP `
-                              -ChildPath 'nuget.exe'
+        -ChildPath 'nuget.exe'
     Install-NugetExe -OutFile $nugetExePath
 
     $installPesterParameters = @{
-        Name = 'Pester'
+        Name  = 'Pester'
         Force = $true
     }
 
@@ -76,11 +77,16 @@ function Invoke-AppveyorInstallTask
 
     Install-Module @installPesterParameters
 
+    $certificate = New-DscSelfSignedCertificate
+    Write-Info -Message ('Created self-signed certificate ''{0}''.' -f $certificate.Subject)
+    Write-Info -Message ('$env:DscPublicCertificatePath: {0}' -f $env:DscPublicCertificatePath)
+    Write-Info -Message ('$env:DscCertificateThumbprint: {0}' -f $env:DscCertificateThumbprint)
+
     # Execute the custom install task if defined
     if ($customTaskModuleLoaded `
-        -and (Get-Command -Module $CustomAppVeyorTasks `
-                          -Name Invoke-CustomAppveyorInstallTask `
-                          -ErrorAction SilentlyContinue))
+            -and (Get-Command -Module $CustomAppVeyorTasks `
+                -Name Invoke-CustomAppveyorInstallTask `
+                -ErrorAction SilentlyContinue))
     {
         Invoke-CustomAppveyorInstallTask
     }
@@ -148,7 +154,7 @@ function Invoke-AppveyorTestScriptTask
     param
     (
         [Parameter()]
-        [ValidateSet('Default','Harness')]
+        [ValidateSet('Default', 'Harness')]
         [String]
         $Type = 'Default',
 
@@ -169,7 +175,7 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter(ParameterSetName = 'Default')]
         [String[]]
-        $ExcludeTag = @('Examples','Markdown'),
+        $ExcludeTag = @('Examples', 'Markdown'),
 
         [Parameter(ParameterSetName = 'Harness')]
         [String]
@@ -192,42 +198,22 @@ function Invoke-AppveyorTestScriptTask
     if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
     {
         $MainModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                    -ChildPath $MainModulePath
+            -ChildPath $MainModulePath
     }
 
     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                 -ChildPath 'TestsResults.xml'
+        -ChildPath 'TestsResults.xml'
 
     # Execute custom test task if defined
     if ($customTaskModuleLoaded `
-        -and (Get-Command -Module $CustomAppVeyorTasks `
-                          -Name Start-CustomAppveyorTestTask `
-                          -ErrorAction SilentlyContinue))
+            -and (Get-Command -Module $CustomAppVeyorTasks `
+                -Name Start-CustomAppveyorTestTask `
+                -ErrorAction SilentlyContinue))
     {
         Start-CustomAppveyorTestTask
     }
 
-    if ($DisableConsistency.IsPresent)
-    {
-        $disableConsistencyMofPath = Join-Path -Path $env:temp -ChildPath 'DisableConsistency'
-        if (-not (Test-Path -Path $disableConsistencyMofPath))
-        {
-            $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force
-        }
-
-        # have LCM Apply only once.
-        Configuration Meta
-        {
-            LocalConfigurationManager
-            {
-                ConfigurationMode = 'ApplyOnly'
-            }
-        }
-        meta -outputPath $disableConsistencyMofPath
-
-        Set-DscLocalConfigurationManager -Path $disableConsistencyMofPath -Force -Verbose
-        $null = Remove-Item -LiteralPath $disableConsistencyMofPath -Recurse -Force -Confirm:$false
-    }
+    Initialize-LocalConfigurationManager -Encrypt:$true -DisableConsistency:$DisableConsistency
 
     $moduleName = Split-Path -Path $env:APPVEYOR_BUILD_FOLDER -Leaf
     $testsPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'Tests'
@@ -331,7 +317,7 @@ function Invoke-AppveyorTestScriptTask
             }
 
             $getChildItemParameters = @{
-                Path = $env:APPVEYOR_BUILD_FOLDER
+                Path    = $env:APPVEYOR_BUILD_FOLDER
                 Recurse = $true
             }
 
@@ -369,9 +355,9 @@ function Invoke-AppveyorTestScriptTask
                 {
                     $testObjects += @(
                         [PSCustomObject] @{
-                            TestPath = $testFile.FullName
-                            OrderNumber = $null
-                            ContainerName = $null
+                            TestPath       = $testFile.FullName
+                            OrderNumber    = $null
+                            ContainerName  = $null
                             ContainerImage = $null
                         }
                     )
@@ -433,7 +419,7 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 $testObjectOrder += $testObjects | Where-Object -FilterScript {
                     $_.OrderNumber -eq 0 `
-                    -and $null -eq $_.ContainerName
+                        -and $null -eq $_.ContainerName
                 }
 
 
@@ -460,11 +446,11 @@ function Invoke-AppveyorTestScriptTask
                     {
                         $testContainer += @(
                             [PSCustomObject] @{
-                                ContainerName = $uniqueContainer.ContainerName
-                                ContainerImage = $uniqueContainer.ContainerImage
+                                ContainerName       = $uniqueContainer.ContainerName
+                                ContainerImage      = $uniqueContainer.ContainerImage
                                 ContainerIdentifier = $null
-                                PesterResult = $null
-                                TranscriptPath = $null
+                                PesterResult        = $null
+                                TranscriptPath      = $null
                             }
                         )
                     }
@@ -503,9 +489,9 @@ function Invoke-AppveyorTestScriptTask
 
                         $containerName = $currentContainer.ContainerName
                         $newContainerParameters = @{
-                            Name = $containerName
-                            Image = $currentContainer.ContainerImage
-                            TestPath = $containerTestObjectOrder.TestPath
+                            Name        = $containerName
+                            Image       = $currentContainer.ContainerImage
+                            TestPath    = $containerTestObjectOrder.TestPath
                             ProjectPath = $env:APPVEYOR_BUILD_FOLDER
                         }
 
@@ -600,7 +586,7 @@ function Invoke-AppveyorTestScriptTask
                         it from the container test result files.
                     #>
                     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                                -ChildPath 'worker_TestsResults.xml'
+                        -ChildPath 'worker_TestsResults.xml'
 
                     $pesterParameters['OutputFile'] = $testResultsFile
 
@@ -622,8 +608,8 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 $testObjectOrder += $testObjects | Where-Object -FilterScript {
                     $null -eq $_.OrderNumber `
-                    -and $null -eq $_.ContainerName `
-                    -and $_.TestPath -notmatch 'Integration\.Tests'
+                        -and $null -eq $_.ContainerName `
+                        -and $_.TestPath -notmatch 'Integration\.Tests'
                 }
 
                 <#
@@ -634,8 +620,8 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 $testObjectOrder += $testObjects | Where-Object -FilterScript {
                     $null -eq $_.ContainerName `
-                    -and $_.OrderNumber -gt 0 `
-                    -and $_.TestPath -match 'Integration\.Tests'
+                        -and $_.OrderNumber -gt 0 `
+                        -and $_.TestPath -match 'Integration\.Tests'
                 } | Sort-Object -Property 'OrderNumber'
 
                 <#
@@ -646,8 +632,8 @@ function Invoke-AppveyorTestScriptTask
                 #>
                 $testObjectOrder += $testObjects | Where-Object -FilterScript {
                     $null -eq $_.OrderNumber `
-                    -and $null -eq $_.ContainerName `
-                    -and $_.TestPath -match 'Integration\.Tests'
+                        -and $null -eq $_.ContainerName `
+                        -and $_.TestPath -match 'Integration\.Tests'
                 }
 
                 # Add all the paths to the Invoke-Pester Path parameter.
@@ -682,7 +668,7 @@ function Invoke-AppveyorTestScriptTask
                                 If the container has not returned before that time,
                                 the test will fail.
                             #>
-                            Timeout = 3600
+                            Timeout             = 3600
                         }
 
                         $containerExitCode = Wait-Container @waitContainerParameters
@@ -730,8 +716,8 @@ function Invoke-AppveyorTestScriptTask
 
                         $copyItemFromContainerParameters = @{
                             ContainerIdentifier = $currentContainer.ContainerIdentifier
-                            Path = $currentContainer.TranscriptPath
-                            Destination = $env:APPVEYOR_BUILD_FOLDER
+                            Path                = $currentContainer.TranscriptPath
+                            Destination         = $env:APPVEYOR_BUILD_FOLDER
                         }
 
                         Copy-ItemFromContainer @copyItemFromContainerParameters
@@ -769,9 +755,9 @@ function Invoke-AppveyorTestScriptTask
                         {
                             # Output the final unit test results.
                             $outTestResultParameters = @{
-                                TestResult = $currentContainer.PesterResult.TestResult
+                                TestResult             = $currentContainer.PesterResult.TestResult
                                 WaitForAppVeyorConsole = $true
-                                Timeout = 5
+                                Timeout                = 5
                             }
 
                             Out-TestResult @outTestResultParameters
@@ -785,9 +771,9 @@ function Invoke-AppveyorTestScriptTask
                         if ($CodeCoverage.IsPresent)
                         {
                             $outMissedCommandParameters = @{
-                                MissedCommand = $currentContainer.PesterResult.CodeCoverage.MissedCommands
+                                MissedCommand          = $currentContainer.PesterResult.CodeCoverage.MissedCommands
                                 WaitForAppVeyorConsole = $true
-                                Timeout = 5
+                                Timeout                = 5
                             }
 
                             Out-MissedCommand @outMissedCommandParameters
@@ -813,15 +799,15 @@ function Invoke-AppveyorTestScriptTask
         {
             # Copy the DSCResource.Tests folder into the folder containing the resource PSD1 file.
             $dscTestsPath = Join-Path -Path $MainModulePath `
-                                      -ChildPath 'DSCResource.Tests'
+                -ChildPath 'DSCResource.Tests'
             Copy-Item -Path $PSScriptRoot -Destination $MainModulePath -Recurse
             $testHarnessPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                         -ChildPath $HarnessModulePath
+                -ChildPath $HarnessModulePath
 
             # Execute the resource tests as well as the DSCResource.Tests\meta.tests.ps1
             Import-Module -Name $testHarnessPath
             $results = & $HarnessFunctionName -TestResultsFile $testResultsFile `
-                                             -DscTestsPath $dscTestsPath
+                -DscTestsPath $dscTestsPath
 
             # Delete the DSCResource.Tests folder because it is not needed
             Remove-Item -Path $dscTestsPath -Force -Recurse
@@ -862,17 +848,17 @@ function Invoke-AppveyorTestScriptTask
         }
 
         $addAppVeyorTestParameters = @{
-            Name = $result.Name
+            Name      = $result.Name
             Framework = 'NUnit'
-            Filename = $componentName
-            Outcome = $appVeyorResult
-            Duration = $result.Time.TotalMilliseconds
+            Filename  = $componentName
+            Outcome   = $appVeyorResult
+            Duration  = $result.Time.TotalMilliseconds
         }
 
         if ($result.FailureMessage)
         {
             $addAppVeyorTestParameters += @{
-                ErrorMessage = $result.FailureMessage
+                ErrorMessage    = $result.FailureMessage
                 ErrorStackTrace = $result.StackTrace
             }
         }
@@ -884,10 +870,10 @@ function Invoke-AppveyorTestScriptTask
         if ($PSVersionTable.PSEdition -eq 'Core')
         {
             $requestObject = @{
-                testName = $addAppVeyorTestParameters.Name
-                testFramework = $addAppVeyorTestParameters.Framework
-                fileName = $addAppVeyorTestParameters.Filename
-                outcome = $addAppVeyorTestParameters.Outcome
+                testName             = $addAppVeyorTestParameters.Name
+                testFramework        = $addAppVeyorTestParameters.Framework
+                fileName             = $addAppVeyorTestParameters.Filename
+                outcome              = $addAppVeyorTestParameters.Outcome
                 durationMilliseconds = $addAppVeyorTestParameters.Duration
             }
 
@@ -1027,7 +1013,7 @@ function Invoke-AppveyorAfterTestTask
     param
     (
         [Parameter()]
-        [ValidateSet('Default','Wiki')]
+        [ValidateSet('Default', 'Wiki')]
         [String]
         $Type = 'Default',
 
@@ -1053,7 +1039,7 @@ function Invoke-AppveyorAfterTestTask
     if (-not ([System.IO.Path]::IsPathRooted($MainModulePath)))
     {
         $MainModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                    -ChildPath $MainModulePath
+            -ChildPath $MainModulePath
     }
 
     if ($Type -eq 'Wiki')
@@ -1065,7 +1051,7 @@ function Invoke-AppveyorAfterTestTask
 
         # Clone the DSCResources Module to the repository folder
         $docoHelperPath = Join-Path -Path $PSScriptRoot `
-                                    -ChildPath 'DscResource.DocumentationHelper\DscResource.DocumentationHelper.psd1'
+            -ChildPath 'DscResource.DocumentationHelper\DscResource.DocumentationHelper.psd1'
         Import-Module -Name $docoHelperPath
         New-DscResourcePowerShellHelp -OutputPath $docoPath -ModulePath $MainModulePath -Verbose
 
@@ -1075,9 +1061,9 @@ function Invoke-AppveyorAfterTestTask
         New-DscResourceWikiSite -OutputPath $wikiContentPath -ModulePath $MainModulePath -Verbose
 
         $zipFileName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                 -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION)_wikicontent.zip"
+            -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION)_wikicontent.zip"
         Compress-Archive -Path (Join-Path -Path $wikiContentPath -ChildPath '*') `
-                         -DestinationPath $zipFileName
+            -DestinationPath $zipFileName
         Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
             Push-TestArtifact -Path $_.FullName -FileName $_.Name
         }
@@ -1090,17 +1076,17 @@ function Invoke-AppveyorAfterTestTask
 
     # Set the Module Version in the Manifest to the AppVeyor build version
     $manifestPath = Join-Path -Path $MainModulePath `
-                              -ChildPath "$ResourceModuleName.psd1"
+        -ChildPath "$ResourceModuleName.psd1"
     $manifestContent = Get-Content -Path $manifestPath -Raw
     $regex = '(?<=ModuleVersion\s+=\s+'')(?<ModuleVersion>.*)(?='')'
-    $manifestContent = $manifestContent -replace $regex,$env:APPVEYOR_BUILD_VERSION
+    $manifestContent = $manifestContent -replace $regex, $env:APPVEYOR_BUILD_VERSION
     Set-Content -Path $manifestPath -Value $manifestContent -Force
 
     # Zip and Publish the Main Module Folder content
     $zipFileName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                             -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION).zip"
+        -ChildPath "$($ResourceModuleName)_$($env:APPVEYOR_BUILD_VERSION).zip"
     Compress-Archive -Path (Join-Path -Path $MainModulePath -ChildPath '*') `
-                     -DestinationPath $zipFileName
+        -DestinationPath $zipFileName
     New-DscChecksum -Path $env:APPVEYOR_BUILD_FOLDER -Outpath $env:APPVEYOR_BUILD_FOLDER
     Get-ChildItem -Path $zipFileName | ForEach-Object -Process {
         Push-TestArtifact -Path $_.FullName -FileName $_.Name
@@ -1111,41 +1097,41 @@ function Invoke-AppveyorAfterTestTask
 
     # Create the Nuspec file for the Nuget Package in the Main Module Folder
     $nuspecPath = Join-Path -Path $MainModulePath `
-                            -ChildPath "$ResourceModuleName.nuspec"
+        -ChildPath "$ResourceModuleName.nuspec"
     $nuspecParams = @{
-        packageName = $ResourceModuleName
-        destinationPath = $MainModulePath
-        version = $env:APPVEYOR_BUILD_VERSION
-        author = $Author
-        owners = $Owners
-        licenseUrl = "https://github.com/PowerShell/DscResources/blob/master/LICENSE"
-        projectUrl = "https://github.com/$($env:APPVEYOR_REPO_NAME)"
+        packageName        = $ResourceModuleName
+        destinationPath    = $MainModulePath
+        version            = $env:APPVEYOR_BUILD_VERSION
+        author             = $Author
+        owners             = $Owners
+        licenseUrl         = "https://github.com/PowerShell/DscResources/blob/master/LICENSE"
+        projectUrl         = "https://github.com/$($env:APPVEYOR_REPO_NAME)"
         packageDescription = $ResourceModuleName
-        tags = "DesiredStateConfiguration DSC DSCResourceKit"
+        tags               = "DesiredStateConfiguration DSC DSCResourceKit"
     }
     New-Nuspec @nuspecParams
 
     # Create the Nuget Package
     $nugetExePath = Join-Path -Path $env:TEMP `
-                              -ChildPath 'nuget.exe'
+        -ChildPath 'nuget.exe'
     Start-Process -FilePath $nugetExePath -Wait -ArgumentList @(
-        'Pack',$nuspecPath
-        '-OutputDirectory',$env:APPVEYOR_BUILD_FOLDER
-        '-BasePath',$MainModulePath
+        'Pack', $nuspecPath
+        '-OutputDirectory', $env:APPVEYOR_BUILD_FOLDER
+        '-BasePath', $MainModulePath
     )
 
     # Push the Nuget Package up to AppVeyor
     $nugetPackageName = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-                                  -ChildPath "$ResourceModuleName.$($env:APPVEYOR_BUILD_VERSION).nupkg"
+        -ChildPath "$ResourceModuleName.$($env:APPVEYOR_BUILD_VERSION).nupkg"
     Get-ChildItem $nugetPackageName | ForEach-Object -Process {
         Push-TestArtifact -Path $_.FullName -FileName $_.Name
     }
 
     # Execute custom after test task if defined
     if ($customTaskModuleLoaded `
-        -and (Get-Command -Module $CustomAppVeyorTasks `
-                          -Name Start-CustomAppveyorAfterTestTask `
-                          -ErrorAction SilentlyContinue))
+            -and (Get-Command -Module $CustomAppVeyorTasks `
+                -Name Start-CustomAppveyorAfterTestTask `
+                -ErrorAction SilentlyContinue))
     {
         Start-CustomAppveyorAfterTestTask
     }

@@ -197,15 +197,19 @@ This module provides functions for building and testing DSC Resources in AppVeyo
 
 * **Invoke-AppveyorInstallTask**: This task is used to set up the environment in
   preparation for the test and deploy tasks.
-  It should be called in the _install_ AppVeyor phase.
+  It should be called under the install AppVeyor phase (the `install:` keyword in
+  the *appveyor.yml*).
 * **Invoke-AppveyorTestScriptTask**: This task is used to execute the tests.
-  It should be called in the _test_script_ AppVeyor phase.
-* **Invoke-AppveyorAfterTestTask**: This task is used to perform the following tasks:
+  It should be called under test AppVeyor phase (the `test_script:` keyword in
+  the *appveyor.yml*).
+* **Invoke-AppveyorAfterTestTask**: This task is used to perform the following tasks.
+  It should be called either under the test AppVeyor phase (the `test_script:`
+  keyword in the *appveyor.yml*), or the after tests AppVeyor phase (the `after_test:`
+  keyword in the *appveyor.yml*).
   * Generate, zip and publish the Wiki content to AppVeyor (optional).
   * Set the build number in the DSC Resource Module manifest.
   * Publish the Test Results artefact to AppVeyor.
   * Zip and publish the DSC Resource content to AppVeyor.
-  It should be called in the _test_script_ AppVeyor phase.
 * **Invoke-AppVeyorDeployTask**: This task is used to perform the following tasks.
   It should be called under the deploy AppVeyor phase (the `deploy_script:`
   keyword in the *appveyor.yml*).
@@ -241,35 +245,15 @@ The following opt-in flags are available:
 * **Common Tests - Custom Script Analyzer Rules**: fail tests if any
   custom script analyzer rules are violated.
 
-### Using AppVeyor.psm1 with eXperiemental DSC Resources
+### Using AppVeyor.psm1 with the default shared model
 
-An example ```AppVeyor.yml``` file used in an 'experimental' DSC Resource where the
-AppVeyor.psm1 module is being used:
+For an example of a AppVeyor.yml file for using the default shared model with a
+resource module, see the
+[DscResource.Template appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml).
 
-```yml
-version: 4.0.{build}.0
-install:
-    - git clone https://github.com/PowerShell/DscResource.Tests
+### Using AppVeyor.psm1 with harness model
 
-    - ps: |
-        Import-Module "$env:APPVEYOR_BUILD_FOLDER\DscResource.Tests\AppVeyor.psm1"
-        Invoke-AppveyorInstallTask
-
-build: false
-
-test_script:
-    - ps: |
-        Invoke-AppveyorTestScriptTask -CodeCoverage
-
-deploy_script:
-    - ps: |
-        Invoke-AppveyorAfterTestTask
-```
-
-### Using AppVeyor.psm1 with HQRM DSC Resources
-
-An example ```AppVeyor.yml``` file used in an 'HQRM' DSC Resource where the
-AppVeyor.psm1 module is being used:
+An example AppVeyor.yml file of using the harness model with a resource module.
 
 ```yml
 version: 3.1.{build}.0
@@ -302,6 +286,24 @@ deploy_script:
             -ResourceModuleName $moduleName
 ```
 
+## Encrypt credentials in integration tests
+
+1. On the call to `Invoke-AppveyorTestScriptTask`, make sure you have
+   `-Encrypt` specified. This will decrypt the credentials.
+1. Any configuration used for an integration test must have the *CertificateFile*
+   property pointing to path stored in `$env:DscPublicCertificatePath`.
+
+    ```powershell
+    $ConfigurationData = @{
+        AllNodes = @(
+            @{
+                NodeName        = 'localhost'
+                CertificateFile = $env:DscPublicCertificatePath
+            }
+        )
+    }
+    ```
+
 ## CodeCoverage reporting with CodeCov.io
 
 This is to enable code coverage reporting through
@@ -311,33 +313,35 @@ Pester code coverage, which the first two sections cover.
 
 ### Ensure Code Coverage is enabled
 
-#### Repos using `-Type 'Default'` for `Invoke-AppveyorTestScriptTask`
+#### Repository using `-Type 'Default'` for `Invoke-AppveyorTestScriptTask`
 
 1. On the call to `Invoke-AppveyorTestScriptTask`, make sure you have
-    `-CodeCoverage` specified.  This will enable Pester code coverage.
+   `-CodeCoverage` specified.  This will enable Pester code coverage.
 
-#### Repos using `-Type 'Harness'` for `Invoke-AppveyorTestScriptTask`
+#### Repository using `-Type 'Harness'` for `Invoke-AppveyorTestScriptTask`
 
-1. Make sure you are properly generating pester code coverage in the repo's
-    harness code.
+1. Make sure you are properly generating pester code coverage in the repository
+   harness code.
 
 ### Enable reporting to CodeCove.io
 
 1. On the call to `Invoke-AppveyorTestScriptTask`, specify
-    `-CodeCovIo`.  This will enable reporting to [codecov.io](http://codecov.io)
+   `-CodeCovIo`.  This will enable reporting to [codecov.io](http://codecov.io)
 
 ### Configure CodeCov.io
 
-1. Copy `.codecov.io` from the root of this repo to the root of your repo.
-1. Adjust the code coverage goals if needed.  See the [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
+1. Copy `.codecov.yml` from the root of this repo to the root of your repo.
+1. Adjust the code coverage goals if needed. See the
+   [CodeCov.io documentation](https://docs.codecov.io/docs/commit-status).
 
 ### Add the badge to the Readme
 
 Add the following code below the AppVeyor badge in the main repo `readme.md`,
-replacing `<reproName>` with the name of the repo
+replacing `<repoName>` with the name of the repository.
 
 ```markdown
-[![codecov](https://codecov.io/gh/PowerShell/<reproName>/branch/master/graph/badge.svg)](https://codecov.io/gh/PowerShell/<reproName>)
+[![codecov](https://codecov.io/gh/PowerShell/<repoName>/branch/master/graph/badge.svg)](https://codecov.io/gh/PowerShell/<reproName>/branch/master)
+[![codecov](https://codecov.io/gh/PowerShell/<repoName>/branch/dev/graph/badge.svg)](https://codecov.io/gh/PowerShell/<reproName>/branch/dev)
 ```
 
 ## Documentation Helper Module
@@ -858,6 +862,9 @@ Contributors that add or change an example to be published must make sure that
 * Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
   from getting documentation files from variable `$MainModulePath` defined in
   AppVeyor.yml ([issue #245](https://github.com/PowerShell/DscResource.Tests/issues/245))
+* Added support for example and integration test configurations compilation using
+  a certificate, so that there are no more need for PSDscAllowPlainTextPassword
+  in configurations ([issue #240](https://github.com/PowerShell/DscResource.Tests/issues/240)).
 
 ### 0.2.0.0
 
