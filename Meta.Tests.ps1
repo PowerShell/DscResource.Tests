@@ -707,7 +707,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                                         # Adding certificate to the examples configuration data.
                                         foreach ($node in $ConfigurationData.AllNodes.GetEnumerator())
                                         {
-                                            if ($node.PSDscAllowPlainTextPassword -eq $true)
+                                            if ($node.ContainsKey('PSDscAllowPlainTextPassword') -eq $true -and $node.PSDscAllowPlainTextPassword -eq $true)
                                             {
                                                 Write-Warning -Message ('The example ''{0}'' is using PSDscAllowPlainTextPassword = $true in the configuration data for node name ''{1}'', this should be removed so the example is secure. PSDscAllowPlainTextPassword was overridden in the tests so the example can be tested securely.' -f $exampleDescriptiveName, $node.NodeName)
 
