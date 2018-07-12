@@ -859,10 +859,16 @@ Contributors that add or change an example to be published must make sure that
   the script meta data (within the examples in the repository).
 * Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
   from getting documentation files from variable `$MainModulePath` defined in
-  AppVeyor.yml ([issue #245](https://github.com/PowerShell/DscResource.Tests/issues/245))
+  AppVeyor.yml ([issue #245](https://github.com/PowerShell/DscResource.Tests/issues/245)).
 * Added support for example and integration test configurations compilation using
   a certificate, so that there are no more need for PSDscAllowPlainTextPassword
   in configurations ([issue #240](https://github.com/PowerShell/DscResource.Tests/issues/240)).
+* Refactored `WikiPages.psm1` to meet guidelines and improve testability.
+* Added unit test coverage for `WikiPages.psm1`.
+* Added support to Wiki generation for Example files that are formatted in the
+  way required by the automatic example publishing code ([issue #247](https://github.com/PowerShell/DscResource.Tests/issues/247)).
+* Added `.gitattributes` to force EOL to be CRLF to make testing more consistent
+  in unit tests.
 
 ### 0.2.0.0
 
