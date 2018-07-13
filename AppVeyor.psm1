@@ -49,10 +49,14 @@ function Invoke-AppveyorInstallTask
         $PesterMaximumVersion
     )
 
-    if (Find-PackageProvider -Name 'Nuget' -ErrorAction 'SilentlyContinue')
-    {
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    }
+    <#
+        Automatically installs the Nuget provider if your computer does not
+        have the Nuget provider installed.
+    #>
+    Get-PackageProvider -Name NuGet -ForceBootstrap
+
+    # Install the latest PowerShellGet from the PowerShell Gallery.
+    Install-Module -Name PowerShellGet -Force -Repository PSGallery
 
     # Install Nuget.exe to enable package creation
     $nugetExePath = Join-Path -Path $env:TEMP `

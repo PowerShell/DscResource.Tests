@@ -601,7 +601,7 @@ Contributors that add or change an example to be published must make sure that
 .LICENSEURI https://github.com/PowerShell/xPSDesiredStateConfiguration/blob/master/LICENSE
 .PROJECTURI https://github.com/PowerShell/xPSDesiredStateConfiguration
 .ICONURI
-.EXTERNALMODULEDEPENDENCIES xPSDesiredStateConfiguration
+.EXTERNALMODULEDEPENDENCIES
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES First version.
@@ -869,6 +869,11 @@ Contributors that add or change an example to be published must make sure that
   way required by the automatic example publishing code ([issue #247](https://github.com/PowerShell/DscResource.Tests/issues/247)).
 * Added `.gitattributes` to force EOL to be CRLF to make testing more consistent
   in unit tests.
+* Make sure the latest PowerShellGet is installed on the AppVeyor Build Worker
+  ([issue #252](https://github.com/PowerShell/DscResource.Tests/issues/252)).
+* Update the example pusblishing example to not use `.EXTERNALMODULEDEPENDENCIES`
+  (only #Requires is needed). `.EXTERNALMODULEDEPENDENCIES` is used for external
+  dependencies (outside of PowerShell Gallery).
 
 ### 0.2.0.0
 
