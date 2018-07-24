@@ -1545,7 +1545,7 @@ InModuleScope $script:ModuleName {
             }
         }
 
-        Context 'When a self-signed certificate already exist' {
+        Context 'When a self-signed certificate already exists' {
             BeforeAll {
                 Mock -CommandName Get-ChildItem -MockWith {
                     return $validCertificate
@@ -1568,17 +1568,25 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Export-Certificate
             }
 
-            It 'Should return a certificate and not call any cmdlets' {
+            It 'Should return a certificate and call the correct cmdlets' {
                 $result = New-DscSelfSignedCertificate
                 $result.Thumbprint | Should -Be $mockCertificateThumbprint
                 $result.Subject | Should -Be "CN=$mockCertificateSubject"
 
                 Assert-MockCalled -CommandName New-SelfSignedCertificate -Exactly -Times 0
                 Assert-MockCalled -CommandName New-SelfSignedCertificateEx -Exactly -Times 0
-                Assert-MockCalled -CommandName Set-EnvironmentVariable -Exactly -Times 0
+                Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
+                    $Name -eq 'DscPublicCertificatePath' `
+                    -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
+                } -Exactly -Times 1
+
+                Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
+                    $Name -eq 'DscCertificateThumbprint' `
+                    -and $Value -eq $mockCertificateThumbprint
+                } -Exactly -Times 1
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 Assert-MockCalled -CommandName Import-Module -Exactly -Times 0
-                Assert-MockCalled -CommandName Export-Certificate -Exactly -Times 0
+                Assert-MockCalled -CommandName Export-Certificate -Exactly -Times 1
             }
         }
     }

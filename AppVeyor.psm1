@@ -33,7 +33,7 @@ Import-Module -Name $testHelperPath -Force
         1. Installs Nuget Package Provider DLL.
         2. Installs Nuget.exe to the AppVeyor Build Folder.
         3. Installs the Pester PowerShell Module.
-        4. Installs self-signed certificate for encrypting credentials in configurations.
+        4. Creates a self-signed certificate for encrypting credentials in configurations.
         5. Executes Invoke-CustomAppveyorInstallTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
            in resource module repository.
 
@@ -81,6 +81,7 @@ function Invoke-AppveyorInstallTask
 
     Install-Module @installPesterParameters
 
+    # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
     $certificate = New-DscSelfSignedCertificate
     Write-Info -Message ('Created self-signed certificate ''{0}''.' -f $certificate.Subject)
     Write-Info -Message ('$env:DscPublicCertificatePath: {0}' -f $env:DscPublicCertificatePath)
@@ -104,6 +105,9 @@ function Invoke-AppveyorInstallTask
 
         Executes Start-CustomAppveyorTestTask if defined in .AppVeyor\CustomAppVeyorTasks.psm1
         in resource module repository.
+
+        Creates a self-signed certificate for encrypting credentials in configurations
+        if it doesn't already exist.
 
     .PARAMETER Type
         This controls the method of running the tests.
@@ -204,6 +208,12 @@ function Invoke-AppveyorTestScriptTask
         $MainModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
             -ChildPath $MainModulePath
     }
+
+    # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
+    $certificate = New-DscSelfSignedCertificate
+    Write-Info -Message ('Created self-signed certificate ''{0}''.' -f $certificate.Subject)
+    Write-Info -Message ('$env:DscPublicCertificatePath: {0}' -f $env:DscPublicCertificatePath)
+    Write-Info -Message ('$env:DscCertificateThumbprint: {0}' -f $env:DscCertificateThumbprint)
 
     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
         -ChildPath 'TestsResults.xml'

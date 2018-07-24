@@ -1853,16 +1853,16 @@ function New-DscSelfSignedCertificate
 
             $certificate = New-SelfSignedCertificateEx @newSelfSignedCertificateExParameters
         }
-
-        # Export the public key certificate
-        Export-Certificate -Cert $certificate -FilePath $dscPublicCertificatePath -Force
-
-        # Update a machine and session environment variable with the path to the public certificate.
-        Set-EnvironmentVariable -Name 'DscPublicCertificatePath' -Value $dscPublicCertificatePath -Machine
-
-        # Update a machine and session environment variable with the thumbprint of the certificate.
-        Set-EnvironmentVariable -Name 'DscCertificateThumbprint' -Value $certificate.Thumbprint -Machine
     }
+
+    # Export the public key certificate
+    Export-Certificate -Cert $certificate -FilePath $dscPublicCertificatePath -Force
+
+    # Update a machine and session environment variable with the path to the public certificate.
+    Set-EnvironmentVariable -Name 'DscPublicCertificatePath' -Value $dscPublicCertificatePath -Machine
+
+    # Update a machine and session environment variable with the thumbprint of the certificate.
+    Set-EnvironmentVariable -Name 'DscCertificateThumbprint' -Value $certificate.Thumbprint -Machine
 
     return $certificate
 }

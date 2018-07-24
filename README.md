@@ -286,21 +286,38 @@ deploy_script:
             -ResourceModuleName $moduleName
 ```
 
-## Encrypt credentials in integration tests
+## Encrypt Credentials in Integration Tests
 
-1. Any configuration used for an integration test must have the *CertificateFile*
-   property pointing to path stored in `$env:DscPublicCertificatePath`.
+Any configuration used for an integration test that uses a configuration
+that contains credential parameters must be configured to use MOF encryption
+by providing a certificate file.
 
-    ```powershell
-    $ConfigurationData = @{
-        AllNodes = @(
-            @{
-                NodeName        = 'localhost'
-                CertificateFile = $env:DscPublicCertificatePath
-            }
-        )
-    }
-    ```
+The path to the certificate file must be provided in the `CertificateFile`
+property in the `ConfigurationData`.
+
+```powershell
+$ConfigurationData = @{
+    AllNodes = @(
+        @{
+            NodeName        = 'localhost'
+            CertificateFile = $env:DscPublicCertificatePath
+        }
+    )
+}
+```
+
+When these tests are run in AppVeyor and the *AppVeyor* module is being used
+then the `Invoke-AppveyorInstallTask` and/or `Invoke-AppveyorTestScriptTask`
+will automatically generate an appropriate certificate file and assign the
+path to the environment variable `$env:DscPublicCertificatePath`.
+
+To run the same tests outside of AppVeyor, the certificate can be created and
+the path assigned to the `$env:DscPublicCertificatePath` variable by running
+the function `New-DscSelfSignedCertificate` from the *TestHelper* module.
+
+```powershell
+$certificate = New-DscSelfSignedCertificate
+```
 
 ## CodeCoverage reporting with CodeCov.io
 
@@ -876,6 +893,12 @@ Contributors that add or change an example to be published must make sure that
   dependencies (outside of PowerShell Gallery).
 * Example publishing can now use a filename without number prefix
   ([issue #254](https://github.com/PowerShell/DscResource.Tests/issues/254)).
+* Update `New-DscSelfSignedCertificate` to set environment variables even if
+  certificate already exists.
+* Change `Invoke-AppveyorTestScriptTask` to also create a self-signed certificate
+  using `New-DscSelfSignedCertificate` so that the certificate environment variables
+  are still assigned if the test machine reboots after calling
+  `Invoke-AppveyorInstallTask` ([issue #255](https://github.com/PowerShell/DscResource.Tests/issues/255))
 
 ### 0.2.0.0
 
