@@ -21,6 +21,8 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
 
             Mock -CommandName Install-DependentModule
             Mock -CommandName Copy-ResourceModuleToPSModulePath
+            Mock -CommandName Copy-Item
+            Mock -CommandName Remove-Item
             Mock -CommandName Write-Verbose -ParameterFilter {
                 $Message -match 'Copying module from'
             }
@@ -34,7 +36,7 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
             }
 
             AfterAll {
-                Remove-Item -Path 'env:gallery_api'
+                $env:gallery_api = $null
             }
 
             BeforeEach {
@@ -94,7 +96,7 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
             }
 
             AfterAll {
-                Remove-Item -Path 'env:gallery_api'
+                $env:gallery_api = $null
             }
 
             Context 'When the example configuration name has a mismatch against filename' {
@@ -214,49 +216,7 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
                 }
             }
 
-            Context 'When the example configuration is the same version as the one in the Gallery' {
-                BeforeAll {
-                    Mock -CommandName Find-Script -MockWith {
-                        return @{
-                            Version = '1.0.0.0'
-                        }
-                    }
-
-                    $mockExampleScriptPath = Join-Path -Path $mockModulesExamplesPath -ChildPath 'TestConfig.ps1'
-
-                    $newScriptFileInfoParameters = @{
-                        Path = $mockExampleScriptPath
-                        Version = '1.0.0.0'
-                        Guid = $mockGuid
-                        Description = 'Test metadata'
-                    }
-
-                    New-ScriptFileInfo @newScriptFileInfoParameters
-
-                    $definition = '
-                        Configuration TestConfig
-                        {
-                        }
-                    '
-
-                    $definition | Out-File -Append -FilePath $mockExampleScriptPath -Encoding utf8 -Force
-                }
-
-                It 'Should not call Publish-Script' {
-                    $startGalleryDeployParameters = @{
-                        ResourceModuleName = $mockResourceModuleName
-                        Path               = $mockModulesExamplesPath
-                        ModuleRootPath     = $mockModuleRootPath
-                        Branch             = 'master'
-                    }
-
-                    { Start-GalleryDeploy @startGalleryDeployParameters } | Should -Not -Throw
-
-                    Assert-MockCalled -CommandName Publish-Script -Exactly -Times 0
-                }
-            }
-
-            Context 'When the example configuration is the newer version than the one in the Gallery' {
+            Context 'When the example configuration is an older version than the one in the Gallery' {
                 BeforeAll {
                     Mock -CommandName Find-Script -MockWith {
                         return @{
@@ -298,7 +258,7 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
                 }
             }
 
-            Context 'When the example configuration has a older version than the one in the Gallery' {
+            Context 'When the example configuration is a newer version than the one in the Gallery' {
                 BeforeAll {
                     Mock -CommandName Find-Script -MockWith {
                         return @{
@@ -480,7 +440,16 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
                     { Start-GalleryDeploy @startGalleryDeployParameters -Verbose } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0 -Scope It
-                    Assert-MockCalled -CommandName Publish-Script -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Copy-Item -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Remove-Item -Exactly -Times 1 -Scope It
+
+                    <#
+                        Should always publish script from temp folder, and not
+                        having the number prefix in the filename
+                    #>
+                    Assert-MockCalled -CommandName Publish-Script -ParameterFilter {
+                        $Path -eq (Join-Path -Path $env:TEMP -ChildPath 'TestConfig.ps1')
+                    } -Exactly -Times 1 -Scope It
                 }
 
                 Context 'When the running against a branch other than the master branch' {
@@ -498,6 +467,25 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
                             # Using $WhatIf did not work, but $WhatIfPreference worked.
                             $WhatIfPreference -eq $true
                         } -Exactly -Times 1 -Scope It
+                    }
+                }
+
+                Context 'When the Publish-Script throws an error' {
+                    BeforeEach {
+                        Mock -CommandName Publish-Script -MockWith {
+                            throw 'Mocked error'
+                        }
+                    }
+
+                    It 'Should catch the error and re-throw the error' {
+                        $startGalleryDeployParameters = @{
+                            ResourceModuleName = $mockResourceModuleName
+                            Path               = $mockModulesExamplesPath
+                            ModuleRootPath     = $mockModuleRootPath
+                            Branch             = 'dev'
+                        }
+
+                        { Start-GalleryDeploy @startGalleryDeployParameters } | Should -Throw 'Mocked error'
                     }
                 }
             }

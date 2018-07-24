@@ -874,6 +874,8 @@ Contributors that add or change an example to be published must make sure that
 * Update the example pusblishing example to not use `.EXTERNALMODULEDEPENDENCIES`
   (only #Requires is needed). `.EXTERNALMODULEDEPENDENCIES` is used for external
   dependencies (outside of PowerShell Gallery).
+* Example publishing can now use a filename without number prefix
+  ([issue #254](https://github.com/PowerShell/DscResource.Tests/issues/254)).
 
 ### 0.2.0.0
 

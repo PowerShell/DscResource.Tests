@@ -127,10 +127,10 @@ function Start-GalleryDeploy
             $passedTest = Test-ConfigurationName -Path $exampleToValidate.FullName
             if ($passedTest)
             {
-                $publishFilename = Get-PublishFileName -Path $exampleToValidate.FullName
+                $filenameWithoutExtension = Get-PublishFileName -Path $exampleToValidate.FullName
 
                 # Look if the script don't exist or is a new version.
-                $latestScriptVersionInGallery = Find-Script -Name $publishFilename -ErrorAction SilentlyContinue
+                $latestScriptVersionInGallery = Find-Script -Name $filenameWithoutExtension -ErrorAction 'SilentlyContinue'
                 if ($latestScriptVersionInGallery)
                 {
                     # Already exist in Gallery, verify if newer version.
@@ -193,19 +193,38 @@ function Start-GalleryDeploy
     $examplesToPublish = $examplesToPublish | Where-Object -FilterScript { $_.Guid -notin $duplicateGuid.Name }
     foreach ($exampleToPublish in $examplesToPublish)
     {
-        Write-Info -Message ($script:localizedData.PublishExample -f $exampleToPublish.Name, $exampleToPublish.Version)
+        $publishFilename = '{0}{1}' -f `
+            (Get-PublishFileName -Path $exampleToPublish.Path),
+            (Get-Item $exampleToPublish.Path).Extension
 
-        $publishScriptParameters = @{
-            Path        = $exampleToPublish.Path
-            NuGetApiKey = $env:gallery_api
-        }
+        $destinationPath = Join-Path -Path $env:TEMP -ChildPath $publishFilename
 
-        if ($isDebugMode)
+        try
         {
-            $publishScriptParameters['WhatIf'] = $true
-        }
+            Copy-Item -Path $exampleToPublish.Path -Destination $destinationPath -Force
 
-        Publish-Script @publishScriptParameters
+            Write-Info -Message ($script:localizedData.PublishExample -f $exampleToPublish.Name, $exampleToPublish.Version, $publishFilenameWithoutExtension)
+
+            $publishScriptParameters = @{
+                Path        = $destinationPath
+                NuGetApiKey = $env:gallery_api
+            }
+
+            if ($isDebugMode)
+            {
+                $publishScriptParameters['WhatIf'] = $true
+            }
+
+            Publish-Script @publishScriptParameters
+        }
+        catch
+        {
+            throw $_
+        }
+        finally
+        {
+            Remove-Item -Path $destinationPath -Force -ErrorAction 'Continue'
+        }
     }
 }
 

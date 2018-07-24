@@ -14,5 +14,5 @@ ConfigurationNameMismatch = The configuration name and the file name are not the
 AddingExampleToBePublished = Adding the example '{0}' to the list to be published.
 DuplicateGuid = Skipping examples that was found having the same GUID. Duplicate examples: '{0}'.
 ExampleIsAlreadyPublished = The example '{0}' is already published (same version).
-PublishExample = The example '{0}' with version '{1}' is being published.
+PublishExample = The example '{0}' with version '{1}' is being published as '{2}'.
 '@
