@@ -82,10 +82,7 @@ function Invoke-AppveyorInstallTask
     Install-Module @installPesterParameters
 
     # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
-    $certificate = New-DscSelfSignedCertificate
-    Write-Info -Message ('Created self-signed certificate ''{0}''.' -f $certificate.Subject)
-    Write-Info -Message ('$env:DscPublicCertificatePath: {0}' -f $env:DscPublicCertificatePath)
-    Write-Info -Message ('$env:DscCertificateThumbprint: {0}' -f $env:DscCertificateThumbprint)
+    $null = New-DscSelfSignedCertificate
 
     # Execute the custom install task if defined
     if ($customTaskModuleLoaded `
@@ -210,10 +207,7 @@ function Invoke-AppveyorTestScriptTask
     }
 
     # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
-    $certificate = New-DscSelfSignedCertificate
-    Write-Info -Message ('Created self-signed certificate ''{0}''.' -f $certificate.Subject)
-    Write-Info -Message ('$env:DscPublicCertificatePath: {0}' -f $env:DscPublicCertificatePath)
-    Write-Info -Message ('$env:DscCertificateThumbprint: {0}' -f $env:DscCertificateThumbprint)
+    $null = New-DscSelfSignedCertificate
 
     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
         -ChildPath 'TestsResults.xml'

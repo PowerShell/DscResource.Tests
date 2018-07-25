@@ -898,7 +898,10 @@ Contributors that add or change an example to be published must make sure that
 * Change `Invoke-AppveyorTestScriptTask` to also create a self-signed certificate
   using `New-DscSelfSignedCertificate` so that the certificate environment variables
   are still assigned if the test machine reboots after calling
-  `Invoke-AppveyorInstallTask` ([issue #255](https://github.com/PowerShell/DscResource.Tests/issues/255))
+  `Invoke-AppveyorInstallTask` ([issue #255](https://github.com/PowerShell/DscResource.Tests/issues/255)).
+* Change `New-DscSelfSignedCertificate` to write information about certificate
+  creation or usage so that `Invoke-AppveyorInstallTask` and
+  `Invoke-AppveyorTestScriptTask` does not have to ([issue #259](https://github.com/PowerShell/DscResource.Tests/issues/259)).
 
 ### 0.2.0.0
 
