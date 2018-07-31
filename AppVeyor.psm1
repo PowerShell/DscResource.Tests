@@ -1,6 +1,3 @@
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
-Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
-
 <#
     .SYNOPSIS
         This module provides functions for building and testing DSC Resources in AppVeyor.
@@ -8,17 +5,10 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeC
         These functions will only work if called within an AppVeyor CI build task.
 #>
 
-$customTasksModulePath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
-    -ChildPath '.AppVeyor\CustomAppVeyorTasks.psm1'
-if (Test-Path -Path $customTasksModulePath)
-{
-    Import-Module -Name $customTasksModulePath
-    $customTaskModuleLoaded = $true
-}
-else
-{
-    $customTaskModuleLoaded = $false
-}
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1') -Force
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.CodeCoverage')
+# Import the module containing the container helper functions.
+Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.Container')
 
 # Load the test helper module.
 $testHelperPath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
@@ -83,15 +73,6 @@ function Invoke-AppveyorInstallTask
 
     # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
     $null = New-DscSelfSignedCertificate
-
-    # Execute the custom install task if defined
-    if ($customTaskModuleLoaded `
-            -and (Get-Command -Module $CustomAppVeyorTasks `
-                -Name Invoke-CustomAppveyorInstallTask `
-                -ErrorAction SilentlyContinue))
-    {
-        Invoke-CustomAppveyorInstallTask
-    }
 
     Write-Info -Message 'Install Task Complete.'
 }
@@ -211,15 +192,6 @@ function Invoke-AppveyorTestScriptTask
 
     $testResultsFile = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER `
         -ChildPath 'TestsResults.xml'
-
-    # Execute custom test task if defined
-    if ($customTaskModuleLoaded `
-            -and (Get-Command -Module $CustomAppVeyorTasks `
-                -Name Start-CustomAppveyorTestTask `
-                -ErrorAction SilentlyContinue))
-    {
-        Start-CustomAppveyorTestTask
-    }
 
     Initialize-LocalConfigurationManager -Encrypt:$true -DisableConsistency:$DisableConsistency
 
@@ -462,9 +434,6 @@ function Invoke-AppveyorTestScriptTask
                             }
                         )
                     }
-
-                    # Import the module containing the container helper functions.
-                    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.Container')
 
                     Write-Info -Message 'Using one or more Docker Windows containers to run tests.'
 
@@ -821,11 +790,6 @@ function Invoke-AppveyorTestScriptTask
             Remove-Item -Path $dscTestsPath -Force -Recurse
             break
         }
-
-        default
-        {
-            throw "An unhandled type '$Type' was specified."
-        }
     }
 
     $pesterTestResult = $results.TestResult
@@ -1133,15 +1097,6 @@ function Invoke-AppveyorAfterTestTask
         -ChildPath "$ResourceModuleName.$($env:APPVEYOR_BUILD_VERSION).nupkg"
     Get-ChildItem $nugetPackageName | ForEach-Object -Process {
         Push-TestArtifact -Path $_.FullName -FileName $_.Name
-    }
-
-    # Execute custom after test task if defined
-    if ($customTaskModuleLoaded `
-            -and (Get-Command -Module $CustomAppVeyorTasks `
-                -Name Start-CustomAppveyorAfterTestTask `
-                -ErrorAction SilentlyContinue))
-    {
-        Start-CustomAppveyorAfterTestTask
     }
 
     Write-Info -Message 'After Test Task Complete.'

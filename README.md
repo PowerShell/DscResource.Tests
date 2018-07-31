@@ -902,6 +902,15 @@ Contributors that add or change an example to be published must make sure that
 * Change `New-DscSelfSignedCertificate` to write information about certificate
   creation or usage so that `Invoke-AppveyorInstallTask` and
   `Invoke-AppveyorTestScriptTask` does not have to ([issue #259](https://github.com/PowerShell/DscResource.Tests/issues/259)).
+* Remove option to use CustomTaskModulePath. It was not used, nor documented. To
+  make the unit tests easier the option was removed
+  ([issue #263](https://github.com/PowerShell/DscResource.Tests/issues/263)).
+* Improved the unit tests for the helper function `Invoke-AppveyorTestScriptTask`,
+  adding more test coverage, especially for the container part.
+* Moved the import of module DscResource.Container to the top of the module file
+  AppVeyor.psm1 to simplify the unit tests.
+* Rearranging the `Import-Module` and the comment-based help, in the module file
+  AppVeyor.psm1, so that the comment-based help is at the top of the file.
 
 ### 0.2.0.0
 
