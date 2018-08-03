@@ -911,6 +911,8 @@ Contributors that add or change an example to be published must make sure that
   AppVeyor.psm1 to simplify the unit tests.
 * Rearranging the `Import-Module` and the comment-based help, in the module file
   AppVeyor.psm1, so that the comment-based help is at the top of the file.
+* Fix informational message when publishing examples
+  ([issue #261](https://github.com/PowerShell/DscResource.Tests/issues/261)).
 
 ### 0.2.0.0
 

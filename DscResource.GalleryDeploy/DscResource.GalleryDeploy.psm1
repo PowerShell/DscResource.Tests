@@ -193,8 +193,10 @@ function Start-GalleryDeploy
     $examplesToPublish = $examplesToPublish | Where-Object -FilterScript { $_.Guid -notin $duplicateGuid.Name }
     foreach ($exampleToPublish in $examplesToPublish)
     {
+        $publishFilenameWithoutExtension = Get-PublishFileName -Path $exampleToPublish.Path
+
         $publishFilename = '{0}{1}' -f `
-            (Get-PublishFileName -Path $exampleToPublish.Path),
+            $publishFilenameWithoutExtension,
             (Get-Item $exampleToPublish.Path).Extension
 
         $destinationPath = Join-Path -Path $env:TEMP -ChildPath $publishFilename
