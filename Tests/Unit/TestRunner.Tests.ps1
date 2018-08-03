@@ -32,7 +32,7 @@ Describe "$($script:ModuleName) Unit Tests" {
 
             Context 'When starting tests' {
                 It 'Should call Invoke-Pester exactly 2 times' {
-                    { Start-DscResourceTests -ResourcesPath $mockResourcePath } | Should Not Throw
+                    { Start-DscResourceTests -ResourcesPath $mockResourcePath } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Invoke-Pester -Exactly -Times 2
                 }

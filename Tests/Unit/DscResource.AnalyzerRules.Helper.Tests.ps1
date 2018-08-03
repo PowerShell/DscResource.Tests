@@ -22,8 +22,8 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $getStatementBlockAsRowsResult = `
                         Get-StatementBlockAsRows @getStatementBlockAsRowsParameters
 
-                    $getStatementBlockAsRowsResult[0] | Should Be $expectedReturnValue1
-                    $getStatementBlockAsRowsResult[1] | Should Be $expectedReturnValue2
+                    $getStatementBlockAsRowsResult[0] | Should -Be $expectedReturnValue1
+                    $getStatementBlockAsRowsResult[1] | Should -Be $expectedReturnValue2
                 }
             }
 
@@ -36,8 +36,8 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $getStatementBlockAsRowsResult = `
                         Get-StatementBlockAsRows @getStatementBlockAsRowsParameters
 
-                    $getStatementBlockAsRowsResult[0] | Should Be $expectedReturnValue1
-                    $getStatementBlockAsRowsResult[1] | Should Be $expectedReturnValue2
+                    $getStatementBlockAsRowsResult[0] | Should -Be $expectedReturnValue1
+                    $getStatementBlockAsRowsResult[1] | Should -Be $expectedReturnValue2
                 }
             }
         }
@@ -55,7 +55,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceOnSameLineResult = `
                         Test-StatementOpeningBraceOnSameLine @testStatementOpeningBraceOnSameLineParameters
 
-                    $testStatementOpeningBraceOnSameLineResult | Should Be $true
+                    $testStatementOpeningBraceOnSameLineResult | Should -Be $true
                 }
             }
 
@@ -73,7 +73,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceOnSameLineResult = `
                         Test-StatementOpeningBraceOnSameLine @testStatementOpeningBraceOnSameLineParameters
 
-                    $testStatementOpeningBraceOnSameLineResult | Should Be $false
+                    $testStatementOpeningBraceOnSameLineResult | Should -Be $false
                 }
             }
 
@@ -90,7 +90,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceOnSameLineResult = `
                         Test-StatementOpeningBraceOnSameLine @testStatementOpeningBraceOnSameLineParameters
 
-                    $testStatementOpeningBraceOnSameLineResult | Should Be $false
+                    $testStatementOpeningBraceOnSameLineResult | Should -Be $false
                 }
             }
         }
@@ -111,7 +111,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceIsNotFollowedByNewLineResult = `
                         Test-StatementOpeningBraceIsNotFollowedByNewLine @testStatementOpeningBraceIsNotFollowedByNewLineParameters
 
-                    $testStatementOpeningBraceIsNotFollowedByNewLineResult | Should Be $true
+                    $testStatementOpeningBraceIsNotFollowedByNewLineResult | Should -Be $true
                 }
             }
 
@@ -131,7 +131,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceIsNotFollowedByNewLineResult = `
                         Test-StatementOpeningBraceIsNotFollowedByNewLine @testStatementOpeningBraceIsNotFollowedByNewLineParameters
 
-                    $testStatementOpeningBraceIsNotFollowedByNewLineResult | Should Be $false
+                    $testStatementOpeningBraceIsNotFollowedByNewLineResult | Should -Be $false
                 }
             }
         }
@@ -154,7 +154,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult = `
                         Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testStatementOpeningBraceIsFollowedByMoreThanOneNewLineParameters
 
-                    $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult | Should Be $true
+                    $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult | Should -Be $true
                 }
             }
 
@@ -174,7 +174,7 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                     $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult = `
                         Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testStatementOpeningBraceIsFollowedByMoreThanOneNewLineParameters
 
-                    $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult | Should Be $false
+                    $testStatementOpeningBraceIsFollowedByMoreThanOneNewLineResult | Should -Be $false
                 }
             }
         }
@@ -204,9 +204,9 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                         )
                         $Ast -is [System.Management.Automation.Language.ParameterAst]
                     }, $true)
-                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should Be $true
+                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should -Be $true
                     $isInClass = Test-isInClass -Ast $ParameterAst
-                    $isInClass | Should Be $false
+                    $isInClass | Should -Be $false
                 }
             }
 
@@ -230,9 +230,9 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                         )
                         $Ast -is [System.Management.Automation.Language.ParameterAst]
                     }, $true)
-                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should Be $true
+                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should -Be $true
                     $isInClass = Test-isInClass -Ast $ParameterAst
-                    $isInClass | Should Be $true
+                    $isInClass | Should -Be $true
                 }
 
                 It "Should return false for an AST contained in a ScriptBlock`r`n`tthat is a value assignment for a property or method in a class AST" {
@@ -259,9 +259,9 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                         )
                         $Ast -is [System.Management.Automation.Language.ParameterAst]
                     }, $true)
-                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should Be $true
+                    ($ParameterAst -is [System.Management.Automation.Language.ParameterAst]) | Should -Be $true
                     $isInClass = Test-isInClass -Ast $ParameterAst
-                    $isInClass | Should Be $false
+                    $isInClass | Should -Be $false
 
                 }
             }

@@ -102,7 +102,7 @@ Describe 'Common Tests - File Formatting' {
             }
         }
 
-        $containsUnicodeFile | Should Be $false
+        $containsUnicodeFile | Should -Be $false
     }
 
     It 'Should not contain any files with tab characters' {
@@ -122,7 +122,7 @@ Describe 'Common Tests - File Formatting' {
             }
         }
 
-        $containsFileWithTab | Should Be $false
+        $containsFileWithTab | Should -Be $false
     }
 
     It 'Should not contain empty files' {
@@ -139,7 +139,7 @@ Describe 'Common Tests - File Formatting' {
             }
         }
 
-        $containsEmptyFile | Should Be $false
+        $containsEmptyFile | Should -Be $false
     }
 
     It 'Should not contain files without a newline at the end' {
@@ -163,7 +163,7 @@ Describe 'Common Tests - File Formatting' {
         }
 
 
-        $containsFileWithoutNewLine | Should Be $false
+        $containsFileWithoutNewLine | Should -Be $false
     }
 
     Context 'When repository contains markdown files' {
@@ -186,7 +186,7 @@ Describe 'Common Tests - File Formatting' {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
-                $markdownFileHasBom | Should Be $false
+                $markdownFileHasBom | Should -Be $false
             }
         }
     }
@@ -216,7 +216,7 @@ Describe 'Common Tests - Validate Script Files' -Tag 'Script' {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
-                $scriptFileHasBom | Should Be $false
+                $scriptFileHasBom | Should -Be $false
             }
         }
     }
@@ -245,7 +245,7 @@ Describe 'Common Tests - .psm1 File Parsing' {
                     $containsParseErrors = $true
                 }
 
-                $containsParseErrors | Should Be $false
+                $containsParseErrors | Should -Be $false
             }
         }
     }
@@ -271,7 +271,7 @@ Describe 'Common Tests - Validate Module Files' -Tag 'Module' {
                     Write-Warning -Message "$filePathOutputName contain Byte Order Mark (BOM). Use fixer function 'ConvertTo-ASCII'."
                 }
 
-                $moduleFileHasBom | Should Be $false
+                $moduleFileHasBom | Should -Be $false
             }
         }
     }
@@ -300,7 +300,7 @@ Describe 'Common Tests - Module Manifest' {
     $moduleManifestProperties = Test-ModuleManifest -Path $moduleManifestPath -ErrorAction 'SilentlyContinue'
 
     It "Should contain a PowerShellVersion property of at least $minimumPSVersion based on resource types" {
-        $moduleManifestProperties.PowerShellVersion -ge $minimumPSVersion | Should Be $true
+        $moduleManifestProperties.PowerShellVersion -ge $minimumPSVersion | Should -Be $true
     }
 
     if ($containsClassResource)
@@ -311,11 +311,11 @@ Describe 'Common Tests - Module Manifest' {
             foreach ($classResourceInModule in $classResourcesInModule)
             {
                 It "Should explicitly export $classResourceInModule in DscResourcesToExport" {
-                    $moduleManifestProperties.ExportedDscResources -contains $classResourceInModule | Should Be $true
+                    $moduleManifestProperties.ExportedDscResources -contains $classResourceInModule | Should -Be $true
                 }
 
                 It "Should include class module $classResourceInModule.psm1 in NestedModules" {
-                    $moduleManifestProperties.NestedModules.Name -contains $classResourceInModule | Should Be $true
+                    $moduleManifestProperties.NestedModules.Name -contains $classResourceInModule | Should -Be $true
                 }
             }
         }
@@ -332,12 +332,12 @@ Describe 'Common Tests - Script Resource Schema Validation' {
             $scriptResourcePath = Join-Path -Path $dscResourcesFolderFilePath -ChildPath $scriptResourceName
 
             It 'Should pass Test-xDscResource' {
-                Test-xDscResource -Name $scriptResourcePath | Should Be $true
+                Test-xDscResource -Name $scriptResourcePath | Should -Be $true
             }
 
             It 'Should pass Test-xDscSchema' {
                 $mofSchemaFilePath = Join-Path -Path $scriptResourcePath -ChildPath "$scriptResourceName.schema.mof"
-                Test-xDscSchema -Path $mofSchemaFilePath | Should Be $true
+                Test-xDscSchema -Path $mofSchemaFilePath | Should -Be $true
             }
         }
     }
@@ -440,7 +440,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         Write-Warning -Message  'For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/PSScriptAnalyzer'
                     }
 
-                    $errorPssaRulesOutput | Should Be $null
+                    $errorPssaRulesOutput | Should -Be $null
                 }
 
                 It 'Should pass all required PS Script Analyzer rules' {
@@ -465,7 +465,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                             If opted into 'Common Tests - Required Script Analyzer Rules' then
                             test that there were no violations
                         #>
-                        $requiredPssaRulesOutput | Should Be $null
+                        $requiredPssaRulesOutput | Should -Be $null
                     }
                 }
 
@@ -491,7 +491,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                             If opted into 'Common Tests - Flagged Script Analyzer Rules' then
                             test that there were no violations
                         #>
-                        $flaggedPssaRulesOutput | Should Be $null
+                        $flaggedPssaRulesOutput | Should -Be $null
                     }
                 }
 
@@ -519,7 +519,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                             If opted into 'Common Tests - New Error-Level Script Analyzer Rules' then
                             test that there were no violations
                         #>
-                        $newErrorPssaRulesOutput | Should Be $null
+                        $newErrorPssaRulesOutput | Should -Be $null
                     }
                 }
 
@@ -539,7 +539,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                         }
                     }
 
-                    $requiredRuleIsSuppressed | Should Be $false
+                    $requiredRuleIsSuppressed | Should -Be $false
                 }
 
                 It 'Should pass all custom DSC Resource Kit PSSA rules' {
@@ -567,7 +567,7 @@ Describe 'Common Tests - PS Script Analyzer on Resource Files' {
                             If opted into 'Common Tests - Custom Script Analyzer Rules' then
                             test that there were no violations
                         #>
-                        $customPssaRulesOutput | Should Be $null
+                        $customPssaRulesOutput | Should -Be $null
                     }
                 }
             }
@@ -741,7 +741,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                             # Remove the variable $ConfigurationData if it existed in the file we dot-sourced so next example file doesn't use the previous examples configuration.
                             Remove-Item -Path variable:ConfigurationData -ErrorAction SilentlyContinue
                         }
-                    } | Should Not Throw
+                    } | Should -Not -Throw
                 }
             }
         }
@@ -868,7 +868,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     #>
                     $npmParametersForStartProcess['ArgumentList'] = 'install -g gulp'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when installing package Gulp in local scope' {
@@ -876,7 +876,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # gulp must also be installed locally to be able to be referenced in the javascript file.
                     $npmParametersForStartProcess['ArgumentList'] = 'install gulp'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when installing package through2' {
@@ -884,7 +884,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # Used in gulpfile.js; A tiny wrapper around Node streams2 Transform to avoid explicit sub classing noise
                     $npmParametersForStartProcess['ArgumentList'] = 'install through2'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when installing package markdownlint' {
@@ -892,7 +892,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # Used in gulpfile.js; A Node.js style checker and lint tool for Markdown/CommonMark files.
                     $npmParametersForStartProcess['ArgumentList'] = 'install markdownlint'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when installing package gulp-concat as a dev-dependency' {
@@ -900,7 +900,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # gulp-concat is installed as devDependencies. Used in gulpfile.js; Concatenates files
                     $npmParametersForStartProcess['ArgumentList'] = 'install gulp-concat -D'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
         }
 
@@ -965,7 +965,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
 
             if ($optIn)
             {
-                $mdErrors | Should Be 0
+                $mdErrors | Should -Be 0
             }
         }
 
@@ -981,7 +981,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # gulp-concat is installed as devDependencies. Used in gulpfile.js; Concatenates files
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp-concat -D'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when uninstalling package markdownlint' {
@@ -989,7 +989,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # Used in gulpfile.js; A Node.js style checker and lint tool for Markdown/CommonMark files.
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall markdownlint'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when uninstalling package through2' {
@@ -997,7 +997,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # Used in gulpfile.js; A tiny wrapper around Node streams2 Transform to avoid explicit sub classing noise
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall through2'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when uninstalling package Gulp in local scope' {
@@ -1005,7 +1005,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     # gulp must also be installed locally to be able to be referenced in the javascript file.
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall gulp'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when uninstalling package Gulp in global scope' {
@@ -1016,7 +1016,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     #>
                     $npmParametersForStartProcess['ArgumentList'] = 'uninstall -g gulp'
                     Start-Process @npmParametersForStartProcess
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
 
             It 'Should not throw an error when removing the node_modules folder' {
@@ -1027,7 +1027,7 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                     {
                         Remove-Item -Path $npmNodeModulesPath -Recurse -Force
                     }
-                } | Should Not Throw
+                } | Should -Not -Throw
             }
         }
     }

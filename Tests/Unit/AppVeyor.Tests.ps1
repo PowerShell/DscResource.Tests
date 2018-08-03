@@ -179,7 +179,7 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
                 Mock -CommandName Test-Path -MockWith { return $false } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should Not Throw
+                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
                 Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
@@ -189,7 +189,7 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Test-Path -MockWith { return $false } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
                 Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should Not Throw
+                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
                 Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
@@ -199,7 +199,7 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
                 Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should Not Throw
+                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
                 Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
