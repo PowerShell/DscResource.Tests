@@ -913,6 +913,10 @@ Contributors that add or change an example to be published must make sure that
   AppVeyor.psm1, so that the comment-based help is at the top of the file.
 * Fix informational message when publishing examples
   ([issue #261](https://github.com/PowerShell/DscResource.Tests/issues/261)).
+* When cloning this repo and checking out the dev branch, the file
+  DscResource.AnalyzerRules.Tests.ps1 was always unstaged. This was probably
+  due to the .gitattributes file that was introduced in a previous PR.
+  EOL in DscResource.AnalyzerRules.Tests.ps1 is now fixed.
 
 ### 0.2.0.0
 
