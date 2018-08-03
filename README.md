@@ -917,6 +917,8 @@ Contributors that add or change an example to be published must make sure that
   DscResource.AnalyzerRules.Tests.ps1 was always unstaged. This was probably
   due to the .gitattributes file that was introduced in a previous PR.
   EOL in DscResource.AnalyzerRules.Tests.ps1 is now fixed.
+* Adding regression tests for
+  [issue #70](https://github.com/PowerShell/DscResource.Tests/issues/70)).
 
 ### 0.2.0.0
 

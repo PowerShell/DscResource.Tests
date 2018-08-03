@@ -991,17 +991,20 @@ InModuleScope $script:ModuleName {
                 )
 
                 { Restore-TestEnvironment -TestEnvironment $TestEnvironment } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Set-PSModulePath' -Exactly -Times 0
             }
         }
 
-        Context 'When restoring the test environment from an integration test that has the wrong PSModulePath' {
-            It 'Should restore without throwing' {
+        # Regression test for issue #70.
+        Context 'When restoring the test environment from an integration test that changed the PSModulePath' {
+            It 'Should restore without throwing and call the correct mocks' {
                 $testEnvironmentParameter = @{
                     DSCModuleName      = 'TestModule'
                     DSCResourceName    = 'TestResource'
                     TestType           = 'Integration'
                     ImportedModulePath = $moduleToImportFilePath
-                    OldPSModulePath    = 'Wrong path'
+                    OldPSModulePath    = 'Wrong paths'
                     OldExecutionPolicy = Get-ExecutionPolicy
                 }
 
@@ -1011,11 +1014,13 @@ InModuleScope $script:ModuleName {
                 #Assert-MockCalled -CommandName 'Set-ExecutionPolicy' -Exactly -Times 1 -Scope It
 
                 Assert-MockCalled -CommandName 'Set-PSModulePath' -ParameterFilter {
-                    $PSBoundParameters.ContainsKey('Machine') -eq $false
+                    $Path -eq $testEnvironmentParameter.OldPSModulePath `
+                    -and $PSBoundParameters.ContainsKey('Machine') -eq $false
                 } -Exactly -Times 1 -Scope It
 
                 Assert-MockCalled -CommandName 'Set-PSModulePath' -ParameterFilter {
-                    $PSBoundParameters.ContainsKey('Machine') -eq $true
+                    $Path -eq $testEnvironmentParameter.OldPSModulePath `
+                    -and $PSBoundParameters.ContainsKey('Machine') -eq $true
                 } -Exactly -Times 1 -Scope It
             }
         }
