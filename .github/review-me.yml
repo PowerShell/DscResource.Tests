@@ -1,0 +1,6 @@
+# Configuration for probot-review-me - https://github.com/z0al/probot-review-me
+when:
+  continuous-integration/appveyor/pr: success
+  license/cla: success
+
+label: needs review

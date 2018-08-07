@@ -921,6 +921,7 @@ Contributors that add or change an example to be published must make sure that
   [issue #70](https://github.com/PowerShell/DscResource.Tests/issues/70)).
 * Migrate Pester Test Syntax from v3 -> v4
   ([issue #199](https://github.com/PowerShell/DscResource.Tests/issues/199)).
+* Activate GitHub App Review Me.
 
 ### 0.2.0.0
 
