@@ -903,68 +903,70 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
             }
         }
 
-        if (Test-Path -Path (Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'))
-        {
-            Write-Verbose -Message ('Using markdownlint settings file from repository folder ''{0}''.' -f $repoRootPath) -Verbose
-            $markdownlintSettingsFilePath = Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'
-        }
-        else
-        {
-            Write-Verbose -Message 'Using markdownlint settings file from DscResource.Test repository.' -Verbose
-            $markdownlintSettingsFilePath = $null
-        }
-
-        It "Should not have errors in any markdown files" {
-
-            $mdErrors = 0
-            try
+        Context 'When there are markdown files' {
+            if (Test-Path -Path (Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'))
             {
+                Write-Verbose -Message ('Using markdownlint settings file from repository folder ''{0}''.' -f $repoRootPath) -Verbose
+                $markdownlintSettingsFilePath = Join-Path -Path $repoRootPath -ChildPath '.markdownlint.json'
+            }
+            else
+            {
+                Write-Verbose -Message 'Using markdownlint settings file from DscResource.Test repository.' -Verbose
+                $markdownlintSettingsFilePath = $null
+            }
 
-                $gulpArgumentList = @(
-                    'test-mdsyntax',
-                    '--silent',
-                    '--rootpath',
-                    $repoRootPath,
-                    '--dscresourcespath',
-                    $dscResourcesFolderFilePath
-                )
+            It "Should not have errors in any markdown files" {
 
-                if ($markdownlintSettingsFilePath)
+                $mdErrors = 0
+                try
                 {
-                    $gulpArgumentList += @(
-                        '--settingspath',
-                        $markdownlintSettingsFilePath
+
+                    $gulpArgumentList = @(
+                        'test-mdsyntax',
+                        '--silent',
+                        '--rootpath',
+                        $repoRootPath,
+                        '--dscresourcespath',
+                        $dscResourcesFolderFilePath
                     )
-                }
 
-                Start-Process -FilePath "gulp" -ArgumentList $gulpArgumentList `
-                    -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
-                Start-Sleep -Seconds 3
-                $mdIssuesPath = Join-Path -Path $PSScriptRoot -ChildPath "markdownissues.txt"
+                    if ($markdownlintSettingsFilePath)
+                    {
+                        $gulpArgumentList += @(
+                            '--settingspath',
+                            $markdownlintSettingsFilePath
+                        )
+                    }
 
-                if ((Test-Path -Path $mdIssuesPath) -eq $true)
-                {
-                    Get-Content -Path $mdIssuesPath | ForEach-Object -Process {
-                        if ([string]::IsNullOrEmpty($_) -eq $false)
-                        {
-                            Write-Warning -Message $_
-                            $mdErrors ++
+                    Start-Process -FilePath 'gulp' -ArgumentList $gulpArgumentList `
+                        -Wait -WorkingDirectory $PSScriptRoot -PassThru -NoNewWindow
+                    Start-Sleep -Seconds 3
+                    $mdIssuesPath = Join-Path -Path $PSScriptRoot -ChildPath 'markdownissues.txt'
+
+                    if ((Test-Path -Path $mdIssuesPath) -eq $true)
+                    {
+                        Get-Content -Path $mdIssuesPath | ForEach-Object -Process {
+                            if ([string]::IsNullOrEmpty($_) -eq $false)
+                            {
+                                Write-Warning -Message $_
+                                $mdErrors ++
+                            }
                         }
                     }
+                    Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
                 }
-                Remove-Item -Path $mdIssuesPath -Force -ErrorAction SilentlyContinue
-            }
-            catch [System.Exception]
-            {
-                Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
-                        "be sure that you have installed nodejs and have " + `
-                        "run 'npm install -g gulp' in order to have this " + `
-                        "text execute.")
-            }
+                catch [System.Exception]
+                {
+                    Write-Warning -Message ('Unable to run gulp to test markdown files. Please ' + `
+                            'be sure that you have installed nodejs and have ' + `
+                            'run ''npm install -g gulp'' in order to have this ' + `
+                            'test execute.')
+                }
 
-            if ($optIn)
-            {
-                $mdErrors | Should -Be 0
+                if ($optIn)
+                {
+                    $mdErrors | Should -Be 0
+                }
             }
         }
 
@@ -1032,9 +1034,119 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
     }
     else
     {
-        Write-Warning -Message ("Unable to run gulp to test markdown files. Please " + `
-                "be sure that you have installed nodejs and npm in order " + `
-                "to have this text execute.")
+        Write-Warning -Message ('Unable to run gulp to test markdown files. Please ' + `
+                'be sure that you have installed nodejs and npm in order ' + `
+                'to have this text execute.')
+    }
+}
+
+Describe 'Common Tests - Spellcheck Files' -Tag 'Spellcheck' {
+    BeforeAll {
+        $npmParametersForStartProcess = @{
+            FilePath         = 'npm'
+            ArgumentList     = ''
+            WorkingDirectory = $PSScriptRoot
+            Wait             = $true
+            WindowStyle      = 'Hidden'
+        }
+    }
+
+    if ((Get-Command -Name 'npm' -ErrorAction SilentlyContinue))
+    {
+        $skipDependency = $false
+    }
+    else
+    {
+        Write-Warning -Message ('Unable to run cSpell to spellcheck markdown files. Please ' + `
+            'be sure that you have installed nodejs and npm in order ' + `
+            'to have this text execute.')
+
+        $skipDependency = $true
+    }
+
+    Context 'When installing spellcheck dependencies' {
+        It 'Should not throw an error when installing package cSpell in global scope' -Skip:$skipDependency {
+            {
+                # More information about cSpell: https://www.npmjs.com/package/cspell
+                $npmParametersForStartProcess['ArgumentList'] = 'install -g cspell'
+                Start-Process @npmParametersForStartProcess
+            } | Should -Not -Throw
+        }
+    }
+
+    # If npm wasn't installed then we can't run this test.
+    $optIn = -not $skipDependency -and (Get-OptInStatus -OptIns $optIns -Name 'Common Tests - Spellcheck Markdown Files')
+
+    Context 'When there are markdown files' {
+        $errorFileName = 'SpellingErrors.txt'
+
+        It 'Should not have spelling errors in any markdown files' -Skip:(!$optIn) {
+            $spellcheckSettingsFilePath = Join-Path -Path $repoRootPath -ChildPath '.vscode\cSpell.json'
+            if (Test-Path -Path $spellcheckSettingsFilePath)
+            {
+                Write-Info -Message ('Using spellcheck settings file ''{0}''.' -f $spellcheckSettingsFilePath)
+            }
+            else
+            {
+                $spellcheckSettingsFilePath = $null
+            }
+
+            $cSpellArgumentList = @(
+                '"**/*.md"',
+                '--no-color'
+            )
+
+            if ($spellcheckSettingsFilePath)
+            {
+                $cSpellArgumentList += @(
+                    '--config',
+                    $spellcheckSettingsFilePath
+                )
+            }
+
+            # This must be last, we send output to the error file.
+            $cSpellArgumentList += @(
+                ('>{0}' -f $errorFileName)
+            )
+
+            $startProcessParameters = @{
+                FilePath = 'cspell'
+                ArgumentList = $cSpellArgumentList
+                Wait = $true
+                PassThru = $true
+                NoNewWindow = $true
+            }
+
+            $process = Start-Process @startProcessParameters
+            $process.ExitCode | Should -Be 0
+        } -ErrorVariable itBlockError
+
+        # If the It-block did not pass the test, output the spelling errors.
+        if ($itBlockError.Count -ne 0)
+        {
+            $misspelledErrors = Get-Content -Path $errorFileName
+
+            foreach ($misspelledError in $misspelledErrors)
+            {
+                $message = '{0}' -f $misspelledError
+                Write-Host -BackgroundColor Yellow -ForegroundColor Black -Object $message
+            }
+        }
+
+        # Make sure we always remove the file if it exist.
+        if (Test-Path $errorFileName)
+        {
+            Remove-Item -Path $errorFileName -Force
+        }
+    }
+
+    Context 'When uninstalling spellcheck dependencies' {
+        It 'Should not throw an error when uninstalling package cSpell in global scope' -Skip:$skipDependency {
+            {
+                $npmParametersForStartProcess['ArgumentList'] = 'uninstall -g cspell'
+                Start-Process @npmParametersForStartProcess
+            } | Should -Not -Throw
+        }
     }
 }
 

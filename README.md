@@ -296,6 +296,9 @@ The following opt-in flags are available:
   DSC resource module.
 - **Common Tests - Validate Markdown Links**: fails tests if a link in
   a markdown file is broken.
+* **Common Tests - Spellcheck Markdown Files**: fail test if there are any
+  spelling errors in the markdown files. There is the possibility to add
+  or override words in the `.vscode\cSpell.json` file.
 
 #### Common Tests - Validate Markdown Links
 
@@ -1019,6 +1022,9 @@ Contributors that add or change an example to be published must make sure that
   ([issue #188](https://github.com/PowerShell/DscResource.Tests/issues/188)).
 - Add new opt-in common test for markdown link linting
   ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
+* Adding opt-in common test for spellchecking markdown files. Opt-in by
+  adding "Common Tests - Spellcheck Markdown Files" in the file
+  .MetaTestOptIn.json ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
 
 ### 0.2.0.0
 
