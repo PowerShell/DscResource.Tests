@@ -1124,6 +1124,17 @@ Describe 'Common Tests - Spellcheck Files' -Tag 'Spellcheck' {
         # If the It-block did not pass the test, output the spelling errors.
         if ($itBlockError.Count -ne 0)
         {
+            $message = @"
+There were spelling errors. If these are false negatives, then please add the
+word or phrase to the settings file '/.vscode/cSpell.json' in the repository.
+See this section for more information.
+https://github.com/PowerShell/DscResource.Tests/#common-tests-spellcheck-markdownfiles
+
+"@
+
+            Write-Host -BackgroundColor Yellow -ForegroundColor Black -Object $message
+            Write-Host -ForegroundColor White -Object ''
+
             $misspelledErrors = Get-Content -Path $errorFileName
 
             foreach ($misspelledError in $misspelledErrors)

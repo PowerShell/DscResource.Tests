@@ -298,7 +298,61 @@ The following opt-in flags are available:
   a markdown file is broken.
 * **Common Tests - Spellcheck Markdown Files**: fail test if there are any
   spelling errors in the markdown files. There is the possibility to add
-  or override words in the `.vscode\cSpell.json` file.
+  or override words in the `\.vscode\cSpell.json` file.
+
+#### Common Tests - Spellcheck Markdown Files
+
+When opt-in for this test, if there are any spelling errors in markdown files,
+the tests will fail.
+
+>**Note:** The spell checker is case-insensitive, so the words 'AppVeyor' and
+>'appveyor' is equal and both allowed.
+
+If the spell checker ([cSpell](https://www.npmjs.com/package/cspell)) does not
+recognize the word, but the word are correct, or maybe there are a specific phrase
+that should always be allowed. Then it possible to add those to a dictionary, or
+tell it to ignore words or phrases.
+
+By adding a file `\.vscode\cSpell.json` in the repository, the spell checker
+will follow the settings in this file.
+
+The simplest form of the file `\.vscode\cSpell.json` is this (see
+[cSpell](https://www.npmjs.com/package/cspell) for more settings).
+
+>This settings file will also work together with the Visual Studio Code extension
+>[Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker).
+>By using the extension the spelling errors can be caught in real-time.
+
+```json
+{
+    "ignorePaths": [
+        ".git/*",
+        ".vscode/*"
+    ],
+    "language": "en",
+    "dictionaries": [
+        "powershell"
+    ],
+    "words": [
+        "markdownlint",
+        "Codecov"
+    ],
+    "ignoreRegExpList": [
+        "AppVeyor",
+        "opencode@microsoft.com",
+        "\\.gitattributes"
+    ]
+}
+```
+
+The key `words` should have the words that are normally used when writing text.
+
+The key `ignoreRegExpList` is better to use to ignore phrases or combination of
+words, like 'AppVeyor', it will detect that word as two different words, since
+it consist of two words with upper-case letter.
+So for it to ignore 'AppVeyor', as we know it's correct, we can add a regular
+expression to `ignoreRegExpList`, in this case `AppVeyor`. That will ignore part
+of the text that matches the regular expression.
 
 #### Common Tests - Validate Markdown Links
 
