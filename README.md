@@ -191,9 +191,9 @@ fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](M
 
 The test helper module (TestHelper.psm1) contains the following functions:
 
-- **New-Nuspec**: Creates a new nuspec file for nuget package.
+- **New-Nuspec**: Creates a new nuspec file for NuGet package.
 - **Install-ResourceDesigner**: Will attempt to download the
-  xDSCResourceDesignerModule using Nuget package and return the module.
+  xDSCResourceDesignerModule using NuGet package and return the module.
 - **Initialize-TestEnvironment**: Initializes an environment for running unit or
   integration tests on a DSC resource.
 - **Restore-TestEnvironment**: Restores the environment after running unit or
@@ -743,7 +743,7 @@ Contributors that add or change an example to be published must make sure that
   - Added more test helper functions
 - Cleaned MetaFixers and TestRunner
 - Updated common test output format
-- Added ```Install-NugetExe``` to TestHelper.psm1
+- Added ```Install-NuGetExe``` to TestHelper.psm1
 - Fixed up Readme.md to remove markdown violations and resolve duplicate information
 - Added ```AppVeyor.psm1``` module
 - Added ```DscResource.DocumentationHelper``` modules
@@ -795,8 +795,9 @@ Contributors that add or change an example to be published must make sure that
 - Added new common test so that script files (.ps1) are checked for Byte Order
   Mark (BOM) ([issue #160](https://github.com/PowerShell/DscResource.Tests/issues/160)).
   This test is opt-in using .MetaTestOptIn.json.
-- Added minimum viable product for applying custom PSSA rules to check adherence to
-  DSC Resource Kit style guidelines ([issue #86](https://github.com/PowerShell/DscResource.Tests/issues/86)).
+- Added minimum viable product for applying custom PS Script Analyzer rules to
+  check adherence to DSC Resource Kit style guidelines
+  ([issue #86](https://github.com/PowerShell/DscResource.Tests/issues/86)).
   The current rules checks the [Parameter()] attribute format is correct in all parameter blocks.
   - Fixed Byte Order Mark (BOM) in files; DscResource.AnalyzerRules.psd1,
   DscResource.AnalyzerRules.psm1 and en-US/DscResource.AnalyzerRules.psd1
@@ -840,7 +841,7 @@ Contributors that add or change an example to be published must make sure that
 - When common tests are running on another repository than DscResource.Tests the
   DscResource.Tests unit and integration tests are removed from the list of tests
   to run ([issue #189](https://github.com/PowerShell/DscResource.Tests/issues/189)).
-- Fix ModuleVersion number value inserted into manifest in Nuget package produced
+- Fix ModuleVersion number value inserted into manifest in NuGet package produced
   in Invoke-AppveyorAfterTestTask ([issue #193](https://github.com/PowerShell/DscResource.Tests/issues/193)).
 - Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
 - Improved WikiPages.psm1 to include the EmbeddedInstance to the datatype in the
@@ -874,13 +875,13 @@ Contributors that add or change an example to be published must make sure that
 - Added module DscResource.Container which contain logic to handle the container
   testing when unit tests are run in a Docker Windows container.
 - Added Get-OptInStatus function to enable retrieving of an opt-in status
-  by name. This is required for implementation of PSSA opt-in rules where
-  the describe block contains multiple opt-ins in a single block.
+  by name. This is required for implementation of PS Script Analyzer opt-in rules
+  where the describe block contains multiple opt-ins in a single block.
 - Added new opt-in flags to allow enforcement of script analyzer rules ([issue #161](https://github.com/PowerShell/DscResource.Tests/issues/161))
 - Updated year in DscResources.Tests.psd1 manifest to 2018.
 - Fixed bug where common test would throw an error if there were no
   .MetaTestOptIn.json file or it was empty (no opt-ins).
-- Added more tests for custom Script Analazyer rules to increased code coverage.
+- Added more tests for custom PS Script Analyzer rules to increased code coverage.
   These new tests call the Measure-functions directly.
 - Changed so that DscResource.Tests repository can analyze code coverage for the
   helper modules ([issue #208](https://github.com/PowerShell/DscResource.Tests/issues/208)).
@@ -891,7 +892,7 @@ Contributors that add or change an example to be published must make sure that
 - Changed Get-PSModulePathItem to trim end back slash ([issue #217](https://github.com/PowerShell/DscResource.Tests/issues/217))
 - Updated to support running unit tests on PowerShell Core:
   - Updated helper function Test-FileHasByteOrderMark to use `AsByteStream`.
-  - Install-PackageProvider will only run if `Find-PackageProvider -Name 'Nuget'`
+  - Install-PackageProvider will only run if `Find-PackageProvider -Name 'NuGet'`
     returns a package. Currently it is not found on the AppVeyor build worker for
     PowerShell Core.
   - Adding tests to AppVeyor test pane is done by using the RestAPI because the
@@ -949,7 +950,7 @@ Contributors that add or change an example to be published must make sure that
   opt-in ([issue #234](https://github.com/PowerShell/DscResource.Tests/issues/234)).
 - Added new opt-in common test 'Common Tests - Validate Example Files To Be Published'.
   This common test verifies that the examples those name ending with '*Config'
-  passes testing of script meta data, and that there are no duplicate GUID's in
+  passes testing of script meta data, and that there are no duplicate GUIDs in
   the script meta data (within the examples in the repository).
 - Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
   from getting documentation files from variable `$MainModulePath` defined in
@@ -965,7 +966,7 @@ Contributors that add or change an example to be published must make sure that
   in unit tests.
 - Make sure the latest PowerShellGet is installed on the AppVeyor Build Worker
   ([issue #252](https://github.com/PowerShell/DscResource.Tests/issues/252)).
-- Update the example pusblishing example to not use `.EXTERNALMODULEDEPENDENCIES`
+- Update the example publishing example to not use `.EXTERNALMODULEDEPENDENCIES`
   (only #Requires is needed). `.EXTERNALMODULEDEPENDENCIES` is used for external
   dependencies (outside of PowerShell Gallery).
 - Example publishing can now use a filename without number prefix
@@ -1004,8 +1005,8 @@ Contributors that add or change an example to be published must make sure that
   ([issue #274](https://github.com/PowerShell/DscResource.Tests/issues/274)).
 - Excluding tag 'Examples' when calling `Invoke-AppveyorTestScriptTask` since
   this repository will never have examples.
-- Added Rule Name to PS Script Analyzer custom rules
-- Added PsScript Analyzer Rule Name to Write-Warning output in meta.tests
+- Added Rule Name to PS Script Analyzer custom rules.
+- Added PS Script Analyzer Rule Name to Write-Warning output in meta.tests.
 - Removed sections 'Goals' and 'Git and Unicode' as they have become redundant.
 - Add a new parameter `-CodeCoveragePath` in the function
   `Invoke-AppveyorTestScriptTask` to be able to add one or more relative
@@ -1022,9 +1023,11 @@ Contributors that add or change an example to be published must make sure that
   ([issue #188](https://github.com/PowerShell/DscResource.Tests/issues/188)).
 - Add new opt-in common test for markdown link linting
   ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
-* Adding opt-in common test for spellchecking markdown files. Opt-in by
+- Adding opt-in common test for spellchecking markdown files. Opt-in by
   adding "Common Tests - Spellcheck Markdown Files" in the file
   .MetaTestOptIn.json ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
+- Opt-in for the test "Common Tests - Spellcheck Markdown Files", and added the
+  settings file `.vscode\cSpell.json`.
 
 ### 0.2.0.0
 
