@@ -137,12 +137,12 @@ InModuleScope $script:ModuleName {
 
                 { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
 
-                Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1
-                Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1
-                Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1
-                Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1
-                Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1
-                Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1
+                Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
             }
         }
 
@@ -212,17 +212,21 @@ InModuleScope $script:ModuleName {
                 Mock -CommandName Invoke-Pester -MockWith { return $mockTestResult }
             }
 
+            AfterEach {
+                Assert-MockCalled -CommandName Invoke-Pester -Exactly -Times 1 -Scope It
+            }
+
             Context 'When called with default values' {
                 It 'Should not throw exception and call the correct mocks' {
                     { Invoke-AppveyorTestScriptTask } | Should -Not -Throw
 
-                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1
-                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1
-                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1
-                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1
-                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 0
-                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 0
-                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0
+                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0 -Scope It
                 }
 
                 Context 'When configuration needs a module to compile' {
@@ -240,8 +244,8 @@ InModuleScope $script:ModuleName {
                     It 'Should not throw exception and call the correct mocks' {
                         { Invoke-AppveyorTestScriptTask } | Should -Not -Throw
 
-                        Assert-MockCalled -CommandName Get-ResourceModulesInConfiguration -Exactly -Times 1
-                        Assert-MockCalled -CommandName Install-DependentModule -Exactly -Times 1
+                        Assert-MockCalled -CommandName Get-ResourceModulesInConfiguration -Exactly -Times 1 -Scope It
+                        Assert-MockCalled -CommandName Install-DependentModule -Exactly -Times 1 -Scope It
                     }
                 }
             }
@@ -255,13 +259,34 @@ InModuleScope $script:ModuleName {
 
                     { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
 
-                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1
-                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1
-                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1
-                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1
-                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1
-                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1
-                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 1
+                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 1 -Scope It
+                }
+            }
+
+            Context 'When called with the parameters ExcludeTag' {
+                It 'Should not throw exception and call the correct mocks' {
+                    $testParameters = @{
+                        ExcludeTag = @('Markdown')
+                    }
+
+                    { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+
+                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName Invoke-Pester -ParameterFilter {
+                        $ExcludeTag[0] -eq 'Markdown'
+                    } -Exactly -Times 1
                 }
             }
 
@@ -285,13 +310,13 @@ InModuleScope $script:ModuleName {
 
                     { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
 
-                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1
-                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1
-                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 0
-                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 0
-                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1
-                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1
-                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0
+                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 0 -Scope It
+                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 0 -Scope It
                 }
             }
 
@@ -377,47 +402,47 @@ InModuleScope $script:ModuleName {
 
                     { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
 
-                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 3
-                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 9
-                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1
-                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1
-                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1
-                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1
-                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 5
-                    Assert-MockCalled -CommandName Get-Content -Exactly -Times 2
-                    Assert-MockCalled -CommandName Out-TestResult -Exactly -Times 2
-                    Assert-MockCalled -CommandName Out-MissedCommand -Exactly -Times 2
+                    Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 3 -Scope It
+                    Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 9 -Scope It
+                    Assert-MockCalled -CommandName Export-CodeCovIoJson -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Invoke-UploadCoveCoveIoReport -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Initialize-LocalConfigurationManager -Exactly -Times 1 -Scope It
+                    Assert-MockCalled -CommandName Write-Warning -Exactly -Times 5 -Scope It
+                    Assert-MockCalled -CommandName Get-Content -Exactly -Times 2 -Scope It
+                    Assert-MockCalled -CommandName Out-TestResult -Exactly -Times 2 -Scope It
+                    Assert-MockCalled -CommandName Out-MissedCommand -Exactly -Times 2 -Scope It
                     Assert-MockCalled -CommandName New-Container -ParameterFilter {
                         $Name -eq $containerName1
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName New-Container -ParameterFilter {
                         $Name -eq $containerName2
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName Start-Container -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier1
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName Start-Container -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier2
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName Wait-Container -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier1
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName Wait-Container -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier2
-                    } -Exactly -Times 1
+                    } -Exactly -Times 1 -Scope It
 
                     Assert-MockCalled -CommandName Copy-ItemFromContainer -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier1
-                    } -Exactly -Times 3
+                    } -Exactly -Times 3 -Scope It
 
                     Assert-MockCalled -CommandName Copy-ItemFromContainer -ParameterFilter {
                         $ContainerIdentifier -eq $containerIdentifier2
-                    } -Exactly -Times 3
+                    } -Exactly -Times 3 -Scope It
                 }
 
                 Context 'When container reports an error' {

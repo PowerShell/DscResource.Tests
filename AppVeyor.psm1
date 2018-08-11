@@ -102,7 +102,6 @@ function Invoke-AppveyorInstallTask
     .PARAMETER ExcludeTag
         This is the list of tags that will be used to prevent tests from being run if
         the tag is set in the describe block of the test.
-        This wll default to 'Examples' and 'Markdown'.
 
     .PARAMETER HarnessModulePath
         This is the full path and filename of the test harness module.
@@ -161,7 +160,7 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter(ParameterSetName = 'Default')]
         [String[]]
-        $ExcludeTag = @('Examples', 'Markdown'),
+        $ExcludeTag,
 
         [Parameter(ParameterSetName = 'Harness')]
         [String]

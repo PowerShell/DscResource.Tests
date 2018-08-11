@@ -94,7 +94,7 @@ that the markdown files are correct.
 The 'markdown' tests can be excluded when running pester by using:
 
 ```PowerShell
-Invoke-Pester -ExcludeTag 'Markdown'
+Invoke-Pester -ExcludeTag @('Markdown')
 ```
 
 It is possible to override the default behavior of the markdown validation test.
@@ -118,7 +118,7 @@ This causes them to behave as extra integration tests.
 The 'example' tests can be excluded when running pester by using:
 
 ```PowerShell
-Invoke-Pester -ExcludeTag 'Example'
+Invoke-Pester -ExcludeTag @('Example')
 ```
 
 When a repository is opted-in to example testing, each example file in the 'Examples'
@@ -922,6 +922,11 @@ Contributors that add or change an example to be published must make sure that
 * Migrate Pester Test Syntax from v3 -> v4
   ([issue #199](https://github.com/PowerShell/DscResource.Tests/issues/199)).
 * Activate GitHub App Review Me.
+* Removed the default values of the parameter `ExcludeTag` in favor of using
+  opt-in. Default is that those tests are opt-out, and must be opt-in
+  ([issue #274](https://github.com/PowerShell/DscResource.Tests/issues/274)).
+* Excluding tag 'Examples' when calling `Invoke-AppveyorTestScriptTask` since
+  this repository will never have examples.
 
 ### 0.2.0.0
 

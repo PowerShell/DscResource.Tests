@@ -20,7 +20,7 @@ build: false
 test_script:
     - ps: |
         Invoke-AppveyorTestScriptTask `
-            -ExcludeTag @() `
+            -ExcludeTag @('Examples') `
             -CodeCoverage `
             -CodeCovIo
 
