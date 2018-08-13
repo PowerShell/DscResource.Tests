@@ -10,7 +10,7 @@ $script:diagnosticRecordType = [Microsoft.Windows.PowerShell.ScriptAnalyzer.Gene
 $script:diagnosticRecord = @{
     Message  = ''
     Extent   = $null
-    RuleName = $PSCmdlet.MyInvocation.InvocationName
+    RuleName = $null
     Severity = 'Warning'
 }
 
@@ -50,6 +50,7 @@ function Measure-ParameterBlockParameterAttribute
     try
     {
         $script:diagnosticRecord['Extent'] = $ParameterAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $ParameterAst
         
         <# 
@@ -118,6 +119,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
 
     try
     {
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $NamedAttributeArgumentAst
 
         <# 
@@ -207,6 +209,7 @@ function Measure-FunctionBlockBraces
     try
     {
         $script:diagnosticRecord['Extent'] = $FunctionDefinitionAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $FunctionDefinitionAst.Extent
@@ -271,6 +274,7 @@ function Measure-IfStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $IfStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $IfStatementAst.Extent
@@ -335,6 +339,7 @@ function Measure-ForEachStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $ForEachStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $ForEachStatementAst.Extent
@@ -399,6 +404,7 @@ function Measure-DoUntilStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $DoUntilStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $DoUntilStatementAst.Extent
@@ -463,6 +469,7 @@ function Measure-DoWhileStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $DoWhileStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $DoWhileStatementAst.Extent
@@ -527,6 +534,7 @@ function Measure-WhileStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $WhileStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $WhileStatementAst.Extent
@@ -591,6 +599,7 @@ function Measure-ForStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $ForStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $ForStatementAst.Extent
@@ -655,6 +664,7 @@ function Measure-SwitchStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $SwitchStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $SwitchStatementAst.Extent
@@ -723,6 +733,7 @@ function Measure-TryStatement
     try
     {
         $script:diagnosticRecord['Extent'] = $TryStatementAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $TryStatementAst.Extent
@@ -787,6 +798,7 @@ function Measure-CatchClause
     try
     {
         $script:diagnosticRecord['Extent'] = $CatchClauseAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $CatchClauseAst.Extent
@@ -850,6 +862,7 @@ function Measure-TypeDefinition
     try
     {
         $script:diagnosticRecord['Extent'] = $TypeDefinitionAst.Extent
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $testParameters = @{
             StatementBlock = $TypeDefinitionAst.Extent

@@ -26,6 +26,40 @@ This is the development branch to which contributions should be proposed by cont
 as pull requests.
 This branch is used by DSC Resource Kit modules for running common tests.
 
+## Table of Contents
+
+<!-- TOC -->
+
+- [DSC Resource Common Meta Tests](#dsc-resource-common-meta-tests)
+  - [Goals](#goals)
+  - [Git and Unicode](#git-and-unicode)
+  - [Markdown Testing](#markdown-testing)
+  - [Example Testing](#example-testing)
+  - [PSScriptAnalyzer Rules](#psscriptanalyzer-rules)
+- [MetaFixers Module](#metafixers-module)
+- [TestHelper Module](#testhelper-module)
+- [Templates for Creating Tests](#templates-for-creating-tests)
+- [Example Test Usage](#example-test-usage)
+- [Example Usage of DSCResource.Tests in AppVeyor.yml](#example-usage-of-dscresourcetests-in-appveyoryml)
+- [AppVeyor Module](#appveyor-module)
+  - [Phased Meta test Opt-In](#phased-meta-test-opt-in)
+  - [Using AppVeyor.psm1 with the default shared model](#using-appveyorpsm1-with-the-default-shared-model)
+  - [Using AppVeyor.psm1 with harness model](#using-appveyorpsm1-with-harness-model)
+- [Encrypt Credentials in Integration Tests](#encrypt-credentials-in-integration-tests)
+- [CodeCoverage reporting with CodeCov.io](#codecoverage-reporting-with-codecovio)
+  - [Ensure Code Coverage is enabled](#ensure-code-coverage-is-enabled)
+  - [Enable reporting to CodeCove.io](#enable-reporting-to-codecoveio)
+  - [Configure CodeCov.io](#configure-codecovio)
+  - [Add the badge to the Readme](#add-the-badge-to-the-readme)
+- [Documentation Helper Module](#documentation-helper-module)
+- [Run integration tests in order](#run-integration-tests-in-order)
+  - [Run tests in a Docker Windows container](#run-tests-in-a-docker-windows-container)
+- [Deploy](#deploy)
+  - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)
+- [Change Log](#change-log)
+
+<!-- /TOC -->
+
 ## DSC Resource Common Meta Tests
 
 > Meta.Tests.ps1
@@ -130,6 +164,67 @@ needs to be provided to the example configuration. The configuration data hash t
 variable name must be `$ConfigurationData` for the test to pick it up. If no
 configuration block is provided a default configuration block is used.
 
+### PSScriptAnalyzer Rules
+
+The DSC Resource Common Meta Tests also contains tests for [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) (PSSA) rules.
+Along with the built-in PSSA rules, custom rules are tested. Those rules are defined and maintained in this repository in
+[DscResource.AnalyzerRules](https://github.com/PowerShell/DscResource.Tests/tree/dev/DscResource.AnalyzerRules). These custom rules are built
+to follow the style guideline, and overriding them should be a temporary measure until the code can follow the style guideline
+
+There will be cases where built-in and/or custom PSSA rules may need to be suppressed in scripts or functions.
+You can suppress a rule by decorating a script/function or script/function parameter with .NET's
+[SuppressMessageAttribute](https://msdn.microsoft.com/en-us/library/system.diagnostics.codeanalysis.suppressmessageattribute.aspx).
+
+When the *Common Tests - PS Script Analyzer on Resource Files* test fails on a PSSA rule, Meta.Tests will use `Write-Warning` to output
+Rule Name, Script Name, Line Number, and Rule Message.  When necessary, the rule name can be used to suppress the rule as needed.
+For example, the following code would cause the **PSAvoidGlobalVars** built-in PSSA rule to fail:
+
+```powerShell
+function Set-TargetResource
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $FeatureName
+    )
+
+    $windowsOptionalFeature = Dism\Enable-WindowsOptionalFeature -FeatureName $FeatureName -NoRestart $true
+
+    if ($windowsOptionalFeature.RestartNeeded -eq $true)
+    {
+        Write-Verbose -Message $script:localizedData.RestartNeeded
+        $global:DSCMachineStatus = 1
+    }
+}
+```
+
+In this example, suppression is allowed here because $global:DSCMachineStatus must be set in order to reboot the machine.
+To suppress the **PSAvoidGlobalVars** rule for this function, this can be done by using the SuppressMessageAttribute like this:
+
+```powershell
+function Set-TargetResource
+{
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $FeatureName
+    )
+
+    $windowsOptionalFeature = Dism\Enable-WindowsOptionalFeature -FeatureName $FeatureName -NoRestart $true
+
+    if ($windowsOptionalFeature.RestartNeeded -eq $true)
+    {
+        Write-Verbose -Message $script:localizedData.RestartNeeded
+        $global:DSCMachineStatus = 1
+    }
+}
+```
+
+For further details and examples for suppressing PSSA rules, please see the [Suppressing Rules documentation](https://github.com/PowerShell/PSScriptAnalyzer#suppressing-rules).
+
 ## MetaFixers Module
 
 > MetaFixers.psm1
@@ -146,12 +241,12 @@ fails, you should be able to run `ConvertTo-UTF8` fixer from [MetaFixers.psm1](M
 
 The test helper module (TestHelper.psm1) contains the following functions:
 
-* **New-Nuspec**: Creates a new nuspec file for nuget package.
-* **Install-ResourceDesigner**: Will attempt to download the
+- **New-Nuspec**: Creates a new nuspec file for nuget package.
+- **Install-ResourceDesigner**: Will attempt to download the
   xDSCResourceDesignerModule using Nuget package and return the module.
-* **Initialize-TestEnvironment**: Initializes an environment for running unit or
+- **Initialize-TestEnvironment**: Initializes an environment for running unit or
   integration tests on a DSC resource.
-* **Restore-TestEnvironment**: Restores the environment after running unit or
+- **Restore-TestEnvironment**: Restores the environment after running unit or
   integration tests on a DSC resource.
 
 ## Templates for Creating Tests
@@ -165,11 +260,11 @@ document and the instructions at the top of each template file.
 
 The resource files are:
 
-* **[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+- **[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
   Use to create a set of Unit Pester tests for a single DSC Resource.
-* **[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/integration_template.ps1)**:
+- **[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/integration_template.ps1)**:
   Use to create a set of Integration Pester tests for a single DSC Resource.
-* **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+- **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
   Use to create a DSC Configuration file for a single DSC Resource. Used in
   conjunction with Integration_Template.ps1.
 
@@ -195,25 +290,25 @@ This module provides functions for building and testing DSC Resources in AppVeyo
 
 >Note: These functions will only work if called within an AppVeyor CI build task.
 
-* **Invoke-AppveyorInstallTask**: This task is used to set up the environment in
+- **Invoke-AppveyorInstallTask**: This task is used to set up the environment in
   preparation for the test and deploy tasks.
   It should be called under the install AppVeyor phase (the `install:` keyword in
   the *appveyor.yml*).
-* **Invoke-AppveyorTestScriptTask**: This task is used to execute the tests.
+- **Invoke-AppveyorTestScriptTask**: This task is used to execute the tests.
   It should be called under test AppVeyor phase (the `test_script:` keyword in
   the *appveyor.yml*).
-* **Invoke-AppveyorAfterTestTask**: This task is used to perform the following tasks.
+- **Invoke-AppveyorAfterTestTask**: This task is used to perform the following tasks.
   It should be called either under the test AppVeyor phase (the `test_script:`
   keyword in the *appveyor.yml*), or the after tests AppVeyor phase (the `after_test:`
   keyword in the *appveyor.yml*).
-  * Generate, zip and publish the Wiki content to AppVeyor (optional).
-  * Set the build number in the DSC Resource Module manifest.
-  * Publish the Test Results artefact to AppVeyor.
-  * Zip and publish the DSC Resource content to AppVeyor.
-* **Invoke-AppVeyorDeployTask**: This task is used to perform the following tasks.
+  - Generate, zip and publish the Wiki content to AppVeyor (optional).
+  - Set the build number in the DSC Resource Module manifest.
+  - Publish the Test Results artefact to AppVeyor.
+  - Zip and publish the DSC Resource content to AppVeyor.
+- **Invoke-AppVeyorDeployTask**: This task is used to perform the following tasks.
   It should be called under the deploy AppVeyor phase (the `deploy_script:`
   keyword in the *appveyor.yml*).
-  * [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
+  - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
 
 ### Phased Meta test Opt-In
 
@@ -223,26 +318,26 @@ any new problem in the area, this will cause the tests to fail, not just warn.
 
 The following opt-in flags are available:
 
-* **Common Tests - Validate Module Files**: run tests to validate module files
+- **Common Tests - Validate Module Files**: run tests to validate module files
   have correct BOM.
-* **Common Tests - Validate Markdown Files**: run tests to validate markdown
+- **Common Tests - Validate Markdown Files**: run tests to validate markdown
   files do not violate markdown rules. Markdown rules can be suppressed in
   .markdownlint.json file.
-* **Common Tests - Validate Example Files**: run tests to validate that examples
+- **Common Tests - Validate Example Files**: run tests to validate that examples
   can be compiled without error.
-* **Common Tests - Validate Example Files To Be Published**: run tests to
+- **Common Tests - Validate Example Files To Be Published**: run tests to
   validate that examples can be published successfully to PowerShell Gallery.
   See requirements under
   [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery).
-* **Common Tests - Validate Script Files**: run tests to validate script files
+- **Common Tests - Validate Script Files**: run tests to validate script files
   have correct BOM.
-* **Common Tests - Required Script Analyzer Rules**: fail tests if any required
+- **Common Tests - Required Script Analyzer Rules**: fail tests if any required
   script analyzer rules are violated.
-* **Common Tests - Flagged Script Analyzer Rules**: fail tests if any flagged
+- **Common Tests - Flagged Script Analyzer Rules**: fail tests if any flagged
   script analyzer rules are violated.
-* **Common Tests - New Error-Level Script Analyzer Rules**: fail tests if any
+- **Common Tests - New Error-Level Script Analyzer Rules**: fail tests if any
   new error-level script analyzer rules are violated.
-* **Common Tests - Custom Script Analyzer Rules**: fail tests if any
+- **Common Tests - Custom Script Analyzer Rules**: fail tests if any
   custom script analyzer rules are violated.
 
 ### Using AppVeyor.psm1 with the default shared model
@@ -443,9 +538,9 @@ an exception will be thrown which will stop the the tests in the build worker.
 
 #### Named attribute argument
 
-* **ContainerName**: The name of the container. If the same container name is used
+- **ContainerName**: The name of the container. If the same container name is used
   in multiple tests they will be run sequentially in the same container.
-* **ContainerImage**: The name of the container image to use for the container.
+- **ContainerImage**: The name of the container image to use for the container.
   This should use the normal Docker format for specifying a Docker image, i.e.
   'microsoft/windowsservercore:latest'. If the tag 'latest' is used, then
   `docker pull` will always run to make sure the latest revision of the image is
@@ -488,18 +583,18 @@ param()
 
 These are the artifacts that differ when running tests using a container.
 
-* unittest_Transcript.txt - Contains the transcript from the test run that
+- unittest_Transcript.txt - Contains the transcript from the test run that
   was done in the container.
-* unittest_TestResults.xml - Contains the Pester output in the NUnitXML
+- unittest_TestResults.xml - Contains the Pester output in the NUnitXML
   format from the tests that was tested in the container.
-* unittest_TestResults.json - Contains the serialized object that Pester
+- unittest_TestResults.json - Contains the serialized object that Pester
   returned after it finished the test run in the container.
-* unittest_DockerLog.txt - If the container exits with any other exit code
+- unittest_DockerLog.txt - If the container exits with any other exit code
   than 0 a Docker log is gathered and uploaded as an artifact. This is
   intended to enable a more detailed view of the error.
   If the container exits with exit code 0 then the Docker log will *not* be
   uploaded.
-* worker_TestsResults - Contains the Pester output in the NUnitXML format
+- worker_TestsResults - Contains the Pester output in the NUnitXML format
   from the tests that was tested in the build worker.
 
 ## Deploy
@@ -535,25 +630,25 @@ deploy tasks in the appveyor.yml).
 
 #### Requirements/dependencies for publishing to PowerShell Gallery
 
-* Publish only on 'master' build.
-* Must have opt-in for the example validation common test.
-* Publish only an example that passes `Test-ScriptFileInfo`.
-* Publish only an example that does not already exist (for example has a newer
+- Publish only on 'master' build.
+- Must have opt-in for the example validation common test.
+- Publish only an example that passes `Test-ScriptFileInfo`.
+- Publish only an example that does not already exist (for example has a newer
   version).
-* Publish only an example which is located under '\Examples' folder.
-* Publish only an example where file name ends with 'Config'.
-* Publish only an example that where filename and configuration name are the same.
+- Publish only an example which is located under '\Examples' folder.
+- Publish only an example where file name ends with 'Config'.
+- Publish only an example that where filename and configuration name are the same.
   *Published examples must have the same configuration name as the file name to
   be able to deploy in Azure Automation.*
-  * Example files are allowed to begin, be prefixed, with numeric value followed
+  - Example files are allowed to begin, be prefixed, with numeric value followed
     by a dash (e.g. '1-', '2-') to support auto-documentation. The prefix will
     be removed from the name when publishing, so the filename will appear without
     the prefix in PowerShell Gallery.
-* Publish only examples that have a unique GUID within the resource module.
+- Publish only examples that have a unique GUID within the resource module.
   *Note: This is only validated within the resource module, the validation
   does not validate this against PowerShell Gallery. This is to prevent
   simple copy/paste mistakes within the same resource module.*
-* Publish only an example where the configuration name contains only letters,
+- Publish only an example where the configuration name contains only letters,
   numbers, and underscores. Where the name starts with a letter, and ends with a
   letter or a number.
 
@@ -589,18 +684,18 @@ environment:
 
 Contributors that add or change an example to be published must make sure that
 
-* The example filename is short but descriptive and ends with 'Config'.
-  * If the example is for a single resource, then the resource name could be
+- The example filename is short but descriptive and ends with 'Config'.
+  - If the example is for a single resource, then the resource name could be
     prefixed in the filename (and configuration name) followed by an underscore
     (e.g. xScript_WatchFileContentConfig.ps1). *The thought is to easier find
     related examples.*
-* The `Node` block is targeting 'localhost' (or equivalent).
-* The filename and configuration name match (see requirements/dependencies above).
-* The example contains script metadata with all required properties present.
-* The example has an unique GUID in the script metadata.
-* The example have comment-based help with at least `.DESCRIPTION`.
-* The example script metadata version and release notes is updated accordingly.
-* (Optional) The example has a `#Requires` statement.
+- The `Node` block is targeting 'localhost' (or equivalent).
+- The filename and configuration name match (see requirements/dependencies above).
+- The example contains script metadata with all required properties present.
+- The example has an unique GUID in the script metadata.
+- The example have comment-based help with at least `.DESCRIPTION`.
+- The example script metadata version and release notes is updated accordingly.
+- (Optional) The example has a `#Requires` statement.
 
 ##### Example of script metadata, #Requires statement and comment-based help
 
@@ -645,190 +740,190 @@ Contributors that add or change an example to be published must make sure that
 #>
 ```
 
-## Versions
+## Change Log
 
 ### Unreleased
 
-* Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
-* Removed code to Remove-Module from Initialize-TestEnvironment because not
+- Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
+- Removed code to Remove-Module from Initialize-TestEnvironment because not
   required: Import-Module -force should do the same thing.
-* Initialize-TestEnvironment changed to import module being tested into Global
+- Initialize-TestEnvironment changed to import module being tested into Global
   scope so that InModuleScope not required in tests.
-* Fixed aliases in files
-* Initialize-TestEnvironment changed to update the execution policy for the
+- Fixed aliases in files
+- Initialize-TestEnvironment changed to update the execution policy for the
   current process only
-* Restore-TestEnvironment changed to update the execution policy for the
+- Restore-TestEnvironment changed to update the execution policy for the
   current process only.
-* Cleaned all common tests
-  * Added tests for PS Script Analyzer
-* Cleaned TestHelper
-  * Removed Force parameter from Install-ModuleFromPowerShellGallery
-  * Added more test helper functions
-* Cleaned MetaFixers and TestRunner
-* Updated common test output format
-* Added ```Install-NugetExe``` to TestHelper.psm1
-* Fixed up Readme.md to remove markdown violations and resolve duplicate information
-* Added ```AppVeyor.psm1``` module
-* Added ```DscResource.DocumentationHelper``` modules
-* Added new tests for testing Examples and Markdown (using Node/NPM/Gulp)
-* Clean up layout of Readme.md to be more logically structured and added more information
+- Cleaned all common tests
+  - Added tests for PS Script Analyzer
+- Cleaned TestHelper
+  - Removed Force parameter from Install-ModuleFromPowerShellGallery
+  - Added more test helper functions
+- Cleaned MetaFixers and TestRunner
+- Updated common test output format
+- Added ```Install-NugetExe``` to TestHelper.psm1
+- Fixed up Readme.md to remove markdown violations and resolve duplicate information
+- Added ```AppVeyor.psm1``` module
+- Added ```DscResource.DocumentationHelper``` modules
+- Added new tests for testing Examples and Markdown (using Node/NPM/Gulp)
+- Clean up layout of Readme.md to be more logically structured and added more information
   about the new tests and modules
-* Added documentation for new tests and features
-* Added phased Meta Test roll-out
-* Added code coverage report with [codecov.io](http://codecove.io)
-* Added default parameter values for HarnessFunctionName and HarnessModulePath in AppVeyor\Invoke-AppveyorTestScriptTask cmdlet
-* Fixed bug in DscResource.DocumentationHelper\MofHelper.psm1 when 'class' mentioned in MOF file outside of header
-* Added ability for DscResource.DocumentationHelper\WikiPages.psm1 to display Array type parameters correctly
-* Fixed Wiki Generation to create Markdown that does not violate markdown rules
-* Removed violation of markdown rules from Readme.md
-* Fixed Wiki Generation when Example header contains parentheses.
-* Added so that any error message for each test are also published to the AppVeyor "Tests-view".
-* Added a common test to verify so that no markdown files contains Byte Order Mark (BOM) (issue #108).
-* Fixed bug where node_modules or .git directories caused errors with long file
+- Added documentation for new tests and features
+- Added phased Meta Test roll-out
+- Added code coverage report with [codecov.io](http://codecove.io)
+- Added default parameter values for HarnessFunctionName and HarnessModulePath in AppVeyor\Invoke-AppveyorTestScriptTask cmdlet
+- Fixed bug in DscResource.DocumentationHelper\MofHelper.psm1 when 'class' mentioned in MOF file outside of header
+- Added ability for DscResource.DocumentationHelper\WikiPages.psm1 to display Array type parameters correctly
+- Fixed Wiki Generation to create Markdown that does not violate markdown rules
+- Removed violation of markdown rules from Readme.md
+- Fixed Wiki Generation when Example header contains parentheses.
+- Added so that any error message for each test are also published to the AppVeyor "Tests-view".
+- Added a common test to verify so that no markdown files contains Byte Order Mark (BOM) (issue #108).
+- Fixed bug where node_modules or .git directories caused errors with long file
   paths for tests
-* Added SkipPublisherCheck to Install-Module calls for installing Pester.
+- Added SkipPublisherCheck to Install-Module calls for installing Pester.
   This way it does not conflict with signed Pester module included in Windows.
-  * Fixed bug when SkipPublisherCheck does not exist in older versions of the
+  - Fixed bug when SkipPublisherCheck does not exist in older versions of the
     Install-Module cmdlet.
-* Changed so that markdown lint rules MD013 and MD024 is disabled by default for the markdown common test.
-* Added an option to use a markdown lint settings file in the repository which will
+- Changed so that markdown lint rules MD013 and MD024 is disabled by default for the markdown common test.
+- Added an option to use a markdown lint settings file in the repository which will
   override the default markdown lint settings file in DscResource.Tests repository.
-* Added a new parameter ResourceType to the test helper function Initialize-TestEnvironment
+- Added a new parameter ResourceType to the test helper function Initialize-TestEnvironment
   to be able to test class-based resources in the folder DscClassResources.
   The new parameter ResourceType can be set to either 'Mof' or 'Class'.
   Default value for parameter ResourceType is 'Mof'.
-* Changed markdown lint rule MD029 to use the 'one' style for ordered lists (issue #115).
-* Removed the reference to the function ConvertTo-SpaceIndentation from the warning
+- Changed markdown lint rule MD029 to use the 'one' style for ordered lists (issue #115).
+- Removed the reference to the function ConvertTo-SpaceIndentation from the warning
   message in the test that checks for tabs in module files. The function
   ConvertTo-SpaceIndentation does not exist anymore ([issue #4](https://github.com/PowerShell/DscResource.Tests/issues/4)).
-* Removed Byte Order Mark (BOM) from the module file TestRunner.psm1.
-* Updated so that checking for Byte Order Mark (BOM) in markdown file lists the
+- Removed Byte Order Mark (BOM) from the module file TestRunner.psm1.
+- Updated so that checking for Byte Order Mark (BOM) in markdown file lists the
   full path so it easier to distinguish when filenames are equal in different
   locations.
-* Updated so that module files (.psm1) are checked for Byte Order Mark (BOM)
+- Updated so that module files (.psm1) are checked for Byte Order Mark (BOM)
   (issue #143).
-* Updated It-blocks for File Parsing tests so that they are more descriptive for
+- Updated It-blocks for File Parsing tests so that they are more descriptive for
   the AppVeyor "Tests-view".
-* Changed debug message which outputs the type of the $results variable (in
+- Changed debug message which outputs the type of the $results variable (in
   AppVeyor.psm1) to use Write-Verbose instead of Write-Info ([issue #99](https://github.com/PowerShell/DscResource.Tests/issues/99)).
-* Added `Get-ResourceModulesInConfiguration` to `TestHelper.psm1` to get support installing
+- Added `Get-ResourceModulesInConfiguration` to `TestHelper.psm1` to get support installing
   DSC Resource modules when testing examples.
-* Enable 'Common Tests - Validate Example Files' to install missing required modules if
+- Enable 'Common Tests - Validate Example Files' to install missing required modules if
   running in AppVeyor or show warning if run by user.
-* Added new common test so that script files (.ps1) are checked for Byte Order
+- Added new common test so that script files (.ps1) are checked for Byte Order
   Mark (BOM) ([issue #160](https://github.com/PowerShell/DscResource.Tests/issues/160)).
   This test is opt-in using .MetaTestOptIn.json.
-* Added minimum viable product for applying custom PSSA rules to check adherence to
+- Added minimum viable product for applying custom PSSA rules to check adherence to
   DSC Resource Kit style guidelines ([issue #86](https://github.com/PowerShell/DscResource.Tests/issues/86)).
   The current rules checks the [Parameter()] attribute format is correct in all parameter blocks.
-  * Fixed Byte Order Mark (BOM) in files; DscResource.AnalyzerRules.psd1,
+  - Fixed Byte Order Mark (BOM) in files; DscResource.AnalyzerRules.psd1,
   DscResource.AnalyzerRules.psm1 and en-US/DscResource.AnalyzerRules.psd1
   ([issue #169](https://github.com/PowerShell/DscResource.Tests/issues/169)).
-  * Extended the parameter custom rule to also validate the Mandatory attribute.
-* Fixed so that code coverage can be scan for code even if there is no DSCResource
+  - Extended the parameter custom rule to also validate the Mandatory attribute.
+- Fixed so that code coverage can be scan for code even if there is no DSCResource
   folder.
-* Added workaround for AppVeyor replaces punctuation in folder structure for
+- Added workaround for AppVeyor replaces punctuation in folder structure for
   DscResource.Tests.
-* Remove the $repoName variable and replace it with $moduleName as it was a
+- Remove the $repoName variable and replace it with $moduleName as it was a
   duplicate.
-* Added so that DscResource.Tests is testing it self with it's own common tests
+- Added so that DscResource.Tests is testing it self with it's own common tests
   ([issue #170](https://github.com/PowerShell/DscResource.Tests/issues/170)).
-* Change README.md to resolve lint error MD029 and MD036.
-* Added module manifest for manifest common tests to pass.
-* Added status badges to README.md.
-* Fixed the markdown test so that node_modules can be deleted when path contains
+- Change README.md to resolve lint error MD029 and MD036.
+- Added module manifest for manifest common tests to pass.
+- Added status badges to README.md.
+- Fixed the markdown test so that node_modules can be deleted when path contains
   an apostrophe ([issue #166](https://github.com/PowerShell/DscResource.Tests/issues/166)).
-  * Fixed typo in It-blocks when uninstalling dependencies.
-* Code was moved from the example tests into a new helper function Install-DependentModule
+  - Fixed typo in It-blocks when uninstalling dependencies.
+- Code was moved from the example tests into a new helper function Install-DependentModule
   ([issue #168](https://github.com/PowerShell/DscResource.Tests/issues/168)).
   Also fixed bug with Version, where Install-Module would not use the correct
   variable for splatting.
-* Enable so that missing required modules for integration tests is installed if
+- Enable so that missing required modules for integration tests is installed if
   running in AppVeyor or show warning if run by user ([issue #168](https://github.com/PowerShell/DscResource.Tests/issues/168)).
-* Set registry key HKLM:\Software\Microsoft\PowerShell\DisablePromptToUpdateHelp
+- Set registry key HKLM:\Software\Microsoft\PowerShell\DisablePromptToUpdateHelp
   to 1 when running in AppVeyor to suppress warning caused by running custom rules
   in PSScriptAnalyzer in the GetExternalRule() method of `Engine/ScriptAnalyzer.cs`
   ([issue #176](https://github.com/PowerShell/DscResource.Tests/issues/176)).
-* Added unit tests for helper function Start-DscResourceTests.
-* Updated AppVeyor code so that common tests and unit tests is run on the working
+- Added unit tests for helper function Start-DscResourceTests.
+- Updated AppVeyor code so that common tests and unit tests is run on the working
   branch's tests. This is to be able to test changes to tests in pull requests
   without having to merge the pull request before seeing the result.
-* Add opt-in parameter RunTestInOrder for the helper function Invoke-AppveyorTestScriptTask
+- Add opt-in parameter RunTestInOrder for the helper function Invoke-AppveyorTestScriptTask
   which enables running integration tests in order ([issue #184](https://github.com/PowerShell/DscResource.Tests/issues/184)).
-  * Refactored the class IntegrationTest to be a public sealed class and using
+  - Refactored the class IntegrationTest to be a public sealed class and using
     a named property for OrderNumber
     ([issue #191](https://github.com/PowerShell/DscResource.Tests/issues/191)).
-* Add Script Analyzer custom rule to test functions and statements so that
+- Add Script Analyzer custom rule to test functions and statements so that
   opening braces are set according to the style guideline ([issue #27](https://github.com/PowerShell/DscResource.Tests/issues/27)).
-* When common tests are running on another repository than DscResource.Tests the
+- When common tests are running on another repository than DscResource.Tests the
   DscResource.Tests unit and integration tests are removed from the list of tests
   to run ([issue #189](https://github.com/PowerShell/DscResource.Tests/issues/189)).
-* Fix ModuleVersion number value inserted into manifest in Nuget package produced
+- Fix ModuleVersion number value inserted into manifest in Nuget package produced
   in Invoke-AppveyorAfterTestTask ([issue #193](https://github.com/PowerShell/DscResource.Tests/issues/193)).
-* Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
-* Improved WikiPages.psm1 to include the EmbeddedInstance to the datatype in the
+- Fix TestRunner.Tests.ps1 to make compatible with Pester 4.0.7 ([issue #196](https://github.com/PowerShell/DscResource.Tests/issues/196)).
+- Improved WikiPages.psm1 to include the EmbeddedInstance to the datatype in the
   generated wiki page ([issue #201](https://github.com/PowerShell/DscResource.Tests/issues/201))
-* Added basic support for analyzing TypeDefinitionAst related code e.g. Enum & Class definitions to include
+- Added basic support for analyzing TypeDefinitionAst related code e.g. Enum & Class definitions to include
   Basic Brace newline rules
-  * Created new unit tests to validate the Analyzer rules pass or fail as expected for these new rules
-* Added Test-IsClass Cmdlet to determine if particular Ast objects are members of a Class or not
-  * Created new Unit Tests to validate the functionality of said cmdlet
-* Modified current Parameter, and AttributeArgument Analyzer Rules to check for Class membership and properly validate in those cases as well as the current Function based Cmdlets
-  * Created new unit tests to validate the new Analyzer rules pass or fail as expected for Class based resources
-* Minor code cleanup in AppVeyor.psm1.
-* Updated documentation in README.md and comment-based help in TestHelp.psm1 to
+  - Created new unit tests to validate the Analyzer rules pass or fail as expected for these new rules
+- Added Test-IsClass Cmdlet to determine if particular Ast objects are members of a Class or not
+  - Created new Unit Tests to validate the functionality of said cmdlet
+- Modified current Parameter, and AttributeArgument Analyzer Rules to check for Class membership and properly validate in those cases as well as the current Function based Cmdlets
+  - Created new unit tests to validate the new Analyzer rules pass or fail as expected for Class based resources
+- Minor code cleanup in AppVeyor.psm1.
+- Updated documentation in README.md and comment-based help in TestHelp.psm1 to
   use the new name of the renamed SqlServerDsc resource module.
-* Fixed minor typo in manifest for the CodeCoverage module.
-* Added a wrapper Set-PSModulePath for setting $env:PSModulePath to be able to
+- Fixed minor typo in manifest for the CodeCoverage module.
+- Added a wrapper Set-PSModulePath for setting $env:PSModulePath to be able to
   write unit tests for the helper functions with more code coverage.
-* Minor typos and cleanup in helper functions.
-* Fixed a bug in Install-DependentModule when calling the helper function using
+- Minor typos and cleanup in helper functions.
+- Fixed a bug in Install-DependentModule when calling the helper function using
   a specific version to install. Now Get-Module will no longer throw an error
   that it does not have a parameter named 'Version'.
-* Added unit test for helper function in TestHelper to increase code coverage.
-* Added Invoke-AppveyorTestScriptTask cmdlet functionality for CodeCoverage for Class based resources ([issue #173](https://github.com/PowerShell/DscResource.Tests/issues/173))
-* Add opt-in parameter RunInContainer for the helper function Invoke-AppveyorTestScriptTask
+- Added unit test for helper function in TestHelper to increase code coverage.
+- Added Invoke-AppveyorTestScriptTask cmdlet functionality for CodeCoverage for Class based resources ([issue #173](https://github.com/PowerShell/DscResource.Tests/issues/173))
+- Add opt-in parameter RunInContainer for the helper function Invoke-AppveyorTestScriptTask
   which enables running unit tests in a Docker Windows container. The RunInContainer
   parameter can only be used when the parameter RunTestInOrder is also used.
-* Moved helper function Write-Info to the TestHelpers module so it could be reused
+- Moved helper function Write-Info to the TestHelpers module so it could be reused
   by other modules. The string was changed to output 'UTC' before the time to
   clarify that it is UTC time, and optional parameter 'ForegroundColor' was added
   so that it is possible to change the color of the text that is written.
-* Added module DscResource.Container which contain logic to handle the container
+- Added module DscResource.Container which contain logic to handle the container
   testing when unit tests are run in a Docker Windows container.
-* Added Get-OptInStatus function to enable retrieving of an opt-in status
+- Added Get-OptInStatus function to enable retrieving of an opt-in status
   by name. This is required for implementation of PSSA opt-in rules where
   the describe block contains multiple opt-ins in a single block.
-* Added new opt-in flags to allow enforcement of script analyzer rules ([issue #161](https://github.com/PowerShell/DscResource.Tests/issues/161))
-* Updated year in DscResources.Tests.psd1 manifest to 2018.
-* Fixed bug where common test would throw an error if there were no
+- Added new opt-in flags to allow enforcement of script analyzer rules ([issue #161](https://github.com/PowerShell/DscResource.Tests/issues/161))
+- Updated year in DscResources.Tests.psd1 manifest to 2018.
+- Fixed bug where common test would throw an error if there were no
   .MetaTestOptIn.json file or it was empty (no opt-ins).
-* Added more tests for custom Script Analazyer rules to increased code coverage.
+- Added more tests for custom Script Analazyer rules to increased code coverage.
   These new tests call the Measure-functions directly.
-* Changed so that DscResource.Tests repository can analyze code coverage for the
+- Changed so that DscResource.Tests repository can analyze code coverage for the
   helper modules ([issue #208](https://github.com/PowerShell/DscResource.Tests/issues/208)).
-* Importing of the TestHelper.psm1 module is now done at the top of the script of
+- Importing of the TestHelper.psm1 module is now done at the top of the script of
   AppVeyor.psm1. Previously it was imported in each helper function. This was done
   to make it easier to mock the helper functions inside the TestHelper.psm1 module
   when testing AppVeyor.psm1.
-* Changed Get-PSModulePathItem to trim end back slash ([issue #217](https://github.com/PowerShell/DscResource.Tests/issues/217))
-* Updated to support running unit tests on PowerShell Core:
-  * Updated helper function Test-FileHasByteOrderMark to use `AsByteStream`.
-  * Install-PackageProvider will only run if `Find-PackageProvider -Name 'Nuget'`
+- Changed Get-PSModulePathItem to trim end back slash ([issue #217](https://github.com/PowerShell/DscResource.Tests/issues/217))
+- Updated to support running unit tests on PowerShell Core:
+  - Updated helper function Test-FileHasByteOrderMark to use `AsByteStream`.
+  - Install-PackageProvider will only run if `Find-PackageProvider -Name 'Nuget'`
     returns a package. Currently it is not found on the AppVeyor build worker for
     PowerShell Core.
-  * Adding tests to AppVeyor test pane is done by using the RestAPI because the
+  - Adding tests to AppVeyor test pane is done by using the RestAPI because the
     cmdlet Add-AppveyorTest is not supported on PowerShell Core yet.
-  * All Push-AppveyorArtifact has been changed to use the helper function
+  - All Push-AppveyorArtifact has been changed to use the helper function
     Push-TestArtifact instead.
-  * The helper function Push-TestArtifact uses 'appveyor.exe' to upload
+  - The helper function Push-TestArtifact uses 'appveyor.exe' to upload
     artifacts because the cmdlet Push-AppveyorArtifact is not supported on
     PowerShell Core.
-* Fix codecov no longer generates an error message when uploading test coverage
+- Fix codecov no longer generates an error message when uploading test coverage
   ([issue #203](https://github.com/PowerShell/DscResource.Tests/issues/203)).
-* Added new helper function Get-DscTestContainerInformation to read the container
+- Added new helper function Get-DscTestContainerInformation to read the container
   information in a particular PowerShell script test file (.Tests.ps1).
-* BREAKING CHANGE: For those repositories that are using parameter `RunTestInOrder`
+- BREAKING CHANGE: For those repositories that are using parameter `RunTestInOrder`
   for the helper function `Invoke-AppveyorTestScriptTask` the
   decoration `[Microsoft.DscResourceKit.IntegrationTest(OrderNumber = 1)]` need
   to move from the configuration file to the test file. This was done since unit
@@ -836,102 +931,104 @@ Contributors that add or change an example to be published must make sure that
   define the order and the container information using the same decoration.
   It is also natural to have the decoration in the test files since those are
   the scripts that are actually run in order.
-* BREAKING CHANGE: The parameter `RunInDocker` is removed in helper function
+- BREAKING CHANGE: The parameter `RunInDocker` is removed in helper function
   `Invoke-AppveyorTestScriptTask`. Using parameter `RunTestInOrder` will now
   handle running tests in a container, but only if at least on test is decorated
   using `[Microsoft.DscResourceKit.IntegrationTest()]` or
   `[Microsoft.DscResourceKit.UnitTest()]`, together with the correct named arguments.
-* Added support for the default shared module to run unit test and integration test
+- Added support for the default shared module to run unit test and integration test
   in a container by decorating each test file with either
   `[Microsoft.DscResourceKit.IntegrationTest()]` or
   `[Microsoft.DscResourceKit.UnitTest()]`.
-* DcsResource.Container
-  * Now has support for verifying if image, with or without
+- DcsResource.Container
+  - Now has support for verifying if image, with or without
     a tag, exists locally or needs to be pulled from Docker Hub.
-  * Now shows the correct localized message when downloading
+  - Now shows the correct localized message when downloading
     an image.
-  * If 'latest' tag is used on the image name, 'docker pull' will be called to
+  - If 'latest' tag is used on the image name, 'docker pull' will be called to
     make sure the local revision of 'latest' is actually the latest revision on
     Docker Hub. If it isn't, then the latest image will be pulled from Docker Hub.
-* Updated AppVeyor.Tests
-  * Mock for Resolve-CoverageInfo was removed since it was not used.
-  * Moved importing of DscResource.CodeCoverage module to top of AppVeyor.psm1
+- Updated AppVeyor.Tests
+  - Mock for Resolve-CoverageInfo was removed since it was not used.
+  - Moved importing of DscResource.CodeCoverage module to top of AppVeyor.psm1
     for easier mocking.
-* Codecov is once again uploaded for "Harness"-model resource modules
+- Codecov is once again uploaded for "Harness"-model resource modules
   ([issue #229](https://github.com/PowerShell/DscResource.Tests/issues/229)).
-* Changed Example common test
-  * Added support for examples to have mandatory parameters.
-  * Added support for all credential parameters, regardless of parameter name.
-  * Added support to use the same name both for filename and configuration name.
+- Changed Example common test
+  - Added support for examples to have mandatory parameters.
+  - Added support for all credential parameters, regardless of parameter name.
+  - Added support to use the same name both for filename and configuration name.
     Supporting filenames starting with or without a numeric value and a dash,
     e.g '99-MyExample.ps1', or 'MyExample.ps'. Any filename starting with a
     numeric value followed by a dash will be removed. This is to support
     configurations to be able to compile in Azure Automation, but still support
     auto-documentation.
-* Add support for publishing examples configurations to PowerShell Gallery if
+- Add support for publishing examples configurations to PowerShell Gallery if
   opt-in ([issue #234](https://github.com/PowerShell/DscResource.Tests/issues/234)).
-* Added new opt-in common test 'Common Tests - Validate Example Files To Be Published'.
+- Added new opt-in common test 'Common Tests - Validate Example Files To Be Published'.
   This common test verifies that the examples those name ending with '*Config'
   passes testing of script meta data, and that there are no duplicate GUID's in
   the script meta data (within the examples in the repository).
-* Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
+- Fix bug in `Invoke-AppveyorAfterTestTask` to prevent Wiki generation function
   from getting documentation files from variable `$MainModulePath` defined in
   AppVeyor.yml ([issue #245](https://github.com/PowerShell/DscResource.Tests/issues/245)).
-* Added support for example and integration test configurations compilation using
+- Added support for example and integration test configurations compilation using
   a certificate, so that there are no more need for PSDscAllowPlainTextPassword
   in configurations ([issue #240](https://github.com/PowerShell/DscResource.Tests/issues/240)).
-* Refactored `WikiPages.psm1` to meet guidelines and improve testability.
-* Added unit test coverage for `WikiPages.psm1`.
-* Added support to Wiki generation for Example files that are formatted in the
+- Refactored `WikiPages.psm1` to meet guidelines and improve testability.
+- Added unit test coverage for `WikiPages.psm1`.
+- Added support to Wiki generation for Example files that are formatted in the
   way required by the automatic example publishing code ([issue #247](https://github.com/PowerShell/DscResource.Tests/issues/247)).
-* Added `.gitattributes` to force EOL to be CRLF to make testing more consistent
+- Added `.gitattributes` to force EOL to be CRLF to make testing more consistent
   in unit tests.
-* Make sure the latest PowerShellGet is installed on the AppVeyor Build Worker
+- Make sure the latest PowerShellGet is installed on the AppVeyor Build Worker
   ([issue #252](https://github.com/PowerShell/DscResource.Tests/issues/252)).
-* Update the example pusblishing example to not use `.EXTERNALMODULEDEPENDENCIES`
+- Update the example pusblishing example to not use `.EXTERNALMODULEDEPENDENCIES`
   (only #Requires is needed). `.EXTERNALMODULEDEPENDENCIES` is used for external
   dependencies (outside of PowerShell Gallery).
-* Example publishing can now use a filename without number prefix
+- Example publishing can now use a filename without number prefix
   ([issue #254](https://github.com/PowerShell/DscResource.Tests/issues/254)).
-* Update `New-DscSelfSignedCertificate` to set environment variables even if
+- Update `New-DscSelfSignedCertificate` to set environment variables even if
   certificate already exists.
-* Change `Invoke-AppveyorTestScriptTask` to also create a self-signed certificate
+- Change `Invoke-AppveyorTestScriptTask` to also create a self-signed certificate
   using `New-DscSelfSignedCertificate` so that the certificate environment variables
   are still assigned if the test machine reboots after calling
   `Invoke-AppveyorInstallTask` ([issue #255](https://github.com/PowerShell/DscResource.Tests/issues/255)).
-* Change `New-DscSelfSignedCertificate` to write information about certificate
+- Change `New-DscSelfSignedCertificate` to write information about certificate
   creation or usage so that `Invoke-AppveyorInstallTask` and
   `Invoke-AppveyorTestScriptTask` does not have to ([issue #259](https://github.com/PowerShell/DscResource.Tests/issues/259)).
-* Remove option to use CustomTaskModulePath. It was not used, nor documented. To
+- Remove option to use CustomTaskModulePath. It was not used, nor documented. To
   make the unit tests easier the option was removed
   ([issue #263](https://github.com/PowerShell/DscResource.Tests/issues/263)).
-* Improved the unit tests for the helper function `Invoke-AppveyorTestScriptTask`,
+- Improved the unit tests for the helper function `Invoke-AppveyorTestScriptTask`,
   adding more test coverage, especially for the container part.
-* Moved the import of module DscResource.Container to the top of the module file
+- Moved the import of module DscResource.Container to the top of the module file
   AppVeyor.psm1 to simplify the unit tests.
-* Rearranging the `Import-Module` and the comment-based help, in the module file
+- Rearranging the `Import-Module` and the comment-based help, in the module file
   AppVeyor.psm1, so that the comment-based help is at the top of the file.
-* Fix informational message when publishing examples
+- Fix informational message when publishing examples
   ([issue #261](https://github.com/PowerShell/DscResource.Tests/issues/261)).
-* When cloning this repo and checking out the dev branch, the file
+- When cloning this repo and checking out the dev branch, the file
   DscResource.AnalyzerRules.Tests.ps1 was always unstaged. This was probably
   due to the .gitattributes file that was introduced in a previous PR.
   EOL in DscResource.AnalyzerRules.Tests.ps1 is now fixed.
-* Adding regression tests for
+- Adding regression tests for
   [issue #70](https://github.com/PowerShell/DscResource.Tests/issues/70)).
-* Migrate Pester Test Syntax from v3 -> v4
+- Migrate Pester Test Syntax from v3 -> v4
   ([issue #199](https://github.com/PowerShell/DscResource.Tests/issues/199)).
-* Activate GitHub App Review Me.
-* Removed the default values of the parameter `ExcludeTag` in favor of using
+- Activate GitHub App Review Me.
+- Removed the default values of the parameter `ExcludeTag` in favor of using
   opt-in. Default is that those tests are opt-out, and must be opt-in
   ([issue #274](https://github.com/PowerShell/DscResource.Tests/issues/274)).
-* Excluding tag 'Examples' when calling `Invoke-AppveyorTestScriptTask` since
+- Excluding tag 'Examples' when calling `Invoke-AppveyorTestScriptTask` since
   this repository will never have examples.
+- Added Rule Name to PS Script Analyzer custom rules
+- Added PsScript Analyzer Rule Name to Write-Warning output in meta.tests
 
 ### 0.2.0.0
 
-* Fixed unicode and path bugs in tests
+- Fixed unicode and path bugs in tests
 
 ### 0.1.0.0
 
-* Initial release
+- Initial release

@@ -1015,12 +1015,12 @@ InModuleScope $script:ModuleName {
 
                 Assert-MockCalled -CommandName 'Set-PSModulePath' -ParameterFilter {
                     $Path -eq $testEnvironmentParameter.OldPSModulePath `
-                    -and $PSBoundParameters.ContainsKey('Machine') -eq $false
+                        -and $PSBoundParameters.ContainsKey('Machine') -eq $false
                 } -Exactly -Times 1 -Scope It
 
                 Assert-MockCalled -CommandName 'Set-PSModulePath' -ParameterFilter {
                     $Path -eq $testEnvironmentParameter.OldPSModulePath `
-                    -and $PSBoundParameters.ContainsKey('Machine') -eq $true
+                        -and $PSBoundParameters.ContainsKey('Machine') -eq $true
                 } -Exactly -Times 1 -Scope It
             }
         }
@@ -1494,12 +1494,12 @@ InModuleScope $script:ModuleName {
 
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscPublicCertificatePath' `
-                    -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
+                        -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
                 } -Exactly -Times 1
 
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscCertificateThumbprint' `
-                    -and $Value -eq $mockCertificateThumbprint
+                        -and $Value -eq $mockCertificateThumbprint
                 } -Exactly -Times 1
             }
         }
@@ -1540,12 +1540,12 @@ InModuleScope $script:ModuleName {
                 Assert-MockCalled -CommandName New-SelfSignedCertificate -Exactly -Times 1
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscPublicCertificatePath' `
-                    -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
+                        -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
                 } -Exactly -Times 1
 
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscCertificateThumbprint' `
-                    -and $Value -eq $mockCertificateThumbprint
+                        -and $Value -eq $mockCertificateThumbprint
                 } -Exactly -Times 1
             }
         }
@@ -1582,12 +1582,12 @@ InModuleScope $script:ModuleName {
                 Assert-MockCalled -CommandName New-SelfSignedCertificateEx -Exactly -Times 0
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscPublicCertificatePath' `
-                    -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
+                        -and $Value -eq (Join-Path -Path $env:temp -ChildPath 'DscPublicKey.cer')
                 } -Exactly -Times 1
 
                 Assert-MockCalled -CommandName Set-EnvironmentVariable -ParameterFilter {
                     $Name -eq 'DscCertificateThumbprint' `
-                    -and $Value -eq $mockCertificateThumbprint
+                        -and $Value -eq $mockCertificateThumbprint
                 } -Exactly -Times 1
                 Assert-MockCalled -CommandName Install-Module -Exactly -Times 0
                 Assert-MockCalled -CommandName Import-Module -Exactly -Times 0
@@ -1670,4 +1670,33 @@ InModuleScope $script:ModuleName {
         }
     }
 
+    Describe 'TestHelper\Write-PsScriptAnalyzerWarning' {
+        Context 'When writing a PsScriptAnalyzer warning' {
+            BeforeAll {
+                $testPssaRuleOutput = [PSCustomObject]@{
+                    Line   = '51'
+                    Message  = 'Test Message'
+                    RuleName = 'TestRule'
+                    ScriptName = 'Pester.ps1'
+                }
+                $testRuleType = 'Test'
+                
+                Mock -CommandName 'Write-Warning'
+            }
+
+            It 'Should call the correct Cmdlets and not throw' {
+                { Write-PsScriptAnalyzerWarning -PssaRuleOutput $testPssaRuleOutput -RuleType $testRuleType } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Write-Warning' -ParameterFilter {
+                    $message -eq "The following PSScriptAnalyzer rule '$($testPssaRuleOutput.RuleName)' errors need to be fixed:"
+                } -Exactly -Times 1
+                Assert-MockCalled -CommandName 'Write-Warning' -ParameterFilter {
+                    $message -eq "$($testPssaRuleOutput.ScriptName) (Line $($testPssaRuleOutput.Line)): $($testPssaRuleOutput.Message)"
+                } -Exactly -Times 1
+                Assert-MockCalled -CommandName 'Write-Warning' -ParameterFilter {
+                    $message -eq "$testRuleType PSSA rule(s) did not pass."
+                } -Exactly -Times 1
+            }
+        }
+    }
 }

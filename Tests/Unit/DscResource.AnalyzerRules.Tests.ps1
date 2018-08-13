@@ -61,6 +61,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.ParameterAst'
+            $ruleName = 'Measure-ParameterBlockParameterAttribute'
         }
 
         Context 'When ParameterAttribute is missing' {
@@ -78,6 +79,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Measure-ParameterBlockParameterAttribute -ParameterAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -98,6 +100,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Measure-ParameterBlockParameterAttribute -ParameterAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeWrongPlace
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -117,6 +120,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Measure-ParameterBlockParameterAttribute -ParameterAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeLowerCase
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -147,6 +151,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-ParameterBlockParameterAttribute"
         }
 
         Context 'When ParameterAttribute is missing' {
@@ -163,6 +168,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -198,6 +204,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeWrongPlace
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -233,6 +240,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeLowerCase
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -269,6 +277,8 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 ($record | Measure-Object).Count | Should -Be 2
                 $record[0].Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
                 $record[1].Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
+                $record[0].RuleName | Should -Be $ruleName
+                $record[1].RuleName | Should -Be $ruleName
             }
         }
 
@@ -290,6 +300,8 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 ($record | Measure-Object).Count | Should -Be 2
                 $record[0].Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
                 $record[1].Message | Should -Be $localizedData.ParameterBlockParameterAttributeLowerCase
+                $record[0].RuleName | Should -Be $ruleName
+                $record[1].RuleName | Should -Be $ruleName
             }
         }
 
@@ -310,6 +322,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -352,6 +365,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterAttributeMissing
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -361,6 +375,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.NamedAttributeArgumentAst'
+            $ruleName = 'Measure-ParameterBlockMandatoryNamedArgument'
         }
 
         Context 'When Mandatory is included and set to $false' {
@@ -380,6 +395,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -400,6 +416,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -420,6 +437,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Measure-ParameterBlockMandatoryNamedArgument -NamedAttributeArgumentAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -446,6 +464,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-ParameterBlockMandatoryNamedArgument"
         }
 
         Context 'When Mandatory is included and set to $false' {
@@ -463,6 +482,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -481,6 +501,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -499,6 +520,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -517,6 +539,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -675,6 +698,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -718,6 +742,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -727,6 +752,7 @@ Describe 'Measure-FunctionBlockBraces' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.FunctionDefinitionAst'
+            $ruleName = 'Measure-FunctionBlockBraces'
         }
 
         Context 'When a functions opening brace is on the same line as the function keyword' {
@@ -751,6 +777,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Measure-FunctionBlockBraces -FunctionDefinitionAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -776,6 +803,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Measure-FunctionBlockBraces -FunctionDefinitionAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -803,6 +831,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Measure-FunctionBlockBraces -FunctionDefinitionAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -812,6 +841,7 @@ Describe 'Measure-FunctionBlockBraces' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-FunctionBlockBraces"
         }
 
         Context 'When a functions opening brace is on the same line as the function keyword' {
@@ -835,6 +865,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -876,6 +907,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -902,6 +934,7 @@ Describe 'Measure-FunctionBlockBraces' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.FunctionOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -935,6 +968,7 @@ Describe 'Measure-IfStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.IfStatementAst'
+            $ruleName = 'Measure-IfStatement'
         }
 
         Context 'When if-statement has an opening brace on the same line' {
@@ -951,6 +985,7 @@ Describe 'Measure-IfStatement' {
                 $record = Measure-IfStatement -IfStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -969,6 +1004,7 @@ Describe 'Measure-IfStatement' {
                 $record = Measure-IfStatement -IfStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -989,6 +1025,7 @@ Describe 'Measure-IfStatement' {
                 $record = Measure-IfStatement -IfStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -998,6 +1035,7 @@ Describe 'Measure-IfStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-IfStatement"
         }
 
         Context 'When if-statement has an opening brace on the same line' {
@@ -1013,6 +1051,7 @@ Describe 'Measure-IfStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1050,6 +1089,7 @@ Describe 'Measure-IfStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1069,6 +1109,7 @@ Describe 'Measure-IfStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.IfStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1111,6 +1152,7 @@ Describe 'Measure-ForEachStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.ForEachStatementAst'
+            $ruleName = 'Measure-ForEachStatement'
         }
 
         Context 'When foreach-statement has an opening brace on the same line' {
@@ -1128,6 +1170,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Measure-ForEachStatement -ForEachStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1146,6 +1189,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Measure-ForEachStatement -ForEachStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1167,6 +1211,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Measure-ForEachStatement -ForEachStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1177,6 +1222,7 @@ Describe 'Measure-ForEachStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-ForEachStatement"
         }
 
         Context 'When foreach-statement has an opening brace on the same line' {
@@ -1193,6 +1239,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1211,6 +1258,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1231,6 +1279,7 @@ Describe 'Measure-ForEachStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1257,6 +1306,7 @@ Describe 'Measure-DoUntilStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.DoUntilStatementAst'
+            $ruleName = 'Measure-DoUntilStatement'
         }
 
         Context 'When DoUntil-statement has an opening brace on the same line' {
@@ -1276,6 +1326,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Measure-DoUntilStatement -DoUntilStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1296,6 +1347,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Measure-DoUntilStatement -DoUntilStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1318,6 +1370,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Measure-DoUntilStatement -DoUntilStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -1327,6 +1380,7 @@ Describe 'Measure-DoUntilStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-DoUntilStatement"
         }
 
         Context 'When DoUntil-statement has an opening brace on the same line' {
@@ -1345,6 +1399,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1364,6 +1419,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1385,6 +1441,7 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1413,6 +1470,7 @@ Describe 'Measure-DoWhileStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.DoWhileStatementAst'
+            $ruleName = 'Measure-DoWhileStatement'
         }
 
         Context 'When DoWhile-statement has an opening brace on the same line' {
@@ -1432,6 +1490,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Measure-DoWhileStatement -DoWhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1452,6 +1511,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Measure-DoWhileStatement -DoWhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1474,6 +1534,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Measure-DoWhileStatement -DoWhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1484,6 +1545,7 @@ Describe 'Measure-DoWhileStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-DoWhileStatement"
         }
 
         Context 'When DoWhile-statement has an opening brace on the same line' {
@@ -1502,6 +1564,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1521,6 +1584,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1542,6 +1606,7 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1570,6 +1635,7 @@ Describe 'Measure-WhileStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.WhileStatementAst'
+            $ruleName = 'Measure-WhileStatement'
         }
 
         Context 'When While-statement has an opening brace on the same line' {
@@ -1589,6 +1655,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Measure-WhileStatement -WhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1609,6 +1676,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Measure-WhileStatement -WhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1631,6 +1699,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Measure-WhileStatement -WhileStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
     }
@@ -1640,6 +1709,7 @@ Describe 'Measure-WhileStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-WhileStatement"
         }
 
         Context 'When While-statement has an opening brace on the same line' {
@@ -1658,6 +1728,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1677,6 +1748,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1698,6 +1770,7 @@ Describe 'Measure-WhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1726,6 +1799,7 @@ Describe 'Measure-SwitchStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.SwitchStatementAst'
+            $ruleName = 'Measure-SwitchStatement'
         }
 
         Context 'When Switch-statement has an opening brace on the same line' {
@@ -1748,6 +1822,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Measure-SwitchStatement -SwitchStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1771,6 +1846,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Measure-SwitchStatement -SwitchStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1796,6 +1872,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Measure-SwitchStatement -SwitchStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1806,6 +1883,7 @@ Describe 'Measure-SwitchStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-SwitchStatement"
         }
 
         Context 'When Switch-statement has an opening brace on the same line' {
@@ -1827,6 +1905,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1847,6 +1926,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1869,6 +1949,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1893,6 +1974,7 @@ Describe 'Measure-SwitchStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1924,6 +2006,7 @@ Describe 'Measure-ForStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.ForStatementAst'
+            $ruleName = 'Measure-ForStatement'
         }
 
         Context 'When For-statement has an opening brace on the same line' {
@@ -1941,6 +2024,7 @@ Describe 'Measure-ForStatement' {
                 $record = Measure-ForStatement -ForStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1959,6 +2043,7 @@ Describe 'Measure-ForStatement' {
                 $record = Measure-ForStatement -ForStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1979,6 +2064,7 @@ Describe 'Measure-ForStatement' {
                 $record = Measure-ForStatement -ForStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -1989,6 +2075,7 @@ Describe 'Measure-ForStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-ForStatement"
         }
 
         Context 'When For-statement has an opening brace on the same line' {
@@ -2005,6 +2092,7 @@ Describe 'Measure-ForStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2022,6 +2110,7 @@ Describe 'Measure-ForStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2041,6 +2130,7 @@ Describe 'Measure-ForStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2067,6 +2157,7 @@ Describe 'Measure-TryStatement' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.TryStatementAst'
+            $ruleName = 'Measure-TryStatement'
         }
 
         Context 'When Try-statement has an opening brace on the same line' {
@@ -2088,6 +2179,7 @@ Describe 'Measure-TryStatement' {
                 $record = Measure-TryStatement -TryStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2110,6 +2202,7 @@ Describe 'Measure-TryStatement' {
                 $record = Measure-TryStatement -TryStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2134,6 +2227,7 @@ Describe 'Measure-TryStatement' {
                 $record = Measure-TryStatement -TryStatementAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2144,6 +2238,7 @@ Describe 'Measure-TryStatement' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-TryStatement"
         }
 
         Context 'When Try-statement has an opening brace on the same line' {
@@ -2164,6 +2259,7 @@ Describe 'Measure-TryStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2185,6 +2281,7 @@ Describe 'Measure-TryStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2208,6 +2305,7 @@ Describe 'Measure-TryStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2238,6 +2336,7 @@ Describe 'Measure-CatchClause' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.CatchClauseAst'
+            $ruleName = 'Measure-CatchClause'
         }
 
         Context 'When Catch-clause has an opening brace on the same line' {
@@ -2259,6 +2358,7 @@ Describe 'Measure-CatchClause' {
                 $record = Measure-CatchClause -CatchClauseAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2281,6 +2381,7 @@ Describe 'Measure-CatchClause' {
                 $record = Measure-CatchClause -CatchClauseAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2305,6 +2406,7 @@ Describe 'Measure-CatchClause' {
                 $record = Measure-CatchClause -CatchClauseAst $mockAst[0]
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2315,6 +2417,7 @@ Describe 'Measure-CatchClause' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-CatchClause"
         }
 
         Context 'When Catch-clause has an opening brace on the same line' {
@@ -2335,6 +2438,7 @@ Describe 'Measure-CatchClause' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceNotOnSameLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2356,6 +2460,7 @@ Describe 'Measure-CatchClause' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2379,6 +2484,7 @@ Describe 'Measure-CatchClause' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
             }
         }
 
@@ -2409,6 +2515,7 @@ Describe 'Measure-TypeDefinition' {
     Context 'When calling the function directly' {
         BeforeAll {
             $astType = 'System.Management.Automation.Language.TypeDefinitionAst'
+            $ruleName = 'Measure-TypeDefinition'
         }
 
         Context 'Enum' {
@@ -2425,6 +2532,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceNotOnSameLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2440,6 +2548,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceShouldBeFollowedByNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2458,6 +2567,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
         }
@@ -2478,6 +2588,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceNotOnSameLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2496,6 +2607,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2516,6 +2628,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
         }
@@ -2526,6 +2639,7 @@ Describe 'Measure-TypeDefinition' {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
+            $ruleName = "$($script:ModuleName)\Measure-TypeDefinition"
         }
 
         Context 'Enum' {
@@ -2541,6 +2655,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceNotOnSameLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2555,6 +2670,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceShouldBeFollowedByNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2572,6 +2688,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
         }
@@ -2591,6 +2708,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceNotOnSameLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2608,6 +2726,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
 
@@ -2627,6 +2746,7 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
                 }
             }
         }
