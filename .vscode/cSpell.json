@@ -12,7 +12,9 @@
         "Codecov",
         "HQRM",
         "GUIDs",
-        "unstaged"
+        "unstaged",
+        "PSSA",
+        "Dism"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
@@ -38,6 +40,13 @@
         "2016-Datacenter",
         "2016-Datacenter-Server-Core",
         "HKLM:\\\\",
-        "\\.gitattributes"
+        "\\.gitattributes",
+        "#psscriptanalyzer-rules",
+        "#metafixers-module",
+        "#testhelper-module",
+        "#example-usage-of-dscresourcetests-in-appveyoryml",
+        "#codecoverage-reporting-with-codecovio",
+        "#enable-reporting-to-codecovio",
+        "#configure-codecovio"
     ]
 }

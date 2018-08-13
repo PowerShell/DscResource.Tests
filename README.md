@@ -47,7 +47,7 @@ This branch is used by DSC Resource Kit modules for running common tests.
 - [Encrypt Credentials in Integration Tests](#encrypt-credentials-in-integration-tests)
 - [CodeCoverage reporting with CodeCov.io](#codecoverage-reporting-with-codecovio)
   - [Ensure Code Coverage is enabled](#ensure-code-coverage-is-enabled)
-  - [Enable reporting to CodeCove.io](#enable-reporting-to-codecoveio)
+  - [Enable reporting to CodeCov.io](#enable-reporting-to-codecovio)
   - [Configure CodeCov.io](#configure-codecovio)
   - [Add the badge to the Readme](#add-the-badge-to-the-readme)
 - [Documentation Helper Module](#documentation-helper-module)
@@ -475,7 +475,7 @@ Defaults to the relative paths 'DSCResources', 'DSCClassResources', and 'Modules
 1. Make sure you are properly generating pester code coverage in the repository
    harness code.
 
-### Enable reporting to CodeCove.io
+### Enable reporting to CodeCov.io
 
 1. On the call to `Invoke-AppveyorTestScriptTask`, specify
    `-CodeCovIo`.  This will enable reporting to [codecov.io](http://codecov.io)
