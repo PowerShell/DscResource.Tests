@@ -296,7 +296,7 @@ The following opt-in flags are available:
   DSC resource module.
 - **Common Tests - Validate Markdown Links**: fails tests if a link in
   a markdown file is broken.
-* **Common Tests - Spellcheck Markdown Files**: fail test if there are any
+- **Common Tests - Spellcheck Markdown Files**: fail test if there are any
   spelling errors in the markdown files. There is the possibility to add
   or override words in the `\.vscode\cSpell.json` file.
 
