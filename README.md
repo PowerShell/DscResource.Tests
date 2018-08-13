@@ -321,7 +321,13 @@ The simplest form of the file `\.vscode\cSpell.json` is this (see
 
 >This settings file will also work together with the Visual Studio Code extension
 >[Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker).
->By using the extension the spelling errors can be caught in real-time.
+>By using this extension the spelling errors can be caught in real-time.
+>When a cSpell.json exists in the .vscode folder, the individual setting in the
+>cSpell.json file will override the corresponding setting in the
+>Visual Studio Code *User settings* or *Workspace settings* file. This differs
+>from adding a *Code Spell Checker* setting to the Visual Studio Code
+>*Workspace settings* file, as the *Workspace settings* file will override all
+>the settings in the *User settings*.
 
 ```json
 {
