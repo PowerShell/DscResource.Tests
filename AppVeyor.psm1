@@ -132,6 +132,14 @@ function Invoke-AppveyorInstallTask
         integration test with a specific order has run.
         This will also enable running unit tests and integration tests in a
         Docker Windows container.
+
+    .PARAMETER CodeCoveragePath
+        One or more relative paths to PowerShell modules, from the root module
+        folder. For each relative folder it will recursively search the first
+        level subfolders for PowerShell module files (.psm1).
+        Default to 'DSCResources', 'DSCClassResources', and 'Modules'.
+        This parameter is ignored when testing the DscResource.Tests repository
+        since that repository is treated differently, and has hard-coded paths.
 #>
 function Invoke-AppveyorTestScriptTask
 {
@@ -176,7 +184,15 @@ function Invoke-AppveyorTestScriptTask
 
         [Parameter(ParameterSetName = 'Default')]
         [Switch]
-        $RunTestInOrder
+        $RunTestInOrder,
+
+        [Parameter(ParameterSetName = 'Default')]
+        [String[]]
+        $CodeCoveragePath = @(
+            'DSCResources',
+            'DSCClassResources',
+            'Modules'
+        )
     )
 
     # Convert the Main Module path into an absolute path if it is relative
@@ -275,10 +291,7 @@ function Invoke-AppveyorTestScriptTask
                         Define the folders to check, if found add the path for
                         code coverage.
                     #>
-                    $possibleModulePaths = @(
-                        'DSCResources',
-                        'DSCClassResources'
-                    )
+                    $possibleModulePaths = $CodeCoveragePath
 
                     foreach ($possibleModulePath in $possibleModulePaths)
                     {

@@ -377,6 +377,14 @@ Pester code coverage, which the first two sections cover.
 1. On the call to `Invoke-AppveyorTestScriptTask`, make sure you have
    `-CodeCoverage` specified.  This will enable Pester code coverage.
 
+It is possible to control which relative paths, from the root module folder, are
+evaluated for code coverage.
+By specifying one or more relative paths in the parameter `-CodeCoveragePath`
+each path is searched for PowerShell modules files (.psm1). For each relative
+folder it will look in the root of the relative path, and also recursively
+search the first level subfolders, for PowerShell module files (.psm1).
+Defaults to the relative paths 'DSCResources', 'DSCClassResources', and 'Modules'.
+
 #### Repository using `-Type 'Harness'` for `Invoke-AppveyorTestScriptTask`
 
 1. Make sure you are properly generating pester code coverage in the repository
@@ -974,6 +982,11 @@ Contributors that add or change an example to be published must make sure that
 - Added Rule Name to PS Script Analyzer custom rules
 - Added PsScript Analyzer Rule Name to Write-Warning output in meta.tests
 - Removed sections 'Goals' and 'Git and Unicode' as they have become redundant.
+- Add a new parameter `-CodeCoveragePath` in the function
+  `Invoke-AppveyorTestScriptTask` to be able to add one or more relative
+  paths which will be searched for PowerShell modules files (.psm1) to be used
+  for evaluating code coverage
+  ([issue #114](https://github.com/PowerShell/DscResource.Tests/issues/114)).
 
 ### 0.2.0.0
 

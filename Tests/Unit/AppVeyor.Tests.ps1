@@ -135,7 +135,9 @@ InModuleScope $script:ModuleName {
                     CodeCovIo      = $true
                 }
 
-                { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+                {
+                    Invoke-AppveyorTestScriptTask @testParameters
+                } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
                 Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
@@ -153,10 +155,24 @@ InModuleScope $script:ModuleName {
             }
 
             BeforeAll {
-                Mock -CommandName Test-Path -MockWith { return $false }
-                Mock -CommandName Get-ChildItem -MockWith { return 'file.Tests.ps1' }
-                Mock -CommandName Get-ChildItem -MockWith { return $null } -ParameterFilter { $Include -eq '*.config.ps1' }
-                Mock -CommandName Invoke-Pester -MockWith { return $pesterReturnedValues }
+                Mock -CommandName Test-Path -MockWith {
+                    return $false
+                }
+
+                Mock -CommandName Get-ChildItem -MockWith {
+                    return 'file.Tests.ps1'
+                }
+
+                Mock -CommandName Get-ChildItem -MockWith {
+                    return $null
+                } -ParameterFilter {
+                    $Include -eq '*.config.ps1'
+                }
+
+                Mock -CommandName Invoke-Pester -MockWith {
+                    return $pesterReturnedValues
+                }
+
                 # Making sure there is no output when performing tests
                 Mock -CommandName Write-Verbose
                 Mock -CommandName Write-Warning
@@ -168,48 +184,198 @@ InModuleScope $script:ModuleName {
             } # End BeforeAll
 
             AfterEach {
-                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
-                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
-                Assert-MockCalled -CommandName Test-Path -Times 2 -Exactly -Scope It
-                Assert-MockCalled -CommandName Get-ChildItem -Times 1 -Exactly -Scope It -ParameterFilter { $Include -eq '*.config.ps1' }
+                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources"
+                }
+
+                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources"
+                }
+
+                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\Modules"
+                }
+
+                Assert-MockCalled -CommandName Get-ChildItem -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Include -eq '*.config.ps1'
+                }
+
                 Assert-MockCalled -CommandName Get-ChildItem -Times 2 -Exactly -Scope It
             } # End AfterEach
 
             It 'Should only include DSCClassResources for CodeCoverage' {
-                Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
-                Mock -CommandName Test-Path -MockWith { return $false } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                } -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources"
+                }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
+                Mock -CommandName Test-Path -MockWith {
+                    return $false
+                } -ParameterFilter {
+                    $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources"
+                }
 
-                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
-                Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
+                {
+                    Invoke-AppveyorTestScriptTask -CodeCoverage
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1"
+                }
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
+                }
             } # End It DSCClassResources only
 
             It 'Should only include DSCResources for CodeCoverage' {
-                Mock -CommandName Test-Path -MockWith { return $false } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
-                Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
+                Mock -CommandName Test-Path -MockWith {
+                    return $false
+                } -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources"
+                }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                } -ParameterFilter {
+                    $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources"
+                }
 
-                Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
-                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
+                {
+                    Invoke-AppveyorTestScriptTask -CodeCoverage
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 0 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1"
+                }
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
+                }
             } # End It DSCResources only
 
             It 'Should include DSCResources and DSCClassResources for CodeCoverage' {
-                Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources" }
-                Mock -CommandName Test-Path -MockWith { return $true } -ParameterFilter { $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources" }
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                } -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources"
+                }
 
-                { Invoke-AppveyorTestScriptTask -CodeCoverage } | Should -Not -Throw
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                } -ParameterFilter {
+                    $Path -and $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources"
+                }
 
-                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" }
-                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter { $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" }
+                {
+                    Invoke-AppveyorTestScriptTask -CodeCoverage
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1"
+                }
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1"
+                }
             } # End It Both DSCResources and DSCClassResources
+
+            It 'Should include all default paths for CodeCoverage' {
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                }
+
+                {
+                    Invoke-AppveyorTestScriptTask -CodeCoverage
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources\**\*.psm1" `
+                    -and $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\DSCResources\**\*.psm1" `
+                    -and $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\Modules\**\*.psm1"
+                }
+            } # End It Both DSCResources and DSCClassResources
+        } # End Context When CodeCoverage requires additional directories
+
+        Context 'When Invoke-AppveyorTestScriptTask is called with parameter CodeCoverage and CodeCoveragePath ' {
+            $pesterReturnedValues = @{
+                PassedCount = 1
+                FailedCount = 0
+            }
+
+            BeforeAll {
+                Mock -CommandName Test-Path -MockWith {
+                    return $false
+                }
+
+                Mock -CommandName Get-ChildItem -MockWith {
+                    return 'file.Tests.ps1'
+                }
+
+                Mock -CommandName Get-ChildItem -MockWith {
+                    return $null
+                } -ParameterFilter {
+                    $Include -eq '*.config.ps1'
+                }
+
+                Mock -CommandName Invoke-Pester -MockWith {
+                    return $pesterReturnedValues
+                }
+
+                # Making sure there is no output when performing tests
+                Mock -CommandName Write-Verbose
+                Mock -CommandName Write-Warning
+                Mock -CommandName New-DscSelfSignedCertificate
+                Mock -CommandName Initialize-LocalConfigurationManager
+                Mock -CommandName Test-IsRepositoryDscResourceTests -MockWith {
+                    return $false
+                }
+            } # End BeforeAll
+
+            AfterEach {
+                Assert-MockCalled -CommandName Test-Path -Times 0 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCClassResources"
+                }
+
+                Assert-MockCalled -CommandName Test-Path -Times 0 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\DSCResources"
+                }
+
+                Assert-MockCalled -CommandName Test-Path -Times 0 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\Modules"
+                }
+
+                Assert-MockCalled -CommandName Test-Path -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Path -eq "$env:APPVEYOR_BUILD_FOLDER\OtherPath"
+                }
+
+                Assert-MockCalled -CommandName Get-ChildItem -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Include -eq '*.config.ps1'
+                }
+
+                Assert-MockCalled -CommandName Get-ChildItem -Times 2 -Exactly -Scope It
+            } # End AfterEach
+
+            It 'Should only include the correct specified path for CodeCoverage' {
+                Mock -CommandName Test-Path -MockWith { return $true }
+
+                {
+                    Invoke-AppveyorTestScriptTask -CodeCoverage -CodeCoveragePath @('OtherPath')
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Invoke-Pester -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $CodeCoverage -contains "$env:APPVEYOR_BUILD_FOLDER\OtherPath\**\*.psm1"
+                }
+            }
         } # End Context When CodeCoverage requires additional directories
 
         Context 'When called with model type as ''Default''' {
             BeforeAll {
                 Mock -CommandName Write-Warning
-                Mock -CommandName Invoke-Pester -MockWith { return $mockTestResult }
+                Mock -CommandName Invoke-Pester -MockWith {
+                    return $mockTestResult
+                }
             }
 
             AfterEach {
@@ -218,7 +384,9 @@ InModuleScope $script:ModuleName {
 
             Context 'When called with default values' {
                 It 'Should not throw exception and call the correct mocks' {
-                    { Invoke-AppveyorTestScriptTask } | Should -Not -Throw
+                    {
+                        Invoke-AppveyorTestScriptTask
+                    } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
                     Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
@@ -238,11 +406,14 @@ InModuleScope $script:ModuleName {
                                 Name = 'MyModule'
                             }
                         }
+
                         Mock -CommandName Install-DependentModule
                     }
 
                     It 'Should not throw exception and call the correct mocks' {
-                        { Invoke-AppveyorTestScriptTask } | Should -Not -Throw
+                        {
+                            Invoke-AppveyorTestScriptTask
+                        } | Should -Not -Throw
 
                         Assert-MockCalled -CommandName Get-ResourceModulesInConfiguration -Exactly -Times 1 -Scope It
                         Assert-MockCalled -CommandName Install-DependentModule -Exactly -Times 1 -Scope It
@@ -257,7 +428,9 @@ InModuleScope $script:ModuleName {
                         CodeCovIo    = $true
                     }
 
-                    { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+                    {
+                        Invoke-AppveyorTestScriptTask @testParameters
+                    } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
                     Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
@@ -275,7 +448,9 @@ InModuleScope $script:ModuleName {
                         ExcludeTag = @('Markdown')
                     }
 
-                    { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+                    {
+                        Invoke-AppveyorTestScriptTask @testParameters
+                    } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
                     Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
@@ -308,7 +483,9 @@ InModuleScope $script:ModuleName {
                         RunTestInOrder = $true
                     }
 
-                    { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+                    {
+                        Invoke-AppveyorTestScriptTask @testParameters
+                    } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 1 -Scope It
                     Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 1 -Scope It
@@ -400,7 +577,9 @@ InModuleScope $script:ModuleName {
                         RunTestInOrder = $true
                     }
 
-                    { Invoke-AppveyorTestScriptTask @testParameters } | Should -Not -Throw
+                    {
+                        Invoke-AppveyorTestScriptTask @testParameters
+                    } | Should -Not -Throw
 
                     Assert-MockCalled -CommandName Add-AppveyorTest -Exactly -Times 3 -Scope It
                     Assert-MockCalled -CommandName Push-TestArtifact -Exactly -Times 9 -Scope It
@@ -474,7 +653,9 @@ InModuleScope $script:ModuleName {
                             RunTestInOrder = $true
                         }
 
-                        { Invoke-AppveyorTestScriptTask @testParameters } | Should -Throw $errorMessage
+                        {
+                            Invoke-AppveyorTestScriptTask @testParameters
+                        } | Should -Throw $errorMessage
 
                     }
                 }
@@ -491,8 +672,9 @@ InModuleScope $script:ModuleName {
                             RunTestInOrder = $true
                         }
 
-                        { Invoke-AppveyorTestScriptTask @testParameters } | Should -Throw 'The container did not report any test result! This indicates that an error occurred in the container.'
-
+                        {
+                            Invoke-AppveyorTestScriptTask @testParameters
+                        } | Should -Throw 'The container did not report any test result! This indicates that an error occurred in the container.'
                     }
                 }
             }
@@ -537,7 +719,9 @@ InModuleScope $script:ModuleName {
 
         Context 'When not opt-in for publishing examples' {
             It 'Should not call Start-GalleryDeploy' {
-                { Invoke-AppVeyorDeployTask -OptIn @() -Branch $mockBranchName } | Should -Not -Throw
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @() -Branch $mockBranchName
+                } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Import-Module -ParameterFilter {
                     $Name -match 'DscResource\.GalleryDeploy'
@@ -549,8 +733,9 @@ InModuleScope $script:ModuleName {
 
         Context 'When opt-in for publishing examples, but building on the wrong branch' {
             It 'Should not call Start-GalleryDeploy' {
-                { Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch 'WrongBranch' } |
-                    Should -Not -Throw
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch 'WrongBranch'
+                } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Import-Module -ParameterFilter {
                     $Name -match 'DscResource\.GalleryDeploy'
@@ -562,8 +747,9 @@ InModuleScope $script:ModuleName {
 
         Context 'When opt-in for publishing examples and building on the correct branch' {
             It 'Should call Start-GalleryDeploy' {
-                { Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch $mockBranchName } |
-                    Should -Not -Throw
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @('PublishExample') -Branch $mockBranchName
+                } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName Import-Module -ParameterFilter {
                     $Name -match 'DscResource\.GalleryDeploy'
