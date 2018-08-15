@@ -31,6 +31,9 @@ This branch is used by DSC Resource Kit modules for running common tests.
 <!-- TOC -->
 
 - [DSC Resource Common Meta Tests](#dsc-resource-common-meta-tests)
+  - [Common Meta Test Opt-In](#common-meta-test-opt-in)
+    - [Common Tests - Validate Markdown Links](#common-tests---validate-markdown-links)
+    - [Common Tests - Spellcheck Markdown Files](#common-tests---spellcheck-markdown-files)
   - [Markdown Testing](#markdown-testing)
   - [Example Testing](#example-testing)
   - [PSScriptAnalyzer Rules](#psscriptanalyzer-rules)
@@ -40,8 +43,6 @@ This branch is used by DSC Resource Kit modules for running common tests.
 - [Example Test Usage](#example-test-usage)
 - [Example Usage of DSCResource.Tests in AppVeyor.yml](#example-usage-of-dscresourcetests-in-appveyoryml)
 - [AppVeyor Module](#appveyor-module)
-  - [Phased Meta test Opt-In](#phased-meta-test-opt-in)
-    - [Common Tests - Validate Markdown Links](#common-tests---validate-markdown-links)
   - [Using AppVeyor.psm1 with the default shared model](#using-appveyorpsm1-with-the-default-shared-model)
   - [Using AppVeyor.psm1 with harness model](#using-appveyorpsm1-with-harness-model)
 - [Encrypt Credentials in Integration Tests](#encrypt-credentials-in-integration-tests)
@@ -62,6 +63,120 @@ This branch is used by DSC Resource Kit modules for running common tests.
 ## DSC Resource Common Meta Tests
 
 > Meta.Tests.ps1
+
+### Common Meta Test Opt-In
+
+New tests may run but only produce errors.  Once you fix the test, please copy
+`.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
+any new problem in the area, this will cause the tests to fail, not just warn.
+
+The following opt-in flags are available:
+
+- **Common Tests - Validate Module Files**: run tests to validate module files
+  have correct BOM.
+- **Common Tests - Validate Markdown Files**: run tests to validate markdown
+  files do not violate markdown rules. Markdown rules can be suppressed in
+  .markdownlint.json file.
+- **Common Tests - Validate Example Files**: run tests to validate that examples
+  can be compiled without error.
+- **Common Tests - Validate Example Files To Be Published**: run tests to
+  validate that examples can be published successfully to PowerShell Gallery.
+  See requirements under
+  [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery).
+- **Common Tests - Validate Script Files**: run tests to validate script files
+  have correct BOM.
+- **Common Tests - Required Script Analyzer Rules**: fail tests if any required
+  script analyzer rules are violated.
+- **Common Tests - Flagged Script Analyzer Rules**: fail tests if any flagged
+  script analyzer rules are violated.
+- **Common Tests - New Error-Level Script Analyzer Rules**: fail tests if any
+  new error-level script analyzer rules are violated.
+- **Common Tests - Custom Script Analyzer Rules**: fail tests if any
+  custom script analyzer rules are violated.
+- **Common Tests - Relative Path Length**: fail tests if the length of the
+  relative full path, from the root of the module, exceeds the max hard limit of
+  129 characters. 129 characters is the current (known) maximum for a relative
+  path to be able to compile a configuration in Azure Automation using a
+  DSC resource module.
+- **Common Tests - Validate Markdown Links**: fails tests if a link in
+  a markdown file is broken.
+- **Common Tests - Spellcheck Markdown Files**: fail test if there are any
+  spelling errors in the markdown files. There is the possibility to add
+  or override words in the `\.vscode\cSpell.json` file.
+
+#### Common Tests - Validate Markdown Links
+
+The test validates the links in markdown files. Any valid GitHub markdown link
+will pass the linter.
+
+>**NOTE!** There is currently a bug in the markdown link linter that makes it
+>unable to recognize absolute paths where the absolute link starts in a parent
+>folder.
+>For example, if a markdown file `/Examples/README.md`,
+>contains an absolute link pointing to `/Examples/Resources/SqlAG`,
+>that link will fail the test. Changing the link to a relative link from the
+>README.md file's folder, e.g `Resources/SqlAG` will pass the test.
+>See issue [vors/MarkdownLinkCheck#5](https://github.com/vors/MarkdownLinkCheck/issues/5).
+
+#### Common Tests - Spellcheck Markdown Files
+
+When opt-in for this test, if there are any spelling errors in markdown files,
+the tests will fail.
+
+>**Note:** The spell checker is case-insensitive, so the words 'AppVeyor' and
+>'appveyor' is equal and both allowed.
+
+If the spell checker ([cSpell](https://www.npmjs.com/package/cspell)) does not
+recognize the word, but the word are correct, or maybe there are a specific phrase
+that should always be allowed. Then it possible to add those to a dictionary, or
+tell it to ignore words or phrases.
+
+By adding a file `\.vscode\cSpell.json` in the repository, the spell checker
+will follow the settings in this file.
+
+The simplest form of the file `\.vscode\cSpell.json` is this (see
+[cSpell](https://www.npmjs.com/package/cspell) for more settings).
+
+>This settings file will also work together with the Visual Studio Code extension
+>[Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker).
+>By using this extension the spelling errors can be caught in real-time.
+>When a cSpell.json exists in the .vscode folder, the individual setting in the
+>cSpell.json file will override the corresponding setting in the
+>Visual Studio Code *User settings* or *Workspace settings* file. This differs
+>from adding a *Code Spell Checker* setting to the Visual Studio Code
+>*Workspace settings* file, as the *Workspace settings* file will override all
+>the settings in the *User settings*.
+
+```json
+{
+    "ignorePaths": [
+        ".git/*",
+        ".vscode/*"
+    ],
+    "language": "en",
+    "dictionaries": [
+        "powershell"
+    ],
+    "words": [
+        "markdownlint",
+        "Codecov"
+    ],
+    "ignoreRegExpList": [
+        "AppVeyor",
+        "opencode@microsoft.com",
+        "\\.gitattributes"
+    ]
+}
+```
+
+The key `words` should have the words that are normally used when writing text.
+
+The key `ignoreRegExpList` is better to use to ignore phrases or combination of
+words, like 'AppVeyor', it will detect that word as two different words, since
+it consist of two words with upper-case letter.
+So for it to ignore 'AppVeyor', as we know it's correct, we can add a regular
+expression to `ignoreRegExpList`, in this case `AppVeyor`. That will ignore part
+of the text that matches the regular expression.
 
 ### Markdown Testing
 
@@ -259,120 +374,6 @@ This module provides functions for building and testing DSC Resources in AppVeyo
   It should be called under the deploy AppVeyor phase (the `deploy_script:`
   keyword in the *appveyor.yml*).
   - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
-
-### Phased Meta Test Opt-In
-
-New tests may run but only produce errors.  Once you fix the test, please copy
-`.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
-any new problem in the area, this will cause the tests to fail, not just warn.
-
-The following opt-in flags are available:
-
-- **Common Tests - Validate Module Files**: run tests to validate module files
-  have correct BOM.
-- **Common Tests - Validate Markdown Files**: run tests to validate markdown
-  files do not violate markdown rules. Markdown rules can be suppressed in
-  .markdownlint.json file.
-- **Common Tests - Validate Example Files**: run tests to validate that examples
-  can be compiled without error.
-- **Common Tests - Validate Example Files To Be Published**: run tests to
-  validate that examples can be published successfully to PowerShell Gallery.
-  See requirements under
-  [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery).
-- **Common Tests - Validate Script Files**: run tests to validate script files
-  have correct BOM.
-- **Common Tests - Required Script Analyzer Rules**: fail tests if any required
-  script analyzer rules are violated.
-- **Common Tests - Flagged Script Analyzer Rules**: fail tests if any flagged
-  script analyzer rules are violated.
-- **Common Tests - New Error-Level Script Analyzer Rules**: fail tests if any
-  new error-level script analyzer rules are violated.
-- **Common Tests - Custom Script Analyzer Rules**: fail tests if any
-  custom script analyzer rules are violated.
-- **Common Tests - Relative Path Length**: fail tests if the length of the
-  relative full path, from the root of the module, exceeds the max hard limit of
-  129 characters. 129 characters is the current (known) maximum for a relative
-  path to be able to compile a configuration in Azure Automation using a
-  DSC resource module.
-- **Common Tests - Validate Markdown Links**: fails tests if a link in
-  a markdown file is broken.
-- **Common Tests - Spellcheck Markdown Files**: fail test if there are any
-  spelling errors in the markdown files. There is the possibility to add
-  or override words in the `\.vscode\cSpell.json` file.
-
-#### Common Tests - Spellcheck Markdown Files
-
-When opt-in for this test, if there are any spelling errors in markdown files,
-the tests will fail.
-
->**Note:** The spell checker is case-insensitive, so the words 'AppVeyor' and
->'appveyor' is equal and both allowed.
-
-If the spell checker ([cSpell](https://www.npmjs.com/package/cspell)) does not
-recognize the word, but the word are correct, or maybe there are a specific phrase
-that should always be allowed. Then it possible to add those to a dictionary, or
-tell it to ignore words or phrases.
-
-By adding a file `\.vscode\cSpell.json` in the repository, the spell checker
-will follow the settings in this file.
-
-The simplest form of the file `\.vscode\cSpell.json` is this (see
-[cSpell](https://www.npmjs.com/package/cspell) for more settings).
-
->This settings file will also work together with the Visual Studio Code extension
->[Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker).
->By using this extension the spelling errors can be caught in real-time.
->When a cSpell.json exists in the .vscode folder, the individual setting in the
->cSpell.json file will override the corresponding setting in the
->Visual Studio Code *User settings* or *Workspace settings* file. This differs
->from adding a *Code Spell Checker* setting to the Visual Studio Code
->*Workspace settings* file, as the *Workspace settings* file will override all
->the settings in the *User settings*.
-
-```json
-{
-    "ignorePaths": [
-        ".git/*",
-        ".vscode/*"
-    ],
-    "language": "en",
-    "dictionaries": [
-        "powershell"
-    ],
-    "words": [
-        "markdownlint",
-        "Codecov"
-    ],
-    "ignoreRegExpList": [
-        "AppVeyor",
-        "opencode@microsoft.com",
-        "\\.gitattributes"
-    ]
-}
-```
-
-The key `words` should have the words that are normally used when writing text.
-
-The key `ignoreRegExpList` is better to use to ignore phrases or combination of
-words, like 'AppVeyor', it will detect that word as two different words, since
-it consist of two words with upper-case letter.
-So for it to ignore 'AppVeyor', as we know it's correct, we can add a regular
-expression to `ignoreRegExpList`, in this case `AppVeyor`. That will ignore part
-of the text that matches the regular expression.
-
-#### Common Tests - Validate Markdown Links
-
-The test validates the links in markdown files. Any valid GitHub markdown link
-will pass the linter.
-
->**NOTE!** There is currently a bug in the markdown link linter that makes it
->unable to recognize absolute paths where the absolute link starts in a parent
->folder.
->For example, if a markdown file `/Examples/README.md`,
->contains an absolute link pointing to `/Examples/Resources/SqlAG`,
->that link will fail the test. Changing the link to a relative link from the
->README.md file's folder, e.g `Resources/SqlAG` will pass the test.
->See issue [vors/MarkdownLinkCheck#5](https://github.com/vors/MarkdownLinkCheck/issues/5).
 
 ### Using AppVeyor.psm1 with the default shared model
 
@@ -1067,7 +1068,8 @@ Contributors that add or change an example to be published must make sure that
   this repository will never have examples.
 - Added Rule Name to PS Script Analyzer custom rules.
 - Added PS Script Analyzer Rule Name to Write-Warning output in meta.tests.
-- Removed sections 'Goals' and 'Git and Unicode' as they have become redundant.
+- Removed sections 'Goals' and 'Git and Unicode' as they have become redundant
+  ([issue #282](https://github.com/PowerShell/DscResource.Tests/issues/282)).
 - Add a new parameter `-CodeCoveragePath` in the function
   `Invoke-AppveyorTestScriptTask` to be able to add one or more relative
   paths which will be searched for PowerShell modules files (.psm1) to be used
@@ -1088,6 +1090,8 @@ Contributors that add or change an example to be published must make sure that
   .MetaTestOptIn.json ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
 - Opt-in for the test "Common Tests - Spellcheck Markdown Files", and added the
   settings file `.vscode\cSpell.json`.
+- Move section Phased Meta test Opt-In in the README.md, and renamed it to
+  Common Meta test Opt-In  ([issue #281](https://github.com/PowerShell/DscResource.Tests/issues/281)).
 
 ### 0.2.0.0
 
