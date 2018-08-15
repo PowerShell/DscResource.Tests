@@ -987,6 +987,9 @@ Contributors that add or change an example to be published must make sure that
   paths which will be searched for PowerShell modules files (.psm1) to be used
   for evaluating code coverage
   ([issue #114](https://github.com/PowerShell/DscResource.Tests/issues/114)).
+- The Modules folder, in the resource module root path, was added as a
+  default path to be searched for PowerShell modules files (.psm1) to be
+  used for evaluating code coverage.
 
 ### 0.2.0.0
 
