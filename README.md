@@ -31,8 +31,6 @@ This branch is used by DSC Resource Kit modules for running common tests.
 <!-- TOC -->
 
 - [DSC Resource Common Meta Tests](#dsc-resource-common-meta-tests)
-  - [Goals](#goals)
-  - [Git and Unicode](#git-and-unicode)
   - [Markdown Testing](#markdown-testing)
   - [Example Testing](#example-testing)
   - [PSScriptAnalyzer Rules](#psscriptanalyzer-rules)
@@ -63,55 +61,6 @@ This branch is used by DSC Resource Kit modules for running common tests.
 ## DSC Resource Common Meta Tests
 
 > Meta.Tests.ps1
-
-### Goals
-
-1. Consistency in encoding and indentations.
-
-  Consistency is good by itself. But more importantly it allows us to:
-1. Avoid big diffs with cosmetic changes in Pull Requests.
-  Cosmetic changes (like formatting) make reviews harder.
-  If you want to include formatting changes (like replacing `"` by `'`),
-  please make it a **separate commit**.
-  This will give reviewers an option to review meaningful changes separately
-  from formatting changes.
-
-### Git and Unicode
-
-By default git treats [unicode files as binary files](http://stackoverflow.com/questions/6855712/why-does-git-treat-this-text-file-as-a-binary-file).
-You may not notice it if your client (like VS or GitHub for Windows) takes care
-of such conversion.
-History with Unicode files is hardly usable from command line `git`.
-
-```dos
-> git diff
- diff --git a/xActiveDirectory.psd1 b/xActiveDirectory.psd1
- index 0fc1914..55fdb85 100644
-Binary files a/xActiveDirectory.psd1 and b/xActiveDirectory.psd1 differ
-```
-
-With forced `--text` option it would look like this:
-
-```dos
-> git diff --text
- diff --git a/xActiveDirectory.psd1 b/xActiveDirectory.psd1
- index 0fc1914..55fdb85 100644
- --- a/xActiveDirectory.psd1
- +++ b/xActiveDirectory.psd1
-@@ -30,4 +30,4 @@
-   C m d l e t s T o E x p o r t   =   ' * '
-
-   }
-
-
-
- -
- \ No newline at end of file
- + #   h e l l o
- \ No newline at end of file
-```
-
-Command line `git` version is a core component and should be used as a common denominator.
 
 ### Markdown Testing
 
@@ -1024,6 +973,7 @@ Contributors that add or change an example to be published must make sure that
   this repository will never have examples.
 - Added Rule Name to PS Script Analyzer custom rules
 - Added PsScript Analyzer Rule Name to Write-Warning output in meta.tests
+- Removed sections 'Goals' and 'Git and Unicode' as they have become redundant.
 
 ### 0.2.0.0
 
