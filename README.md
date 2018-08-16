@@ -990,6 +990,8 @@ Contributors that add or change an example to be published must make sure that
 - The Modules folder, in the resource module root path, was added as a
   default path to be searched for PowerShell modules files (.psm1) to be
   used for evaluating code coverage.
+- Added a pull request template as PULL_REQUEST_TEMPLATE.md that will be shown
+  to the contributor when a pull requests are sent in.
 
 ### 0.2.0.0
 
