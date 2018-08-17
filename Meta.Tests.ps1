@@ -1082,6 +1082,7 @@ Describe 'Common Tests - Spellcheck Files' -Tag 'Spellcheck' {
 
         It 'Should not have spelling errors in any markdown files' -Skip:(!$optIn) {
             $spellcheckSettingsFilePath = Join-Path -Path $repoRootPath -ChildPath '.vscode\cSpell.json'
+
             if (Test-Path -Path $spellcheckSettingsFilePath)
             {
                 Write-Info -Message ('Using spellcheck settings file ''{0}''.' -f $spellcheckSettingsFilePath)
@@ -1147,7 +1148,7 @@ https://github.com/PowerShell/DscResource.Tests/#common-tests-spellcheck-markdow
         # Make sure we always remove the file if it exist.
         if (Test-Path $errorFileName)
         {
-            Remove-Item -Path $errorFileName -Force
+            Remove-Item -Path $errorFileName -Force | Out-Null
         }
     }
 
