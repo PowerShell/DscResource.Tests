@@ -41,6 +41,7 @@ This branch is used by DSC Resource Kit modules for running common tests.
 - [Example Usage of DSCResource.Tests in AppVeyor.yml](#example-usage-of-dscresourcetests-in-appveyoryml)
 - [AppVeyor Module](#appveyor-module)
   - [Phased Meta test Opt-In](#phased-meta-test-opt-in)
+    - [Common Tests - Validate Markdown Links](#common-tests---validate-markdown-links)
   - [Using AppVeyor.psm1 with the default shared model](#using-appveyorpsm1-with-the-default-shared-model)
   - [Using AppVeyor.psm1 with harness model](#using-appveyorpsm1-with-harness-model)
 - [Encrypt Credentials in Integration Tests](#encrypt-credentials-in-integration-tests)
@@ -293,6 +294,22 @@ The following opt-in flags are available:
   129 characters. 129 characters is the current (known) maximum for a relative
   path to be able to compile a configuration in Azure Automation using a
   DSC resource module.
+- **Common Tests - Validate Markdown Links**: fails tests if a link in
+  a markdown file is broken.
+
+#### Common Tests - Validate Markdown Links
+
+The test validates the links in markdown files. Any valid GitHub markdown link
+will pass the linter.
+
+>**NOTE!** There is currently a bug in the markdown link linter that makes it
+>unable to recognize absolute paths where the absolute link starts in a parent
+>folder.
+>For example, if a markdown file `/Examples/README.md`,
+>contains an absolute link pointing to `/Examples/Resources/SqlAG`,
+>that link will fail the test. Changing the link to a relative link from the
+>README.md file's folder, e.g `Resources/SqlAG` will pass the test.
+>See issue [vors/MarkdownLinkCheck#5](https://github.com/vors/MarkdownLinkCheck/issues/5).
 
 ### Using AppVeyor.psm1 with the default shared model
 
@@ -1000,6 +1017,8 @@ Contributors that add or change an example to be published must make sure that
 - Added a common tests to test the length of the relative file path so the paths
   are not exceeding the current path hard limit in Azure Automation
   ([issue #188](https://github.com/PowerShell/DscResource.Tests/issues/188)).
+- Add new opt-in common test for markdown link linting
+  ([issue #211](https://github.com/PowerShell/DscResource.Tests/issues/211)).
 
 ### 0.2.0.0
 
