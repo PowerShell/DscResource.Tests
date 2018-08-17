@@ -173,7 +173,7 @@ The key `ignoreRegExpList` is used to ignore phrases or combinations of words,
 such as `AppVeyor`, which will be detected as two different words since it consists
 of two words starting with upper-case letters.
 To configure [cSpell](https://www.npmjs.com/package/cspell)
-to ignore the work combination `AppVeyor`, then we can add a regular expression,
+to ignore the word combination `AppVeyor`, then we can add a regular expression,
 in this case `AppVeyor`. This will cause [cSpell](https://www.npmjs.com/package/cspell)
 to ignore part of the text that matches the regular expression.
 
