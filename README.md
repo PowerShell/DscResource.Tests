@@ -259,7 +259,7 @@ This module provides functions for building and testing DSC Resources in AppVeyo
   keyword in the *appveyor.yml*).
   - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
 
-### Phased Meta test Opt-In
+### Phased Meta Test Opt-In
 
 New tests may run but only produce errors.  Once you fix the test, please copy
 `.MetaTestOptIn.json` from this repo to the root of your repo.  If there is
@@ -288,6 +288,11 @@ The following opt-in flags are available:
   new error-level script analyzer rules are violated.
 - **Common Tests - Custom Script Analyzer Rules**: fail tests if any
   custom script analyzer rules are violated.
+- **Common Tests - Relative Path Length**: fail tests if the length of the
+  relative full path, from the root of the module, exceeds the max hard limit of
+  129 characters. 129 characters is the current (known) maximum for a relative
+  path to be able to compile a configuration in Azure Automation using a
+  DSC resource module.
 
 ### Using AppVeyor.psm1 with the default shared model
 
@@ -992,6 +997,9 @@ Contributors that add or change an example to be published must make sure that
   used for evaluating code coverage.
 - Added a pull request template as PULL_REQUEST_TEMPLATE.md that will be shown
   to the contributor when a pull requests are sent in.
+- Added a common tests to test the length of the relative file path so the paths
+  are not exceeding the current path hard limit in Azure Automation
+  ([issue #188](https://github.com/PowerShell/DscResource.Tests/issues/188)).
 
 ### 0.2.0.0
 
