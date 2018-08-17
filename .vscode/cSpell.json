@@ -14,7 +14,9 @@
         "GUIDs",
         "unstaged",
         "PSSA",
-        "Dism"
+        "Dism",
+        "vors",
+        "subfolders"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
