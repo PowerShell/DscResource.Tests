@@ -129,7 +129,7 @@ the tests will fail.
 If the spell checker ([cSpell](https://www.npmjs.com/package/cspell)) does not
 recognize the word, but the word is correct or a specific phrase is not recognized
 but should be allowed, then it is possible to add these to a dictionary or tell it to
-ignore the word of phrases. This is done by adding a `\.vscode\cSpell.json` in
+ignore the word or phrases. This is done by adding a `\.vscode\cSpell.json` in
 the repository.
 
 The following JSON is the simplest form of the file `\.vscode\cSpell.json` (see
