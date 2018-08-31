@@ -1,6 +1,6 @@
 # Change log for DscResource.Tests
 
-### Unreleased
+## Unreleased
 
 - Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
 - Removed code to Remove-Module from Initialize-TestEnvironment because not
@@ -316,10 +316,10 @@
   `.gitattributes` file instead of `git config --global core.autocrlf true`
   ([issue #280](https://github.com/PowerShell/DscResource.Tests/issues/280)).
 
-### 0.2.0.0
+## 0.2.0.0
 
 - Fixed unicode and path bugs in tests
 
-### 0.1.0.0
+## 0.1.0.0
 
 - Initial release
