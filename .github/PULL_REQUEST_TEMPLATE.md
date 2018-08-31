@@ -31,7 +31,7 @@
     request (PR). For those task that don't apply to you pull request (PR),
     leave those as is.
 -->
-- [ ] Added an entry under the Unreleased section of the change log in the README.md.
+- [ ] Added an entry under the Unreleased section of the change log in the CHANGELOG.md.
       Entry should say what was changed, and how that affects users (if applicable).
 - [ ] Documentation added/updated in README.md.
 - [ ] Comment-based help added/updated for all new/changed functions.
