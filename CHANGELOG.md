@@ -309,6 +309,9 @@
   Common Meta test Opt-In ([issue #281](https://github.com/PowerShell/DscResource.Tests/issues/281)).
 - Move the change log from README.md to CHANGELOG.md
   ([issue #284](https://github.com/PowerShell/DscResource.Tests/issues/284)).
+- Opt-in to the common test ([issue #287](https://github.com/PowerShell/DscResource.Tests/issues/287)).
+  - Common Tests - Relative Path Length
+  - Common Tests - Validate Markdown Links
 
 ### 0.2.0.0
 
