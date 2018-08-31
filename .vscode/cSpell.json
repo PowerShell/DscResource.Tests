@@ -1,0 +1,54 @@
+{
+    "ignorePaths": [
+        ".git/*",
+        ".vscode/*"
+    ],
+    "language": "en",
+    "dictionaries": [
+        "powershell"
+    ],
+    "words": [
+        "markdownlint",
+        "Codecov",
+        "HQRM",
+        "GUIDs",
+        "unstaged",
+        "PSSA",
+        "Dism",
+        "vors",
+        "subfolders"
+    ],
+    "ignoreRegExpList": [
+        "AppVeyor",
+        "opencode@microsoft.com",
+        "\\.PRIVATEDATA",
+        "\\.COMPANYNAME",
+        "\\.LICENSEURI",
+        "\\.PROJECTURI",
+        "\\.ICONURI",
+        "\\.EXTERNALMODULEDEPENDENCIES",
+        "\\.REQUIREDSCRIPTS",
+        "\\.EXTERNALSCRIPTDEPENDENCIES",
+        "\\.RELEASENOTES",
+        "gulpfile.js",
+        "MSFT_",
+        "microsoft/windowsservercore",
+        "unittest_Transcript.txt",
+        "unittest_TestResults.xml",
+        "unittest_TestResults.json",
+        "unittest_DockerLog.txt",
+        "core\\.autocrlf=input",
+        "core\\.autocrlf true",
+        "2016-Datacenter",
+        "2016-Datacenter-Server-Core",
+        "HKLM:\\\\",
+        "\\.gitattributes",
+        "#psscriptanalyzer-rules",
+        "#metafixers-module",
+        "#testhelper-module",
+        "#example-usage-of-dscresourcetests-in-appveyoryml",
+        "#codecoverage-reporting-with-codecovio",
+        "#enable-reporting-to-codecovio",
+        "#configure-codecovio"
+    ]
+}
