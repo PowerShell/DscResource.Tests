@@ -312,6 +312,9 @@
 - Opt-in to the common test ([issue #287](https://github.com/PowerShell/DscResource.Tests/issues/287)).
   - Common Tests - Relative Path Length
   - Common Tests - Validate Markdown Links
+- Change the section "PowerShell Gallery API key" in README.md to to use
+  `.gitattributes` file instead of `git config --global core.autocrlf true`
+  ([issue #280](https://github.com/PowerShell/DscResource.Tests/issues/280)).
 
 ### 0.2.0.0
 

@@ -717,13 +717,13 @@ environment:
 > **Note:** There was a problem running `Test-ScriptFileInfo` on the AppVeyor
 > build worker, because the build worker has the setting `core.autocrlf=input`
 > which result in the files checked out only have LF as line-ending character.
-> `Test-ScriptFileInfo` is unable to parse the files with just LF, to solve this
-> the following need to be added to the appveyor.yml.
+> `Test-ScriptFileInfo` is unable to parse the files with just LF. To solve this,
+> the best option is to add a `.gitattributes` file in the root of the repository.
+> with the following content. This will always make git checkout files with CRLF
+> as line-ending character.
 >
-> ```yml
-> init:
->   # Needed for publishing of examples, build worker defaults to core.autocrlf=input.
->   - git config --global core.autocrlf true
+> ```plaintext
+> * text eol=crlf
 > ```
 
 #### Contributor responsibilities
