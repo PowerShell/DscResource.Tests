@@ -1,115 +1,96 @@
 <#
-    This module helps fix problems, found by Meta.Tests.ps1
+    .SYNOPSIS
+        Fixes problems found by Meta.Tests.ps1
 #>
 
-$ErrorActionPreference = 'stop'
-Set-StrictMode -Version latest
+$errorActionPreference = 'Stop'
+Set-StrictMode -Version 'Latest'
 
-function ConvertTo-UTF8()
+$testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
+Import-Module -Name $testHelperModulePath
+
+<#
+    .SYNOPSIS
+        Converts the given file to UTF8 encoding.
+
+    .PARAMETER FileInfo
+        The file to convert.
+#>
+function ConvertTo-UTF8
 {
     [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
-        [System.IO.FileInfo]$fileInfo
+    param
+    (
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [System.IO.FileInfo]
+        $FileInfo
     )
 
-    process 
-    {
-        $content = Get-Content -Raw -Encoding Unicode -Path $fileInfo.FullName
-        [System.IO.File]::WriteAllText($fileInfo.FullName, $content, [System.Text.Encoding]::UTF8)
-    }
+    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::UTF8)
 }
 
-function ConvertTo-ASCII()
+<#
+    .SYNOPSIS
+        Converts the given file to ASCII encoding.
+
+    .PARAMETER FileInfo
+        The file to convert.
+#>
+function ConvertTo-ASCII
 {
     [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
-        [System.IO.FileInfo]$fileInfo
+    param
+    (
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [System.IO.FileInfo]
+        $FileInfo
     )
 
-    process 
-    {
-        $content = Get-Content -Raw -Encoding Unicode -Path $fileInfo.FullName
-        [System.IO.File]::WriteAllText($fileInfo.FullName, $content, [System.Text.Encoding]::ASCII)
-    }
+    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::ASCII)
 }
 
-function ConvertTo-SpaceIndentation()
+function Convert-TabsToSpaceIndentation
 {
     [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
-        [System.IO.FileInfo]$fileInfo
+    param
+    (
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [System.IO.FileInfo]
+        $FileInfo
     )
 
-    process 
-    {
-        $content = (Get-Content -Raw -Path $fileInfo.FullName) -replace "`t",'    '
-        [System.IO.File]::WriteAllText($fileInfo.FullName, $content)
-    }
+    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+    $newFileContent = $fileContent.Replace("`t", '    ')
+    [System.IO.File]::WriteAllText($FileInfo.FullName, $newFileContent)
 }
 
-function Get-TextFilesList
+function Get-UnicodeFilesList
 {
+    [OutputType([System.IO.FileInfo[]])]
     [CmdletBinding()]
-    [OutputType([System.IO.FileInfo])]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$root
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $Root
     )
-    ls -File -Recurse $root | ? { @('.gitignore', '.gitattributes', '.ps1', '.psm1', '.psd1', '.json', '.xml', '.cmd', '.mof') -contains $_.Extension } 
+
+    return Get-TextFilesList -Root $Root | Where-Object { Test-FileInUnicode $_ }
 }
 
-function Test-FileUnicode
-{
-    
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
-        [System.IO.FileInfo]$fileInfo
-    )
-
-    process 
-    {
-
-        $path = $fileInfo.FullName
-        $bytes = [System.IO.File]::ReadAllBytes($path)
-        $zeroBytes = @($bytes -eq 0)
-        return [bool]$zeroBytes.Length
-
-    }
-}
-
-function Get-UnicodeFilesList()
+function Add-NewLineAtEndOfFile
 {
     [CmdletBinding()]
-    [OutputType([System.IO.FileInfo])]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$root
+    param
+    (
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [System.IO.FileInfo]
+        $FileInfo
     )
 
-    Get-TextFilesList $root | ? { Test-FileUnicode $_ }
-}
-
-function Add-NewLine()
-{
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(ValueFromPipeline=$true, Mandatory=$true)]
-        [System.IO.FileInfo]$fileInfo
-    )
-
-    process 
-    {
-        $content = Get-Content -Raw -Path $fileInfo.FullName
-        $content += "`r`n"
-        [System.IO.File]::WriteAllText($fileInfo.FullName, $content)
-    }
+    $fileContent = Get-Content -Path $FileInfo.FullName -Raw
+    $fileContent += "`r`n"
+    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent)
 }

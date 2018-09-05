@@ -1,0 +1,34 @@
+#---------------------------------#
+#      environment configuration  #
+#---------------------------------#
+version: 0.2.{build}.0
+install:
+    - ps: |
+        Import-Module "$env:APPVEYOR_BUILD_FOLDER\AppVeyor.psm1"
+        Invoke-AppveyorInstallTask
+
+#---------------------------------#
+#      build configuration        #
+#---------------------------------#
+
+build: false
+
+#---------------------------------#
+#      test configuration         #
+#---------------------------------#
+
+test_script:
+    - ps: |
+        Invoke-AppveyorTestScriptTask `
+            -ExcludeTag @('Examples') `
+            -CodeCoverage `
+            -CodeCovIo
+
+#---------------------------------#
+#      deployment configuration   #
+#---------------------------------#
+
+# scripts to run before deployment
+deploy_script:
+  - ps: |
+      Invoke-AppveyorAfterTestTask
