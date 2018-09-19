@@ -12,7 +12,7 @@
 - Added .gitignore file and suppressed ```package-lock.json``` file from being
   included in repo.
 - Changes to AppVeyor.psm1
-  - Updated Invoke-AppveyorInstallTask to provide better information messages
+  - Updated Invoke-AppveyorInstallTask to provide better informational messages
     when installing each prerequisite
     ([issue #293](https://github.com/PowerShell/DscResource.Tests/issues/293)).
   - Added unit tests for Invoke-AppveyorInstallTask.
