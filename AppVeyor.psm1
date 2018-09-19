@@ -40,18 +40,21 @@ function Invoke-AppveyorInstallTask
     )
 
     <#
-        Automatically installs the Nuget provider if your computer does not
-        have the Nuget provider installed.
+        Parameter ForceBootstrap automatically installs the NuGet package provider
+        if your computer does not have the NuGet package provider installed.
     #>
-    Get-PackageProvider -Name NuGet -ForceBootstrap
+    Write-Info -Message 'Installing the latest NuGet package provider.'
+    $getPackageProviderResult = Get-PackageProvider -Name NuGet -ForceBootstrap
+    $getPackageProviderResult | Format-Table -Property ProviderName,Version
 
-    # Install the latest PowerShellGet from the PowerShell Gallery.
+    Write-Info -Message 'Installing the latest PowerShellGet from the PowerShell Gallery.'
     Install-Module -Name PowerShellGet -Force -Repository PSGallery
 
-    # Install Nuget.exe to enable package creation
-    $nugetExePath = Join-Path -Path $env:TEMP `
-        -ChildPath 'nuget.exe'
+    Write-Info -Message 'Installing nuget.exe v3.4.4 to enable package creation.'
+    $nugetExePath = Join-Path -Path $env:TEMP -ChildPath 'nuget.exe'
     Install-NugetExe -OutFile $nugetExePath
+
+    Write-Info -Message 'Installing the latest Pester module.'
 
     $installPesterParameters = @{
         Name  = 'Pester'
@@ -71,7 +74,7 @@ function Invoke-AppveyorInstallTask
 
     Install-Module @installPesterParameters
 
-    # Create a self-signed certificate for encrypting configuration credentials if it doesn't exist
+    Write-Info -Message 'Create a self-signed certificate for encrypting DSC configuration credentials.'
     $null = New-DscSelfSignedCertificate
 
     Write-Info -Message 'Install Task Complete.'

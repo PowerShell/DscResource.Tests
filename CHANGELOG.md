@@ -11,6 +11,10 @@
   and increased unit test coverage and function ([issue #256](https://github.com/PowerShell/DscResource.Tests/issues/256)).
 - Added .gitignore file and suppressed ```package-lock.json``` file from being
   included in repo.
+- Changes to AppVeyor.psm1
+  - Updated Invoke-AppveyorInstallTask to provide better information messages
+    when installing each prerequisite
+    ([issue #293](https://github.com/PowerShell/DscResource.Tests/issues/293)).
 
 ## 0.3.0.0
 
