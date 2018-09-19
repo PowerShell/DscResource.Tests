@@ -15,6 +15,7 @@
   - Updated Invoke-AppveyorInstallTask to provide better information messages
     when installing each prerequisite
     ([issue #293](https://github.com/PowerShell/DscResource.Tests/issues/293)).
+  - Added unit tests for Invoke-AppveyorInstallTask.
 
 ## 0.3.0.0
 
