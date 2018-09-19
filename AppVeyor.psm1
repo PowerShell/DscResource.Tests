@@ -45,7 +45,7 @@ function Invoke-AppveyorInstallTask
     #>
     Write-Info -Message 'Installing the latest NuGet package provider.'
     $getPackageProviderResult = Get-PackageProvider -Name NuGet -ForceBootstrap
-    $getPackageProviderResult | Format-Table -Property ProviderName,Version
+    $getPackageProviderResult | Format-Table -Property @('Name', 'ProviderName', 'Version')
 
     Write-Info -Message 'Installing the latest PowerShellGet from the PowerShell Gallery.'
     Install-Module -Name PowerShellGet -Force -Repository PSGallery
