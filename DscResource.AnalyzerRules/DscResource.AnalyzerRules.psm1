@@ -52,8 +52,8 @@ function Measure-ParameterBlockParameterAttribute
         $script:diagnosticRecord['Extent'] = $ParameterAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $ParameterAst
-        
-        <# 
+
+        <#
             If we are in a class the parameter attributes are not valid in Classes
             the ParameterValidation attributes are however
         #>
@@ -122,7 +122,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $NamedAttributeArgumentAst
 
-        <# 
+        <#
             Parameter Attributes are not valid in classes, and DscProperty does
             not use the (Mandatory = $true) format just DscProperty(Mandatory)
         #>
@@ -276,8 +276,16 @@ function Measure-IfStatement
         $script:diagnosticRecord['Extent'] = $IfStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
+        <#
+            This removes the clause from if-statement, so it ends up an empty if().
+            This is to resolve issue #238, when the clause spans multiple rows,
+            and the first rows ends with a correct open brace. See example in
+            regression test for #238.
+        #>
+        $extentTextWithClauseRemoved = $IfStatementAst.Extent.Text.Replace($IfStatementAst.Clauses[0].Item1.Extent.Text,'')
+
         $testParameters = @{
-            StatementBlock = $IfStatementAst.Extent
+            StatementBlock = $extentTextWithClauseRemoved
         }
 
         if (Test-StatementOpeningBraceOnSameLine @testParameters)
@@ -867,7 +875,7 @@ function Measure-TypeDefinition
         $testParameters = @{
             StatementBlock = $TypeDefinitionAst.Extent
         }
-        
+
         if ($TypeDefinitionAst.IsEnum)
         {
             if (Test-StatementOpeningBraceOnSameLine @testParameters)

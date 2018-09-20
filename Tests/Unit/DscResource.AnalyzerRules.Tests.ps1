@@ -971,6 +971,27 @@ Describe 'Measure-IfStatement' {
             $ruleName = 'Measure-IfStatement'
         }
 
+        # Regression test for issue #238
+        Context 'When if-statement evaluation contains an open brace, for example when piping to Where-Object' {
+            It 'Should not return an error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        if ($null -eq ($InstalledItems | Where-Object -FilterScript {
+                            $null -ne $_.DisplayName -and $_.DisplayName.Trim() -match $itemToCheck.SearchValue
+                        }))
+                        {
+                            return $true
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-IfStatement -IfStatementAst $mockAst[0]
+                $record |  Should -BeNullOrEmpty
+            }
+        }
+
         Context 'When if-statement has an opening brace on the same line' {
             It 'Should write the correct error record' {
                 $definition = '
@@ -1036,6 +1057,26 @@ Describe 'Measure-IfStatement' {
                 CustomRulePath = $modulePath
             }
             $ruleName = "$($script:ModuleName)\Measure-IfStatement"
+        }
+
+        # Regression test for issue #238
+        Context 'When if-statement evaluation contains an open brace, for example when piping to Where-Object' {
+            It 'Should not return an error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        if ($null -eq ($InstalledItems | Where-Object -FilterScript {
+                            $null -ne $_.DisplayName -and $_.DisplayName.Trim() -match $itemToCheck.SearchValue
+                        }))
+                        {
+                            return $true
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record | Should -BeNullOrEmpty
+            }
         }
 
         Context 'When if-statement has an opening brace on the same line' {
