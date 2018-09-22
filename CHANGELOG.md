@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added issue templates.
+
 ## 0.3.0.0
 
 - Extra whitespace trimmed from TestHelper.psm1 (feature of VS Code).
