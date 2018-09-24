@@ -38,6 +38,8 @@ InModuleScope $script:ModuleName {
             Mock -CommandName Invoke-UploadCoveCoveIoReport
             Mock -CommandName New-DscSelfSignedCertificate
             Mock -CommandName Initialize-LocalConfigurationManager
+            Mock -CommandName Write-Warning
+            Mock -CommandName Write-Verbose
             Mock -CommandName Export-CodeCovIoJson -MockWith {
                 return Join-Path -Path $TestDrive -ChildPath 'CodecovReport.json'
             }
@@ -148,6 +150,45 @@ InModuleScope $script:ModuleName {
             }
         }
 
+        Context 'When there are no Tests folder' {
+            BeforeAll {
+                Mock -CommandName Copy-Item
+                Mock -CommandName Remove-Item
+                Mock -CommandName Import-Module -ParameterFilter {
+                    $Name -match 'TestHarness\.psm1'
+                }
+
+                Mock -CommandName Test-Path -MockWith {
+                    return $false
+                }
+
+                <#
+                    This is a mock of the default harness function name
+                    that normally exists in the module TestHarness.psm1.
+                #>
+                function Invoke-TestHarness
+                {
+                    return [PSCustomObject] $mockTestResult
+                }
+            }
+
+            It 'Should call the correct mock and write a warning' {
+                $testParameters = @{
+                    Type           = 'Harness'
+                    MainModulePath = $mockModuleFolder
+                    CodeCovIo      = $true
+                }
+
+                {
+                    Invoke-AppveyorTestScriptTask @testParameters
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Write-Warning -ParameterFilter {
+                    $Message -eq 'The ''Tests'' folder is missing, the test framework will only run the common tests.'
+                } -Exactly -Times 1 -Scope It
+            }
+        }
+
         Context 'When CodeCoverage requires additional directories' {
             $pesterReturnedValues = @{
                 PassedCount = 1
@@ -155,6 +196,12 @@ InModuleScope $script:ModuleName {
             }
 
             BeforeAll {
+                Mock -CommandName Test-Path -MockWith {
+                    return $true
+                } -ParameterFilter {
+                    $Path -eq (Join-Path -Path $TestDrive -ChildPath 'Tests')
+                }
+
                 Mock -CommandName Test-Path -MockWith {
                     return $false
                 }
@@ -174,10 +221,6 @@ InModuleScope $script:ModuleName {
                 }
 
                 # Making sure there is no output when performing tests
-                Mock -CommandName Write-Verbose
-                Mock -CommandName Write-Warning
-                Mock -CommandName New-DscSelfSignedCertificate
-                Mock -CommandName Initialize-LocalConfigurationManager
                 Mock -CommandName Test-IsRepositoryDscResourceTests -MockWith {
                     return $false
                 }
@@ -324,10 +367,6 @@ InModuleScope $script:ModuleName {
                 }
 
                 # Making sure there is no output when performing tests
-                Mock -CommandName Write-Verbose
-                Mock -CommandName Write-Warning
-                Mock -CommandName New-DscSelfSignedCertificate
-                Mock -CommandName Initialize-LocalConfigurationManager
                 Mock -CommandName Test-IsRepositoryDscResourceTests -MockWith {
                     return $false
                 }
