@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added issue templates.
+- Added the ability to temporary skip common test for debugging purposes
+  ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
 
 ## 0.3.0.0
 

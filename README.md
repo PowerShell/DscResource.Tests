@@ -41,6 +41,7 @@ A full list of changes in each version can be found in the [change log](CHANGELO
   - [Markdown Testing](#markdown-testing)
   - [Example Testing](#example-testing)
   - [PSScriptAnalyzer Rules](#psscriptanalyzer-rules)
+  - [Skip meta tests (for debug purpose)](#skip-meta-tests-for-debug-purpose)
 - [MetaFixers Module](#metafixers-module)
 - [TestHelper Module](#testhelper-module)
 - [Templates for Creating Tests](#templates-for-creating-tests)
@@ -292,6 +293,38 @@ function Set-TargetResource
 ```
 
 For further details and examples for suppressing PSSA rules, please see the [Suppressing Rules documentation](https://github.com/PowerShell/PSScriptAnalyzer#suppressing-rules).
+
+### Skip meta tests (for debug purpose)
+
+For debug purpose it is possible to skip the common tests, the tests in the
+Meta.Tests.ps1 script file.
+When debugging a certain unit test or integration test in AppVeyor, it takes
+quite some time for the common test to run before the actual unit or integration
+test runs.
+
+To temporarily skip the common tests, the environment variable `SkipAllCommonTests`
+can be used.
+
+#### Add environment variable to the appveyor.yml
+
+>**Note:** This environment variable should not be merged, or
+>a commit pushed into the branches `dev` or `master`. This environment
+>variable is purely for debug purposes _before_ sending in a pull request
+>(PR).
+
+Using AppVeyor environment variable.
+
+```yml
+environment:
+  SkipAllCommonTests: True
+```
+
+Or as the first PowerShell line to run when AppVeyor is starting testing.
+
+```yml
+test_script:
+    - ps: Set-Item -Path env:\SkipAllCommonTests -Value $true
+```
 
 ## MetaFixers Module
 

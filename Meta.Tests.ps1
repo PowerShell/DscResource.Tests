@@ -12,6 +12,14 @@ $errorActionPreference = 'Stop'
 $testHelperModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'TestHelper.psm1'
 Import-Module -Name $testHelperModulePath
 
+# Check if there is a request to override the common tests in this file.
+$skipAllCommonTests = Get-Item -Path 'env:\SkipAllCommonTests' -ErrorAction 'SilentlyContinue'
+if ($null -ne $skipAllCommonTests -and $skipAllCommonTests.Value -eq $true)
+{
+    Write-Warning -Message 'DEBUG WARNING: Overriding common test because environment variable OverrideCommonTests is set to $true.'
+    return
+}
+
 $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
 
 <#
