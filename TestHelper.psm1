@@ -173,13 +173,13 @@ function Install-ModuleFromPowerShellGallery
 
             Invoke-WebRequest -Uri $nugetDownloadURL -OutFile $tempNugetPath
             Write-Verbose -Message "nuget.exe downloaded at $tempNugetPath"
-
-            $nugetPath = $tempNugetPath
         }
         else
         {
             Write-Verbose -Message "Using Nuget.exe found at $tempNugetPath"
         }
+
+        $nugetPath = $tempNugetPath
     }
 
     $moduleOutputDirectory = "$(Split-Path -Path $DestinationPath -Parent)\"
