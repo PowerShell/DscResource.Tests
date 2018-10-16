@@ -179,23 +179,22 @@ function Install-ModuleFromPowerShellGallery
             Write-Verbose -Message "Using Nuget.exe found at $tempNugetPath"
         }
 
-        $nugetPath = $tempNugetPath
+        $nugetPath = $tempNugetPath        
     }
 
     $moduleOutputDirectory = "$(Split-Path -Path $DestinationPath -Parent)\"
 
     $nugetSource = 'https://www.powershellgallery.com/api/v2'
-    # Use Nuget.exe to install the module
-    $null = & $nugetPath @( `
-            'install', $ModuleName, `
-            '-source', $nugetSource, `
-            '-outputDirectory', $moduleOutputDirectory, `
-            '-ExcludeVersion' `
-    )
 
-    if ($LASTEXITCODE -ne 0)
+    # Use Nuget.exe to install the module
+
+    $arguments = "install $ModuleName -source $nugetSource -outputDirectory $moduleOutputDirectory -ExcludeVersion"
+
+    $result = Start-Process -FilePath $nugetPath -ArgumentList $arguments
+
+    if ($result.ExitCode -ne 0)
     {
-        throw "Installation of module $ModuleName using Nuget failed with exit code $LASTEXITCODE."
+        throw "Installation of module $ModuleName using Nuget failed with exit code $($result.ExitCode)."
     }
 
     Write-Verbose -Message "The module $ModuleName was installed using Nuget."

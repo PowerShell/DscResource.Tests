@@ -1191,32 +1191,50 @@ InModuleScope $script:ModuleName {
             {
             }
 
-            Mock -CommandName 'Get-Command'
-            Mock -CommandName 'Test-Path' -MockWith {
-                return $true
+            $mockModuleName = 'DummyTestModule'
+
+            $installModuleFromPowerShellGalleryParameters = @{
+                ModuleName      = $mockModuleName
+                DestinationPath = $TestDrive
             }
         }
 
         Context 'When installing a module using NuGet' {
-            BeforeAll {
-                <#
-                    Mocking the nuget.exe but we are actually mocking the function
-                    above. Using powershell.exe to set $LASTEXITCODE to 0.
-                #>
-                Mock -CommandName 'nuget.exe' -MockWith {
-                    powershell.exe -Command 'exit 0'
+            It 'Should install using the Nuget.exe command'{
+                $mockGetCommand = @{
+                    Name = 'Nuget.exe'
                 }
-            }
 
-            It 'Should install module without throwing' {
-                $installModuleFromPowerShellGalleryParameters = @{
-                    ModuleName      = 'DummyTestModule'
-                    DestinationPath = $TestDrive
-                }
+                Mock -CommandName 'Get-Command' -MockWith {$mockGetCommand}
+                Mock -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq 'Nuget.exe'} -MockWith {@{ExitCode = 0}}
 
                 { Install-ModuleFromPowerShellGallery @installModuleFromPowerShellGalleryParameters } | Should -Not -Throw
 
-                Assert-MockCalled -CommandName 'nuget.exe' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq 'Nuget.exe'} -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Get-Command' -Exactly -Times 1 -Scope It
+            }
+            
+            It 'Should use the temp Nuget path if Nuget.exe is in the temp directory' {
+                $tempPath = Join-Path -Path $env:temp -ChildPath 'Nuget.exe'
+                Mock -CommandName 'Get-Command'
+                Mock -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq $tempNugetPath}  -MockWith {@{ExitCode = 0}}
+                Mock -CommandName 'Test-Path' -MockWith {$true}
+
+                { Install-ModuleFromPowerShellGallery @installModuleFromPowerShellGalleryParameters } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq $tempPath} -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Get-Command' -Exactly -Times 1 -Scope It
+            }
+
+            It 'Should install Nuget.exe if it is not available' {
+                $tempPath = Join-Path -Path $env:temp -ChildPath 'Nuget.exe'
+                Mock -CommandName 'Get-Command'
+                Mock -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq $tempPath} -MockWith {@{ExitCode = 0}}
+                Mock -CommandName 'Test-Path' -MockWith {$false}
+
+                { Install-ModuleFromPowerShellGallery @installModuleFromPowerShellGalleryParameters } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq $tempPath} -Exactly -Times 1 -Scope It
                 Assert-MockCalled -CommandName 'Get-Command' -Exactly -Times 1 -Scope It
             }
         }
@@ -1227,19 +1245,10 @@ InModuleScope $script:ModuleName {
                     Mocking the nuget.exe but we are actually mocking the function
                     above. Using powershell.exe to set $LASTEXITCODE to 1.
                 #>
-                Mock -CommandName 'nuget.exe' -MockWith {
-                    powershell.exe -Command 'exit 1'
-                }
+                Mock -CommandName Start-Process -MockWith {@{ExitCode = 1}}
             }
 
             It 'Should throw the correct error' {
-                $mockModuleName = 'DummyTestModule'
-
-                $installModuleFromPowerShellGalleryParameters = @{
-                    ModuleName      = $mockModuleName
-                    DestinationPath = $TestDrive
-                }
-
                 $errorMessage = 'Installation of module {0} using Nuget failed with exit code {1}.' -f $mockModuleName, '1'
                 { Install-ModuleFromPowerShellGallery @installModuleFromPowerShellGalleryParameters } | Should -Throw $errorMessage
             }

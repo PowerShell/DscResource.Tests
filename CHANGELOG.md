@@ -5,6 +5,9 @@
 - Added issue templates.
 - Added the ability to temporary skip common test for debugging purposes
   ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
+- Added functionality to Install-ModuleFromPowerShellGallery helper function to allow using Nuget.exe 
+  when it is already installed in the temp path. Addresses issue ([issue #301](https://github.com/PowerShell/DscResource.Tests/issues/301)).
+- Updated Unit tests to reflect the changes to the Install-ModuleFromPowerShellGallery helper function
 
 ## 0.3.0.0
 
