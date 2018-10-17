@@ -5,6 +5,8 @@
 - Added issue templates.
 - Added the ability to temporary skip common test for debugging purposes
   ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
+- Added a RequiredVersion for PSPKI in TestHelper because of a critical issue
+  in the recently released version of that module
 
 ## 0.3.0.0
 
