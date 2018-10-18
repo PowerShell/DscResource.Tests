@@ -16,7 +16,8 @@
         "PSSA",
         "Dism",
         "vors",
-        "subfolders"
+        "subfolders",
+        "PSPKI"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
