@@ -1833,7 +1833,7 @@ function New-DscSelfSignedCertificate
                 There are build workers still on Windows Server 2012 R2 so let's
                 use the alternate method of New-SelfSignedCertificate.
             #>
-            Install-Module -Name PSPKI -Scope CurrentUser
+            Install-Module -Name PSPKI -Scope CurrentUser -RequiredVersion 3.3.0.0
             Import-Module -Name PSPKI
 
             $newSelfSignedCertificateExParameters = @{
