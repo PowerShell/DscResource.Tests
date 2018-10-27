@@ -76,7 +76,7 @@ InModuleScope -ModuleName 'WikiPages' {
             FullName  = $script:mockExampleFilePath
         }
     )
-    $script:mockExampleContentFirstType = '
+    $script:mockExampleContent = '
 ### Example 1
 
 Example description.
@@ -97,25 +97,7 @@ Configuration Example
     }
 }
 ```'
-    $script:mockGetContentExampleFirstType = '<#
-    .EXAMPLE
-    Example Description.
-#>
-Configuration Example
-{
-    Import-DSCResource -ModuleName MyModule
 
-    Node localhost
-    {
-        MyResource Something
-        {
-            Id    = ''MyId''
-            Enum  = ''Value1''
-            Int   = 1
-        }
-    }
-}
-'
     # General mock values
     $script:mockReadmePath = Join-Path -Path $script:mockSchemaFolder -ChildPath 'readme.md'
     $script:mockOutputFile = Join-Path -Path $script:mockOutputPath -ChildPath 'MyResource.md'
@@ -245,7 +227,7 @@ Configuration Example
                 Mock `
                     -CommandName Get-DscResourceWikiExampleContent `
                     -ParameterFilter $script:getDscResourceWikiExampleContent_parameterFilter `
-                    -MockWith { $script:mockExampleContentFirstType }
+                    -MockWith { $script:mockExampleContent }
 
                 Mock `
                     -CommandName Out-File `
@@ -309,11 +291,52 @@ Configuration Example
         }
 
         Context 'When a path to an example file with .EXAMPLE is passed and example number 1' {
+            $script:mockExampleContent = '
+### Example 1
+
+Example description.
+
+```powershell
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}
+```'
+
+            $script:mockGetContentExample = '<#
+.EXAMPLE
+Example Description.
+#>
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}
+'
             BeforeAll {
                 Mock `
                     -CommandName Get-Content `
                     -ParameterFilter $script:getContentExample_parameterFilter `
-                    -MockWith { $script:mockGetContentExampleFirstType }
+                    -MockWith { $script:mockGetContentExample }
             }
 
             It 'Should not throw an exception' {
@@ -321,7 +344,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContentFirstType
+                $script:result | Should -Be $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
