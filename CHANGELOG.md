@@ -6,7 +6,7 @@
 - Added the ability to temporary skip common test for debugging purposes
   ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
 - Added functionality to Install-ModuleFromPowerShellGallery helper function to allow using Nuget.exe
-  when it is already installed in the temp path. Addresses issue ([issue #301](https://github.com/PowerShell/DscResource.Tests/issues/301)).
+  when it is already installed in the temp path. Addresses ([issue #301](https://github.com/PowerShell/DscResource.Tests/issues/301)).
 - Updated Unit tests to reflect the changes to the Install-ModuleFromPowerShellGallery helper function
 - Added a RequiredVersion for PSPKI (v3.3.0.0) in TestHelper because of a critical
   issue in the recently released version (v3.4.0.1) of that module.

@@ -1205,7 +1205,9 @@ InModuleScope $script:ModuleName {
                     Name = 'Nuget.exe'
                 }
 
-                Mock -CommandName 'Get-Command' -MockWith {$mockGetCommand}
+                Mock -CommandName 'Get-Command' -MockWith {
+                    $mockGetCommand
+                }
                 Mock -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq 'Nuget.exe'} -MockWith {@{ExitCode = 0}}
 
                 { Install-ModuleFromPowerShellGallery @installModuleFromPowerShellGalleryParameters } | Should -Not -Throw
@@ -1213,7 +1215,7 @@ InModuleScope $script:ModuleName {
                 Assert-MockCalled -CommandName 'Start-Process' -ParameterFilter {$FilePath -eq 'Nuget.exe'} -Exactly -Times 1 -Scope It
                 Assert-MockCalled -CommandName 'Get-Command' -Exactly -Times 1 -Scope It
             }
-            
+
             It 'Should use the temp Nuget path if Nuget.exe is in the temp directory' {
                 $tempPath = Join-Path -Path $env:temp -ChildPath 'Nuget.exe'
                 Mock -CommandName 'Get-Command'
