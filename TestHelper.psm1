@@ -178,9 +178,9 @@ function Install-ModuleFromPowerShellGallery {
 
     # Use Nuget.exe to install the module
     $arguments = @(
-        "install $ModuleName" `
-        "-source $nugetSource" `
-        "-outputDirectory $moduleOutputDirectory" `
+        "install $ModuleName",
+        "-source $nugetSource",
+        "-outputDirectory $moduleOutputDirectory",
         "-ExcludeVersion"
     )
 
