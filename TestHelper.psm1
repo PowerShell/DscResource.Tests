@@ -7,7 +7,8 @@
     Test if type Microsoft.DscResourceKit.Test is loaded into the session,
     if not load all the helper types.
 #>
-if (-not ('Microsoft.DscResourceKit.Test' -as [Type])) {
+if (-not ('Microsoft.DscResourceKit.Test' -as [Type])) 
+{
     <#
         This loads the types:
             Microsoft.DscResourceKit.Test
@@ -89,19 +90,22 @@ function New-Nuspec {
     <owners>$Owners</owners>
 "@
 
-    if (-not [String]::IsNullOrEmpty($LicenseUrl)) {
+    if (-not [String]::IsNullOrEmpty($LicenseUrl)) 
+    {
         $nuspecFileContent += @"
     <licenseUrl>$LicenseUrl</licenseUrl>
 "@
     }
 
-    if (-not [String]::IsNullOrEmpty($ProjectUrl)) {
+    if (-not [String]::IsNullOrEmpty($ProjectUrl)) 
+    {
         $nuspecFileContent += @"
     <projectUrl>$ProjectUrl</projectUrl>
 "@
     }
 
-    if (-not [String]::IsNullOrEmpty($IconUrl)) {
+    if (-not [String]::IsNullOrEmpty($IconUrl)) 
+    {
         $nuspecFileContent += @"
     <iconUrl>$IconUrl</iconUrl>
 "@
@@ -117,7 +121,8 @@ function New-Nuspec {
 </package>
 "@
 
-    if (-not (Test-Path -Path $DestinationPath)) {
+    if (-not (Test-Path -Path $DestinationPath)) 
+    {
         $null = New-Item -Path $DestinationPath -ItemType 'Directory'
     }
 
@@ -154,18 +159,21 @@ function Install-ModuleFromPowerShellGallery {
     $nugetPath = 'nuget.exe'
 
     # Can't assume nuget.exe is available - look for it in Path
-    if ($null -eq (Get-Command -Name $nugetPath -ErrorAction 'SilentlyContinue')) {
+    if ($null -eq (Get-Command -Name $nugetPath -ErrorAction 'SilentlyContinue')) 
+    {
         # Is it in temp folder?
         $tempNugetPath = Join-Path -Path $env:temp -ChildPath $nugetPath
 
-        if (-not (Test-Path -Path $tempNugetPath)) {
+        if (-not (Test-Path -Path $tempNugetPath)) 
+        {
             # Nuget.exe can't be found - download it to temp folder
             $nugetDownloadURL = 'http://nuget.org/nuget.exe'
 
             Invoke-WebRequest -Uri $nugetDownloadURL -OutFile $tempNugetPath
             Write-Verbose -Message "nuget.exe downloaded at $tempNugetPath"
         }
-        else {
+        else 
+        {
             Write-Verbose -Message "Using Nuget.exe found at $tempNugetPath"
         }
 
@@ -181,12 +189,13 @@ function Install-ModuleFromPowerShellGallery {
         "install $ModuleName",
         "-source $nugetSource",
         "-outputDirectory $moduleOutputDirectory",
-        "-ExcludeVersion"
+        '-ExcludeVersion'
     )
 
     $result = Start-Process -FilePath $nugetPath -ArgumentList $arguments -Wait
 
-    if ($result.ExitCode -ne 0) {
+    if ($result.ExitCode -ne 0) 
+    {
         throw "Installation of module $ModuleName using Nuget failed with exit code $($result.ExitCode)."
     }
 
@@ -291,16 +300,20 @@ function Initialize-TestEnvironment {
     $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
     $moduleManifestFilePath = Join-Path -Path $moduleRootFilePath -ChildPath "$DscModuleName.psd1"
 
-    if (Test-Path -Path $moduleManifestFilePath) {
+    if (Test-Path -Path $moduleManifestFilePath) 
+    {
         Write-Verbose -Message "Module manifest $DscModuleName.psd1 detected at $moduleManifestFilePath"
     }
-    else {
+    else 
+    {
         throw "Module manifest could not be found for the module $DscModuleName in the root folder $moduleRootFilePath"
     }
 
     # Import the module to test
-    if ($TestType -ieq 'Unit') {
-        switch ($ResourceType) {
+    if ($TestType -ieq 'Unit') 
+    {
+        switch ($ResourceType) 
+        {
             'Mof' {
                 $resourceTypeFolderName = 'DSCResources'
             }
@@ -315,7 +328,8 @@ function Initialize-TestEnvironment {
 
         $moduleToImportFilePath = Join-Path -Path $dscResourceToTestFolderFilePath -ChildPath "$DscResourceName.psm1"
     }
-    else {
+    else 
+    {
         $moduleToImportFilePath = $moduleManifestFilePath
     }
 
@@ -331,19 +345,23 @@ function Initialize-TestEnvironment {
 
     $oldPSModulePath = $env:PSModulePath
 
-    if ($null -ne $oldPSModulePath) {
+    if ($null -ne $oldPSModulePath) 
+    {
         $oldPSModulePathSplit = $oldPSModulePath.Split(';')
     }
-    else {
+    else 
+    {
         $oldPSModulePathSplit = $null
     }
 
-    if ($oldPSModulePathSplit -ccontains $moduleParentFilePath) {
+    if ($oldPSModulePathSplit -ccontains $moduleParentFilePath) 
+    {
         # Remove the existing module path from the new PSModulePath
         $newPSModulePathSplit = $oldPSModulePathSplit | Where-Object {$_ -ne $moduleParentFilePath}
         $newPSModulePath = $newPSModulePathSplit -join ';'
     }
-    else {
+    else 
+    {
         $newPSModulePath = $oldPSModulePath
     }
 
@@ -351,7 +369,8 @@ function Initialize-TestEnvironment {
 
     Set-PSModulePath -Path $newPSModulePath
 
-    if ($TestType -ieq 'Integration') {
+    if ($TestType -ieq 'Integration') 
+    {
         <#
             For integration tests we have to set the machine's PSModulePath because otherwise the
             DSC LCM won't be able to find the resource module being tested or may use the wrong one.
@@ -364,7 +383,8 @@ function Initialize-TestEnvironment {
 
     # Preserve and set the execution policy so that the DSC MOF can be created
     $oldExecutionPolicy = Get-ExecutionPolicy
-    if ($oldExecutionPolicy -ine 'Unrestricted') {
+    if ($oldExecutionPolicy -ine 'Unrestricted') 
+    {
         Set-ExecutionPolicy -ExecutionPolicy 'Unrestricted' -Scope 'Process' -Force
     }
 
@@ -408,23 +428,27 @@ function Restore-TestEnvironment {
 
     Write-Verbose -Message "Cleaning up Test Environment after $($TestEnvironment.TestType) testing of $($TestEnvironment.DSCResourceName) in module $($TestEnvironment.DSCModuleName)."
 
-    if ($TestEnvironment.TestType -ieq 'Integration') {
+    if ($TestEnvironment.TestType -ieq 'Integration') 
+    {
         # Reset the DSC LCM
         Reset-DSC
     }
 
     # Restore PSModulePath
-    if ($TestEnvironment.OldPSModulePath -ne $env:PSModulePath) {
+    if ($TestEnvironment.OldPSModulePath -ne $env:PSModulePath) 
+    {
         Set-PSModulePath -Path $TestEnvironment.OldPSModulePath
 
-        if ($TestEnvironment.TestType -eq 'Integration') {
+        if ($TestEnvironment.TestType -eq 'Integration') 
+        {
             # Restore the machine PSModulePath for integration tests.
             Set-PSModulePath -Path $TestEnvironment.OldPSModulePath -Machine
         }
     }
 
     # Restore the Execution Policy
-    if ($TestEnvironment.OldExecutionPolicy -ne (Get-ExecutionPolicy)) {
+    if ($TestEnvironment.OldExecutionPolicy -ne (Get-ExecutionPolicy)) 
+    {
         Set-ExecutionPolicy -ExecutionPolicy $TestEnvironment.OldExecutionPolicy -Scope 'Process' -Force
     }
 }
@@ -491,7 +515,8 @@ function Test-FileContainsClassResource {
     $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
 
     foreach ($fileAttributeAst in $fileAst.FindAll( {$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $false)) {
-        if ($fileAttributeAst.Extent.Text -ieq '[DscResource()]') {
+        if ($fileAttributeAst.Extent.Text -ieq '[DscResource()]') 
+        {
             return $true
         }
     }
@@ -523,12 +548,14 @@ function Get-ClassResourceNameFromFile {
 
     $classResourceNames = [String[]]@()
 
-    if (Test-FileContainsClassResource -FilePath $FilePath) {
+    if (Test-FileContainsClassResource -FilePath $FilePath) 
+    {
         $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
 
         $typeDefinitionAsts = $fileAst.FindAll( {$args[0] -is [System.Management.Automation.Language.TypeDefinitionAst]}, $false)
         foreach ($typeDefinitionAst in $typeDefinitionAsts) {
-            if ($typeDefinitionAst.Attributes.TypeName.Name -ieq 'DscResource') {
+            if ($typeDefinitionAst.Attributes.TypeName.Name -ieq 'DscResource') 
+            {
                 $classResourceNames += $typeDefinitionAst.Name
             }
         }
@@ -580,7 +607,8 @@ function Test-ModuleContainsClassResource {
     $psm1Files = Get-Psm1FileList -FilePath $ModulePath
 
     foreach ($psm1File in $psm1Files) {
-        if (Test-FileContainsClassResource -FilePath $psm1File.FullName) {
+        if (Test-FileContainsClassResource -FilePath $psm1File.FullName) 
+        {
             return $true
         }
     }
@@ -722,7 +750,8 @@ function Import-PSScriptAnalyzer {
 
     $psScriptAnalyzerModule = Get-Module -Name 'PSScriptAnalyzer' -ListAvailable
 
-    if ($null -eq $psScriptAnalyzerModule) {
+    if ($null -eq $psScriptAnalyzerModule) 
+    {
         Write-Verbose -Message 'Installing PSScriptAnalyzer from the PowerShell Gallery'
         $userProfilePSModulePathItem = Get-UserProfilePSModulePathItem
         $psScriptAnalyzerModulePath = Join-Path -Path $userProfilePSModulePathItem -ChildPath PSScriptAnalyzer
@@ -744,7 +773,8 @@ function Import-PSScriptAnalyzer {
         information:
         https://github.com/PowerShell/PSScriptAnalyzer/blob/development/Engine/ScriptAnalyzer.cs#L1120
     #>
-    if ($env:APPVEYOR -eq $true) {
+    if ($env:APPVEYOR -eq $true) 
+    {
         Set-ItemProperty -Path HKLM:\Software\Microsoft\PowerShell -Name DisablePromptToUpdateHelp -Value 1
     }
 
@@ -762,7 +792,8 @@ function Import-xDscResourceDesigner {
 
     $xDscResourceDesignerModule = Get-Module -Name 'xDscResourceDesigner' -ListAvailable
 
-    if ($null -eq $xDscResourceDesignerModule) {
+    if ($null -eq $xDscResourceDesignerModule) 
+    {
         Write-Verbose -Message 'Installing xDscResourceDesigner from the PowerShell Gallery'
         $userProfilePSModulePathItem = Get-UserProfilePSModulePathItem
         $xDscResourceDesignerModulePath = Join-Path -Path $userProfilePSModulePathItem -ChildPath xDscResourceDesigner
@@ -799,7 +830,8 @@ function Get-SuppressedPSSARuleNameList {
     $attributeAsts = $fileAst.FindAll( {$args[0] -is [System.Management.Automation.Language.AttributeAst]}, $true)
 
     foreach ($attributeAst in $attributeAsts) {
-        if ([System.Diagnostics.CodeAnalysis.SuppressMessageAttribute].FullName.ToLower().Contains($attributeAst.TypeName.FullName.ToLower())) {
+        if ([System.Diagnostics.CodeAnalysis.SuppressMessageAttribute].FullName.ToLower().Contains($attributeAst.TypeName.FullName.ToLower())) 
+        {
             $suppressedPSSARuleNames += $attributeAst.PositionalArguments.Extent.Text
         }
     }
@@ -836,7 +868,8 @@ function Install-NugetExe {
         $Uri = 'https://dist.nuget.org/win-x86-commandline/v3.4.4/NuGet.exe'
     )
 
-    if (Test-Path -Path $OutFile) {
+    if (Test-Path -Path $OutFile) 
+    {
         Remove-Item -Path $OutFile -Force
     }
     Invoke-WebRequest -Uri $Uri -OutFile $OutFile
@@ -869,7 +902,8 @@ function Get-PesterDescribeOptInStatus {
 
     $describeName = Get-PesterDescribeName
     $optIn = $OptIns -icontains $describeName
-    if (-not $optIn) {
+    if (-not $optIn) 
+    {
         $message = @"
 Describe $describeName will not fail unless you opt-in.
 To opt-in, create a '.MetaTestOptIn.json' at the root
@@ -908,7 +942,8 @@ function Get-OptInStatus {
     )
 
     $optIn = $OptIns -icontains $Name
-    if (-not $optIn) {
+    if (-not $optIn) 
+    {
         $message = @"
 $Name will not fail unless you opt-in.
 To opt-in, create a '.MetaTestOptIn.json' at the root
@@ -973,10 +1008,12 @@ function Get-PSModulePathItem {
         Where-Object -FilterScript { $_ -like "$Prefix*" } |
         Select-Object -First 1
 
-    if (-not $item) {
+    if (-not $item) 
+    {
         Write-Error -Message "Cannot find the requested item in the PowerShell module path.`n`$env:PSModulePath = $env:PSModulePath"
     }
-    else {
+    else 
+    {
         $item = $item.TrimEnd('\')
     }
 
@@ -1041,10 +1078,12 @@ function Test-FileHasByteOrderMark {
     }
 
     # Need to treat Windows Powershell and PowerShell Core different.
-    if ($PSVersionTable.PSEdition -eq 'Core') {
+    if ($PSVersionTable.PSEdition -eq 'Core') 
+    {
         $getContentParameters['AsByteStream'] = $true
     }
-    else {
+    else 
+    {
         $getContentParameters['Encoding'] = 'Byte'
     }
 
@@ -1125,7 +1164,8 @@ function Get-ResourceModulesInConfiguration {
 
         foreach ($element in $importDscResourceCmd.CommandElements) {
             # For each element in the Import-DscResource command determine what it means
-            if ($element -is [System.Management.Automation.Language.CommandParameterAst]) {
+            if ($element -is [System.Management.Automation.Language.CommandParameterAst]) 
+            {
                 $parameterName = $element.ParameterName
             }
             elseif ($element -is [System.Management.Automation.Language.StringConstantExpressionAst] `
@@ -1140,7 +1180,8 @@ function Get-ResourceModulesInConfiguration {
                     } # ModuleVersion
                 } # switch
             }
-            elseif ($element -is [System.Management.Automation.Language.ArrayLiteralAst]) {
+            elseif ($element -is [System.Management.Automation.Language.ArrayLiteralAst]) 
+            {
                 <#
                     This is an array of strings (usually something like xNetworking,xWebAdministration)
                     So we need to add each module to the list
@@ -1154,13 +1195,16 @@ function Get-ResourceModulesInConfiguration {
         } # foreach
 
         # Did a module get identified when stepping through the elements?
-        if (-not [String]::IsNullOrEmpty($moduleName)) {
-            if ([String]::IsNullOrEmpty($moduleVersion)) {
+        if (-not [String]::IsNullOrEmpty($moduleName)) 
+        {
+            if ([String]::IsNullOrEmpty($moduleVersion)) 
+            {
                 $listedModules += @{
                     Name = $moduleName
                 }
             }
-            else {
+            else 
+            {
                 $listedModules += @{
                     Name    = $moduleName
                     Version = $moduleVersion
@@ -1209,27 +1253,33 @@ function Install-DependentModule {
             ErrorAction   = 'SilentlyContinue'
         }
 
-        if ($requiredModule.ContainsKey('Version')) {
+        if ($requiredModule.ContainsKey('Version')) 
+        {
             $requiredModuleExist = `
                 Get-Module @getModuleParameters |
                 Where-Object -FilterScript {
                 $_.Version -eq $requiredModule.Version
             }
         }
-        else {
+        else 
+        {
             $requiredModuleExist = Get-Module @getModuleParameters
         }
 
-        if (-not ($requiredModuleExist)) {
+        if (-not ($requiredModuleExist)) 
+        {
             # The required module is missing from this machine
-            if ($requiredModule.ContainsKey('Version')) {
+            if ($requiredModule.ContainsKey('Version')) 
+            {
                 $requiredModuleName = ('{0} version {1}' -f $requiredModule.Name, $requiredModule.Version)
             }
-            else {
+            else 
+            {
                 $requiredModuleName = ('{0}' -f $requiredModule.Name)
             }
 
-            if ($env:APPVEYOR -eq $true) {
+            if ($env:APPVEYOR -eq $true) 
+            {
                 <#
                     Tests are running in AppVeyor so just install the module.
                     If not installed by using Force then the error message
@@ -1241,7 +1291,8 @@ function Install-DependentModule {
                     Force = $true
                 }
 
-                if ($requiredModule.ContainsKey('Version')) {
+                if ($requiredModule.ContainsKey('Version')) 
+                {
                     $installModuleParameters['RequiredVersion'] = $requiredModule.Version
                 }
 
@@ -1254,7 +1305,8 @@ function Install-DependentModule {
                     throw "An error occurred installing the required module $($requiredModuleName) : $_"
                 }
             }
-            else {
+            else 
+            {
                 # Warn the user that the test fill fail
                 Write-Warning -Message ("To be able to compile a configuration the resource module $requiredModuleName " + `
                         'is required but it is not installed on this computer. ' + `
@@ -1308,7 +1360,8 @@ function Get-DscIntegrationTestOrderNumber {
     [System.Management.Automation.Language.Ast[]] $integrationTestAttributeAst = `
         $scriptBlockAst.Find($findIntegrationTestAttributeFilter, $true)
 
-    if ($integrationTestAttributeAst) {
+    if ($integrationTestAttributeAst) 
+    {
         $findOrderNumberNamedAttributeArgumentFilter = {
             $args[0] -is [System.Management.Automation.Language.NamedAttributeArgumentAst] `
                 -and $args[0].ArgumentName -eq 'OrderNumber'
@@ -1317,7 +1370,8 @@ function Get-DscIntegrationTestOrderNumber {
         [System.Management.Automation.Language.Ast[]] $orderNumberNamedAttributeArgumentAst = `
             $integrationTestAttributeAst.Find($findOrderNumberNamedAttributeArgumentFilter, $true)
 
-        if ($orderNumberNamedAttributeArgumentAst) {
+        if ($orderNumberNamedAttributeArgumentAst) 
+        {
             $returnValue = $orderNumberNamedAttributeArgumentAst.Argument.Value
         }
     }
@@ -1378,7 +1432,8 @@ function Get-DscTestContainerInformation {
     [System.Management.Automation.Language.Ast[]] $integrationTestAttributeAst = `
         $scriptBlockAst.Find($findIntegrationTestAttributeFilter, $true)
 
-    if ($integrationTestAttributeAst) {
+    if ($integrationTestAttributeAst) 
+    {
         $findAttributeArgumentFilter = {
             $args[0] -is [System.Management.Automation.Language.NamedAttributeArgumentAst] `
         }
@@ -1387,9 +1442,11 @@ function Get-DscTestContainerInformation {
             $integrationTestAttributeAst.FindAll($findAttributeArgumentFilter, $true)
 
         foreach ($currentAttributeArgumentAst in $attributeArgumentAst) {
-            if ($currentAttributeArgumentAst.ArgumentName -in ('ContainerName', 'ContainerImage')) {
+            if ($currentAttributeArgumentAst.ArgumentName -in ('ContainerName', 'ContainerImage')) 
+            {
                 # Only initiate the hash table if $returnValue is $null.
-                if (-not $returnValue) {
+                if (-not $returnValue) 
+                {
                     # Build the has table to return.
                     $returnValue = @{
                         ContainerName  = $null
@@ -1463,10 +1520,12 @@ function Test-IsRepositoryDscResourceTests {
     $moduleRootFilePath = Split-Path -Path $PSScriptRoot -Parent
 
     $moduleManifestExistInModuleRootFilePath = Get-ChildItem -Path $moduleRootFilePath -Filter '*.psd1'
-    if (-not $moduleManifestExistInModuleRootFilePath) {
+    if (-not $moduleManifestExistInModuleRootFilePath) 
+    {
         return $true
     }
-    else {
+    else 
+    {
         return $false
     }
 }
@@ -1504,10 +1563,12 @@ function Set-PSModulePath {
         $Machine
     )
 
-    if ($Machine.IsPresent) {
+    if ($Machine.IsPresent) 
+    {
         [System.Environment]::SetEnvironmentVariable('PSModulePath', $Path, [System.EnvironmentVariableTarget]::Machine)
     }
-    else {
+    else 
+    {
         $env:PSModulePath = $Path
     }
 }
@@ -1569,7 +1630,8 @@ function Get-LocalizedData {
 
     $localizedStringFileLocation = Join-Path -Path $ModuleRoot -ChildPath $PSUICulture
 
-    if (-not (Test-Path -Path $localizedStringFileLocation)) {
+    if (-not (Test-Path -Path $localizedStringFileLocation)) 
+    {
         # Fallback to en-US
         $localizedStringFileLocation = Join-Path -Path $ModuleRoot -ChildPath 'en-US'
     }
@@ -1688,7 +1750,8 @@ function New-DscSelfSignedCertificate {
         $_.Subject -eq "CN=$certificateSubject"
     } | Select-Object -First 1
 
-    if (-not $certificate) {
+    if (-not $certificate) 
+    {
         $getCommandParameters = @{
             Name        = 'New-SelfSignedCertificate'
             ErrorAction = 'SilentlyContinue'
@@ -1699,7 +1762,8 @@ function New-DscSelfSignedCertificate {
         $hasNewSelfSignedCertificateCommand = $newSelfSignedCertificateCommand `
             -and $newSelfSignedCertificateCommand.Parameters.Keys -contains 'Type'
 
-        if ($hasNewSelfSignedCertificateCommand) {
+        if ($hasNewSelfSignedCertificateCommand) 
+        {
             $newSelfSignedCertificateParameters = @{
                 Type          = 'DocumentEncryptionCertLegacyCsp'
                 DnsName       = $certificateSubject
@@ -1708,7 +1772,8 @@ function New-DscSelfSignedCertificate {
 
             $certificate = New-SelfSignedCertificate @newSelfSignedCertificateParameters
         }
-        else {
+        else 
+        {
             <#
                 There are build workers still on Windows Server 2012 R2 so let's
                 use the alternate method of New-SelfSignedCertificate.
@@ -1735,7 +1800,8 @@ function New-DscSelfSignedCertificate {
 
         Write-Info -Message ('Created self-signed certificate ''{0}'' with thumbprint ''{1}''.' -f $certificate.Subject, $certificate.Thumbprint)
     }
-    else {
+    else 
+    {
         Write-Info -Message ('Using self-signed certificate ''{0}'' with thumbprint ''{1}''.' -f $certificate.Subject, $certificate.Thumbprint)
     }
 
@@ -1787,11 +1853,13 @@ function Set-EnvironmentVariable {
         $Machine
     )
 
-    if ($Machine.IsPresent) {
+    if ($Machine.IsPresent) 
+    {
         [Environment]::SetEnvironmentVariable($Name, $Value, 'Machine')
         Set-Item -Path "env:\$Name" -Value $Value
     }
-    else {
+    else 
+    {
         [Environment]::SetEnvironmentVariable($Name, $Value, 'User')
         Set-Item -Path "env:\$Name" -Value $Value
     }
@@ -1830,7 +1898,8 @@ function Initialize-LocalConfigurationManager {
     )
 
     $disableConsistencyMofPath = Join-Path -Path $env:temp -ChildPath 'LCMConfiguration'
-    if (-not (Test-Path -Path $disableConsistencyMofPath)) {
+    if (-not (Test-Path -Path $disableConsistencyMofPath)) 
+    {
         $null = New-Item -Path $disableConsistencyMofPath -ItemType Directory -Force
     }
 
@@ -1842,7 +1911,8 @@ function Initialize-LocalConfigurationManager {
             {
     '
 
-    if ($DisableConsistency.IsPresent) {
+    if ($DisableConsistency.IsPresent) 
+    {
         Write-Info -Message 'Setting Local Configuration Manager property ConfigurationMode to ''ApplyOnly'', disabling consistency check.'
         # Have LCM Apply only once.
         $configurationMetadata += '
@@ -1850,7 +1920,8 @@ function Initialize-LocalConfigurationManager {
         '
     }
 
-    if ($Encrypt.IsPresent) {
+    if ($Encrypt.IsPresent) 
+    {
         Write-Info -Message ('Setting Local Configuration Manager property CertificateId to ''{0}'', enabling decryption of credentials.' -f $env:DscCertificateThumbprint)
         # Should use encryption.
         $configurationMetadata += ('
