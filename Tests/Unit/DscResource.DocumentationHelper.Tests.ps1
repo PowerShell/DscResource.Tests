@@ -76,8 +76,7 @@ InModuleScope -ModuleName 'WikiPages' {
             FullName  = $script:mockExampleFilePath
         }
     )
-    $script:mockExampleContent = '
-### Example 1
+    $script:mockExampleContent = '### Example 1
 
 Example description.
 
@@ -168,7 +167,7 @@ Configuration Example
         }
         $script:outFile_parameterFilter = {
             $FilePath -eq $script:mockOutputFile `
-            -and $InputObject -eq $script:mockWikiPageOutput
+                -and $InputObject -eq $script:mockWikiPageOutput
         }
 
         # Function call parameters
@@ -290,8 +289,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 1
+            $script:mockExampleContent = '### Example 1
 
 Example Description.
 
@@ -329,8 +327,8 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
+
             BeforeAll {
                 Mock `
                     -CommandName Get-Content `
@@ -361,8 +359,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 2
+            $script:mockExampleContent = '### Example 2
 
 Example Description.
 
@@ -400,8 +397,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -433,8 +429,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 3
+            $script:mockExampleContent = '### Example 3
 
 Example Description.
 
@@ -472,8 +467,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -505,8 +499,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 4
+            $script:mockExampleContent = '### Example 4
 
 Example Description.
 
@@ -547,8 +540,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -580,8 +572,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 5
+            $script:mockExampleContent = '### Example 5
 
 Example Description.
 
@@ -639,8 +630,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -672,8 +662,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '
-### Example 6
+            $script:mockExampleContent = '### Example 6
 
 Example Synopsis.
 
@@ -733,8 +722,88 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
+
+            BeforeAll {
+                Mock `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -MockWith { $script:mockGetContentExample }
+            }
+
+            It 'Should not throw an exception' {
+                { $script:result = Get-DscResourceWikiExampleContent @script:getDscResourceWikiExampleContent_parameters } | Should -Not -Throw
+            }
+
+            It 'Should return the expected string' {
+                $script:result | Should -Be $script:mockExampleContent
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -Exactly -Times 1
+            }
+        }
+
+        Context 'When a path to an example file from SharePointDsc resource module and example number 7' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 7
+                Verbose       = $true
+            }
+
+            $script:mockExampleContent = '### Example 7
+
+This example shows how to deploy Access Services 2013 to the local SharePoint farm.
+
+```powershell
+    Configuration Example
+    {
+        param(
+            [Parameter(Mandatory = $true)]
+            [PSCredential]
+            $SetupAccount
+        )
+        Import-DscResource -ModuleName SharePointDsc
+
+        node localhost {
+            SPAccessServiceApp AccessServices
+            {
+                Name                 = "Access Services Service Application"
+                ApplicationPool      = "SharePoint Service Applications"
+                DatabaseServer       = "SQL.contoso.local\SQLINSTANCE"
+                PsDscRunAsCredential = $SetupAccount
+            }
+        }
+    }
+```'
+
+            $script:mockGetContentExample = '<#
+.EXAMPLE
+    This example shows how to deploy Access Services 2013 to the local SharePoint farm.
+#>
+
+    Configuration Example
+    {
+        param(
+            [Parameter(Mandatory = $true)]
+            [PSCredential]
+            $SetupAccount
+        )
+        Import-DscResource -ModuleName SharePointDsc
+
+        node localhost {
+            SPAccessServiceApp AccessServices
+            {
+                Name                 = "Access Services Service Application"
+                ApplicationPool      = "SharePoint Service Applications"
+                DatabaseServer       = "SQL.contoso.local\SQLINSTANCE"
+                PsDscRunAsCredential = $SetupAccount
+            }
+        }
+    }' -split "`r`n"
 
             BeforeAll {
                 Mock `
