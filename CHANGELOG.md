@@ -9,6 +9,8 @@
   issue in the recently released version (v3.4.0.1) of that module.
 - Improved Wiki documentation generation to address more example file types
   and increased unit test coverage and function ([issue #256](https://github.com/PowerShell/DscResource.Tests/issues/256)).
+- Added .gitignore file and suppressed ```package-lock.json``` file from being
+  included in repo.
 
 ## 0.3.0.0
 
