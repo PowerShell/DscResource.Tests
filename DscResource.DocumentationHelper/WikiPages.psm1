@@ -204,19 +204,19 @@ function Get-DscResourceWikiExampleContent
 
     foreach ($exampleLine in $exampleContent)
     {
-        Write-Verbose -Message ('Processing Line: {0}' -f $exampleLine)
+        Write-Debug -Message ('Processing Line: {0}' -f $exampleLine)
 
         # Determine the behavior based on the current block type
         switch ($blockType.ToString())
         {
             'PSScriptInfo'
             {
-                Write-Verbose -Message 'PSScriptInfo Block Processing'
+                Write-Debug -Message 'PSScriptInfo Block Processing'
 
                 # Exclude PSScriptInfo block from any output
                 if ($exampleLine -eq '#>')
                 {
-                    Write-Verbose -Message 'PSScriptInfo Block Ended'
+                    Write-Debug -Message 'PSScriptInfo Block Ended'
 
                     # End of the PSScriptInfo block
                     $blockType = [WikiExampleBlockType]::None
@@ -225,7 +225,7 @@ function Get-DscResourceWikiExampleContent
 
             'Configuration'
             {
-                Write-Verbose -Message 'Configuration Block Processing'
+                Write-Debug -Message 'Configuration Block Processing'
 
                 # Include all lines in the configuration block in the code output
                 $null = $exampleCodeStringBuilder.AppendLine($exampleLine)
@@ -233,7 +233,7 @@ function Get-DscResourceWikiExampleContent
 
             'ExampleCommentHeader'
             {
-                Write-Verbose -Message 'ExampleCommentHeader Block Processing'
+                Write-Debug -Message 'ExampleCommentHeader Block Processing'
 
                 # Include all lines in Example Comment Header block except for headers
                 $exampleLine = $exampleLine.TrimStart()
@@ -246,7 +246,7 @@ function Get-DscResourceWikiExampleContent
 
                 if ($exampleLine -eq '#>')
                 {
-                    Write-Verbose -Message 'ExampleCommentHeader Block Ended'
+                    Write-Debug -Message 'ExampleCommentHeader Block Ended'
 
                     # End of the Example Comment Header block
                     $blockType = [WikiExampleBlockType]::None
@@ -255,25 +255,25 @@ function Get-DscResourceWikiExampleContent
 
             default
             {
-                Write-Verbose -Message 'Not Currently Processing Block'
+                Write-Debug -Message 'Not Currently Processing Block'
 
                 # Check the current line
                 if ($exampleLine.TrimStart() -eq  '<#PSScriptInfo')
                 {
-                    Write-Verbose -Message 'PSScriptInfo Block Started'
+                    Write-Debug -Message 'PSScriptInfo Block Started'
 
                     $blockType = [WikiExampleBlockType]::PSScriptInfo
                 }
                 elseif ($exampleLine -match 'Configuration')
                 {
-                    Write-Verbose -Message 'Configuration Block Started'
+                    Write-Debug -Message 'Configuration Block Started'
 
                     $null = $exampleCodeStringBuilder.AppendLine($exampleLine)
                     $blockType = [WikiExampleBlockType]::Configuration
                 }
                 elseif ($exampleLine.TrimStart() -eq '<#')
                 {
-                    Write-Verbose -Message 'ExampleCommentHeader Block Started'
+                    Write-Debug -Message 'ExampleCommentHeader Block Started'
 
                     $blockType = [WikiExampleBlockType]::ExampleCommentHeader
                 }
