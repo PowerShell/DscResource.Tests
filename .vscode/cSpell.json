@@ -17,7 +17,8 @@
         "Dism",
         "vors",
         "subfolders",
-        "PSPKI"
+        "PSPKI",
+        "gitignore"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
