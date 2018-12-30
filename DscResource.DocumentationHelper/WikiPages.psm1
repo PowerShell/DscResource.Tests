@@ -1,4 +1,22 @@
 <#
+    Define enumeration for use by wiki example generation to determine the type of
+    block that a text line is within.
+#>
+if (-not ([System.Management.Automation.PSTypeName]'WikiExampleBlockType').Type)
+{
+    $typeDefinition = @'
+    public enum WikiExampleBlockType
+    {
+        None,
+        PSScriptInfo,
+        Configuration,
+        ExampleCommentHeader
+    }
+'@
+    Add-Type -TypeDefinition $typeDefinition
+}
+
+<#
     .SYNOPSIS
         New-DscResourceWikiSite generates wiki pages that can be uploaded to GitHub to use as
         public documentation for a module.
@@ -115,6 +133,7 @@ function New-DscResourceWikiSite
                         -ExamplePath $exampleFile.FullName `
                         -ExampleNumber ($exampleCount++)
 
+                    $null = $output.AppendLine()
                     $null = $output.AppendLine($exampleContent)
                 }
             }
@@ -167,35 +186,111 @@ function Get-DscResourceWikiExampleContent
         $ExampleNumber
     )
 
-    $exampleContent = Get-Content -Path $ExamplePath -Raw
-    $helpStart = $exampleContent.IndexOf('<#')
-    $helpEnd = $exampleContent.IndexOf('#>') + 2
-    $help = $exampleContent.Substring($helpStart, $helpEnd - $helpStart)
-    $helpOriginal = $help
-    $help += [Environment]::NewLine + '```powershell'
-    $help = $help.Replace('    ', '')
-    $exampleContent = $exampleContent.Replace($helpOriginal, $help)
+    $exampleContent = Get-Content -Path $ExamplePath
 
-    # Remove all the lines starting with '#Requires'
-    $exampleContent = [Regex]::Replace(
-        $exampleContent,
-        '^#Requires.*[\r\n]*',
-        [System.String]::Empty,
-        [System.Text.RegularExpressions.RegexOptions]::Multiline + [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
-    )
+    # Use a string builder to assemble the example description and code
+    $exampleDescriptionStringBuilder = New-Object -TypeName System.Text.StringBuilder
+    $exampleCodeStringBuilder = New-Object -TypeName System.Text.StringBuilder
 
-    # Remove the comment block delimiters
-    $exampleContent = $exampleContent -replace '<#'
-    $exampleContent = $exampleContent -replace '#>'
+    <#
+        Step through each line in the source example and determine
+        the content and act accordingly:
+        \<#PSScriptInfo...#\> - Drop block
+        \#Requires - Drop Line
+        \<#...#\> - Drop .EXAMPLE, .SYNOPSIS and .DESCRIPTION but include all other lines
+        Configuration ... - Include entire block until EOF
+    #>
+    $blockType = [WikiExampleBlockType]::None
 
-    # Remove comment block headers
-    $exampleContent = $exampleContent.Replace('.SYNOPSIS', '')
-    $exampleContent = $exampleContent.Replace('.DESCRIPTION', '')
-    $exampleContent = $exampleContent.Replace('.EXAMPLE', '')
-    $exampleContent += '```'
-    $exampleContent = "`r`n### Example $ExampleNumber" + $exampleContent
+    foreach ($exampleLine in $exampleContent)
+    {
+        Write-Debug -Message ('Processing Line: {0}' -f $exampleLine)
 
-    return $exampleContent
+        # Determine the behavior based on the current block type
+        switch ($blockType.ToString())
+        {
+            'PSScriptInfo'
+            {
+                Write-Debug -Message 'PSScriptInfo Block Processing'
+
+                # Exclude PSScriptInfo block from any output
+                if ($exampleLine -eq '#>')
+                {
+                    Write-Debug -Message 'PSScriptInfo Block Ended'
+
+                    # End of the PSScriptInfo block
+                    $blockType = [WikiExampleBlockType]::None
+                }
+            }
+
+            'Configuration'
+            {
+                Write-Debug -Message 'Configuration Block Processing'
+
+                # Include all lines in the configuration block in the code output
+                $null = $exampleCodeStringBuilder.AppendLine($exampleLine)
+            }
+
+            'ExampleCommentHeader'
+            {
+                Write-Debug -Message 'ExampleCommentHeader Block Processing'
+
+                # Include all lines in Example Comment Header block except for headers
+                $exampleLine = $exampleLine.TrimStart()
+
+                if ($exampleLine -notin ('.SYNOPSIS', '.DESCRIPTION', '.EXAMPLE', '#>'))
+                {
+                    # Not a header so add this to the output
+                    $null = $exampleDescriptionStringBuilder.AppendLine($exampleLine)
+                }
+
+                if ($exampleLine -eq '#>')
+                {
+                    Write-Debug -Message 'ExampleCommentHeader Block Ended'
+
+                    # End of the Example Comment Header block
+                    $blockType = [WikiExampleBlockType]::None
+                }
+            }
+
+            default
+            {
+                Write-Debug -Message 'Not Currently Processing Block'
+
+                # Check the current line
+                if ($exampleLine.TrimStart() -eq  '<#PSScriptInfo')
+                {
+                    Write-Debug -Message 'PSScriptInfo Block Started'
+
+                    $blockType = [WikiExampleBlockType]::PSScriptInfo
+                }
+                elseif ($exampleLine -match 'Configuration')
+                {
+                    Write-Debug -Message 'Configuration Block Started'
+
+                    $null = $exampleCodeStringBuilder.AppendLine($exampleLine)
+                    $blockType = [WikiExampleBlockType]::Configuration
+                }
+                elseif ($exampleLine.TrimStart() -eq '<#')
+                {
+                    Write-Debug -Message 'ExampleCommentHeader Block Started'
+
+                    $blockType = [WikiExampleBlockType]::ExampleCommentHeader
+                }
+            }
+        }
+    }
+
+    # Assemble the final output
+    $null = $exampleStringBuilder = New-Object -TypeName System.Text.StringBuilder
+    $null = $exampleStringBuilder.AppendLine("### Example $ExampleNumber")
+    $null = $exampleStringBuilder.AppendLine()
+    $null = $exampleStringBuilder.AppendLine($exampleDescriptionStringBuilder)
+    $null = $exampleStringBuilder.AppendLine('```powershell')
+    $null = $exampleStringBuilder.Append($exampleCodeStringBuilder)
+    $null = $exampleStringBuilder.Append('```')
+
+    return $exampleStringBuilder.ToString()
 }
 
 Export-ModuleMember -Function New-DscResourceWikiSite

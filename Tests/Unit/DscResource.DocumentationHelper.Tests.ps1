@@ -76,8 +76,7 @@ InModuleScope -ModuleName 'WikiPages' {
             FullName  = $script:mockExampleFilePath
         }
     )
-    $script:mockExampleContentFirstType = '
-### Example 1
+    $script:mockExampleContent = '### Example 1
 
 Example description.
 
@@ -97,25 +96,7 @@ Configuration Example
     }
 }
 ```'
-    $script:mockGetContentExampleFirstType = '<#
-    .EXAMPLE
-    Example Description.
-#>
-Configuration Example
-{
-    Import-DSCResource -ModuleName MyModule
 
-    Node localhost
-    {
-        MyResource Something
-        {
-            Id    = ''MyId''
-            Enum  = ''Value1''
-            Int   = 1
-        }
-    }
-}
-'
     # General mock values
     $script:mockReadmePath = Join-Path -Path $script:mockSchemaFolder -ChildPath 'readme.md'
     $script:mockOutputFile = Join-Path -Path $script:mockOutputPath -ChildPath 'MyResource.md'
@@ -186,7 +167,7 @@ Configuration Example
         }
         $script:outFile_parameterFilter = {
             $FilePath -eq $script:mockOutputFile `
-            -and $InputObject -eq $script:mockWikiPageOutput
+                -and $InputObject -eq $script:mockWikiPageOutput
         }
 
         # Function call parameters
@@ -245,7 +226,7 @@ Configuration Example
                 Mock `
                     -CommandName Get-DscResourceWikiExampleContent `
                     -ParameterFilter $script:getDscResourceWikiExampleContent_parameterFilter `
-                    -MockWith { $script:mockExampleContentFirstType }
+                    -MockWith { $script:mockExampleContent }
 
                 Mock `
                     -CommandName Out-File `
@@ -301,19 +282,58 @@ Configuration Example
             $Path -eq $script:mockExampleFilePath
         }
 
-        # Function call parameters
-        $script:getDscResourceWikiExampleContent_parameters = @{
-            ExamplePath   = $script:mockExampleFilePath
-            ExampleNumber = 1
-            Verbose       = $true
-        }
-
         Context 'When a path to an example file with .EXAMPLE is passed and example number 1' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 1
+                Verbose       = $true
+            }
+
+            $script:mockExampleContent = '### Example 1
+
+Example Description.
+
+```powershell
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}
+```'
+
+            $script:mockGetContentExample = '<#
+.EXAMPLE
+Example Description.
+#>
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}' -split "`r`n"
+
             BeforeAll {
                 Mock `
                     -CommandName Get-Content `
                     -ParameterFilter $script:getContentExample_parameterFilter `
-                    -MockWith { $script:mockGetContentExampleFirstType }
+                    -MockWith { $script:mockGetContentExample }
             }
 
             It 'Should not throw an exception' {
@@ -321,7 +341,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContentFirstType
+                $script:result | Should -Be $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -332,11 +352,16 @@ Configuration Example
             }
         }
 
-        Context 'When a path to an example file with .DESCRIPTION is passed and example number 1' {
-            $script:mockExampleContent = '
-### Example 1
+        Context 'When a path to an example file with .DESCRIPTION is passed and example number 2' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 2
+                Verbose       = $true
+            }
 
-Example description.
+            $script:mockExampleContent = '### Example 2
+
+Example Description.
 
 ```powershell
 Configuration Example
@@ -372,8 +397,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -398,11 +422,16 @@ Configuration Example
             }
         }
 
-        Context 'When a path to an example file with .SYNOPSIS is passed and example number 1' {
-            $script:mockExampleContent = '
-### Example 1
+        Context 'When a path to an example file with .SYNOPSIS is passed and example number 3' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 3
+                Verbose       = $true
+            }
 
-Example description.
+            $script:mockExampleContent = '### Example 3
+
+Example Description.
 
 ```powershell
 Configuration Example
@@ -438,8 +467,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -464,11 +492,16 @@ Configuration Example
             }
         }
 
-        Context 'When a path to an example file with .SYNOPSIS and #Requires is passed and example number 1' {
-            $script:mockExampleContent = '
-### Example 1
+        Context 'When a path to an example file with .SYNOPSIS and #Requires is passed and example number 4' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 4
+                Verbose       = $true
+            }
 
-Example description.
+            $script:mockExampleContent = '### Example 4
+
+Example Description.
 
 ```powershell
 Configuration Example
@@ -507,8 +540,7 @@ Configuration Example
             Int   = 1
         }
     }
-}
-'
+}' -split "`r`n"
 
             BeforeAll {
                 Mock `
@@ -531,6 +563,358 @@ Configuration Example
                     -ParameterFilter $script:getContentExample_parameterFilter `
                     -Exactly -Times 1
             }
+        }
+
+        Context 'When a path to an example file with .DESCRIPTION, #Requires and PSScriptInfo is passed and example number 5' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 5
+                Verbose       = $true
+            }
+
+            $script:mockExampleContent = '### Example 5
+
+Example Description.
+
+```powershell
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}
+```'
+
+            $script:mockGetContentExample = '<#PSScriptInfo
+.VERSION 1.0.0
+.GUID 14b1346a-436a-4f64-af5c-b85119b819b3
+.AUTHOR Microsoft Corporation
+.COMPANYNAME Microsoft Corporation
+.COPYRIGHT
+.TAGS DSCConfiguration
+.LICENSEURI https://github.com/PowerShell/CertificateDsc/blob/master/LICENSE
+.PROJECTURI https://github.com/PowerShell/CertificateDsc
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES First version.
+.PRIVATEDATA 2016-Datacenter,2016-Datacenter-Server-Core
+#>
+
+#Requires -module MyModule
+#Requires -module OtherModule
+
+<#
+    .DESCRIPTION
+        Example Description.
+#>
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}' -split "`r`n"
+
+            BeforeAll {
+                Mock `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -MockWith { $script:mockGetContentExample }
+            }
+
+            It 'Should not throw an exception' {
+                { $script:result = Get-DscResourceWikiExampleContent @script:getDscResourceWikiExampleContent_parameters } | Should -Not -Throw
+            }
+
+            It 'Should return the expected string' {
+                $script:result | Should -Be $script:mockExampleContent
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -Exactly -Times 1
+            }
+        }
+
+        Context 'When a path to an example file with .SYNOPSIS, .DESCRIPTION and PSScriptInfo is passed and example number 6' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 6
+                Verbose       = $true
+            }
+
+            $script:mockExampleContent = '### Example 6
+
+Example Synopsis.
+
+Example Description.
+
+```powershell
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}
+```'
+
+            $script:mockGetContentExample = '<#PSScriptInfo
+.VERSION 1.0.0
+.GUID 14b1346a-436a-4f64-af5c-b85119b819b3
+.AUTHOR Microsoft Corporation
+.COMPANYNAME Microsoft Corporation
+.COPYRIGHT
+.TAGS DSCConfiguration
+.LICENSEURI https://github.com/PowerShell/CertificateDsc/blob/master/LICENSE
+.PROJECTURI https://github.com/PowerShell/CertificateDsc
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES First version.
+.PRIVATEDATA 2016-Datacenter,2016-Datacenter-Server-Core
+#>
+
+<#
+    .SYNOPSIS
+        Example Synopsis.
+
+    .DESCRIPTION
+        Example Description.
+#>
+Configuration Example
+{
+    Import-DSCResource -ModuleName MyModule
+
+    Node localhost
+    {
+        MyResource Something
+        {
+            Id    = ''MyId''
+            Enum  = ''Value1''
+            Int   = 1
+        }
+    }
+}' -split "`r`n"
+
+            BeforeAll {
+                Mock `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -MockWith { $script:mockGetContentExample }
+            }
+
+            It 'Should not throw an exception' {
+                { $script:result = Get-DscResourceWikiExampleContent @script:getDscResourceWikiExampleContent_parameters } | Should -Not -Throw
+            }
+
+            It 'Should return the expected string' {
+                $script:result | Should -Be $script:mockExampleContent
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -Exactly -Times 1
+            }
+        }
+
+        Context 'When a path to an example file from SharePointDsc resource module and example number 7' {
+            $script:getDscResourceWikiExampleContent_parameters = @{
+                ExamplePath   = $script:mockExampleFilePath
+                ExampleNumber = 7
+                Verbose       = $true
+            }
+
+            $script:mockExampleContent = '### Example 7
+
+This example shows how to deploy Access Services 2013 to the local SharePoint farm.
+
+```powershell
+    Configuration Example
+    {
+        param(
+            [Parameter(Mandatory = $true)]
+            [PSCredential]
+            $SetupAccount
+        )
+        Import-DscResource -ModuleName SharePointDsc
+
+        node localhost {
+            SPAccessServiceApp AccessServices
+            {
+                Name                 = "Access Services Service Application"
+                ApplicationPool      = "SharePoint Service Applications"
+                DatabaseServer       = "SQL.contoso.local\SQLINSTANCE"
+                PsDscRunAsCredential = $SetupAccount
+            }
+        }
+    }
+```'
+
+            $script:mockGetContentExample = '<#
+.EXAMPLE
+    This example shows how to deploy Access Services 2013 to the local SharePoint farm.
+#>
+
+    Configuration Example
+    {
+        param(
+            [Parameter(Mandatory = $true)]
+            [PSCredential]
+            $SetupAccount
+        )
+        Import-DscResource -ModuleName SharePointDsc
+
+        node localhost {
+            SPAccessServiceApp AccessServices
+            {
+                Name                 = "Access Services Service Application"
+                ApplicationPool      = "SharePoint Service Applications"
+                DatabaseServer       = "SQL.contoso.local\SQLINSTANCE"
+                PsDscRunAsCredential = $SetupAccount
+            }
+        }
+    }' -split "`r`n"
+
+            BeforeAll {
+                Mock `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -MockWith { $script:mockGetContentExample }
+            }
+
+            It 'Should not throw an exception' {
+                { $script:result = Get-DscResourceWikiExampleContent @script:getDscResourceWikiExampleContent_parameters } | Should -Not -Throw
+            }
+
+            It 'Should return the expected string' {
+                $script:result | Should -Be $script:mockExampleContent
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Get-Content `
+                    -ParameterFilter $script:getContentExample_parameterFilter `
+                    -Exactly -Times 1
+            }
+        }
+    }
+
+    Context 'When a path to an example file from CertificateDsc resource module and example number 8' {
+        $script:getDscResourceWikiExampleContent_parameters = @{
+            ExamplePath   = $script:mockExampleFilePath
+            ExampleNumber = 8
+            Verbose       = $true
+        }
+
+        $script:mockExampleContent = '### Example 8
+
+Exports a certificate as a CERT using the friendly name to identify it.
+
+```powershell
+Configuration CertificateExport_CertByFriendlyName_Config
+{
+    Import-DscResource -ModuleName CertificateDsc
+
+    Node localhost
+    {
+        CertificateExport SSLCert
+        {
+            Type         = ''CERT''
+            FriendlyName = ''Web Site SSL Certificate for www.contoso.com''
+            Path         = ''c:\sslcert.cer''
+        }
+    }
+}
+```'
+
+        $script:mockGetContentExample = '<#PSScriptInfo
+.VERSION 1.0.0
+.GUID 14b1346a-436a-4f64-af5c-b85119b819b3
+.AUTHOR Microsoft Corporation
+.COMPANYNAME Microsoft Corporation
+.COPYRIGHT
+.TAGS DSCConfiguration
+.LICENSEURI https://github.com/PowerShell/CertificateDsc/blob/master/LICENSE
+.PROJECTURI https://github.com/PowerShell/CertificateDsc
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES First version.
+.PRIVATEDATA 2016-Datacenter,2016-Datacenter-Server-Core
+#>
+
+#Requires -module CertificateDsc
+
+<#
+    .DESCRIPTION
+        Exports a certificate as a CERT using the friendly name to identify it.
+#>
+Configuration CertificateExport_CertByFriendlyName_Config
+{
+    Import-DscResource -ModuleName CertificateDsc
+
+    Node localhost
+    {
+        CertificateExport SSLCert
+        {
+            Type         = ''CERT''
+            FriendlyName = ''Web Site SSL Certificate for www.contoso.com''
+            Path         = ''c:\sslcert.cer''
+        }
+    }
+}' -split "`r`n"
+
+        BeforeAll {
+            Mock `
+                -CommandName Get-Content `
+                -ParameterFilter $script:getContentExample_parameterFilter `
+                -MockWith { $script:mockGetContentExample }
+        }
+
+        It 'Should not throw an exception' {
+            { $script:result = Get-DscResourceWikiExampleContent @script:getDscResourceWikiExampleContent_parameters } | Should -Not -Throw
+        }
+
+        It 'Should return the expected string' {
+            $script:result | Should -Be $script:mockExampleContent
+        }
+
+        It 'Should call the expected mocks ' {
+            Assert-MockCalled `
+                -CommandName Get-Content `
+                -ParameterFilter $script:getContentExample_parameterFilter `
+                -Exactly -Times 1
         }
     }
 }
