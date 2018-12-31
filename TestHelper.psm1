@@ -899,7 +899,8 @@ function Install-NugetExe
         $RequiredVersion = '3.4.4'
     )
 
-    $downloadUri = '{0}/{1}/NuGet.exe' -f $Uri, $RequiredVersion.ToString()
+    $downloadUri = '{0}/v{1}/NuGet.exe' -f $Uri, $RequiredVersion.ToString()
+    Write-Info -Message ('Downloading NuGet.exe from URL ''{0}''.' -f $downloadUri)
 
     if (Test-Path -Path $OutFile)
     {

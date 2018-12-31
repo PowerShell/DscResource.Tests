@@ -614,7 +614,7 @@ InModuleScope $script:ModuleName {
                 { Install-NuGetExe -OutFile $TestDrive } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
-                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, '3.4.4', 'NuGet.exe')
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, 'v3.4.4', 'NuGet.exe')
                 } -Exactly -Times 1 -Scope It
             }
 
@@ -622,7 +622,7 @@ InModuleScope $script:ModuleName {
                 { Install-NuGetExe -OutFile $TestDrive -RequiredVersion '4.0.0' } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
-                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, '4.0.0', 'NuGet.exe')
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, 'v4.0.0', 'NuGet.exe')
                 } -Exactly -Times 1 -Scope It
             }
 
@@ -631,7 +631,7 @@ InModuleScope $script:ModuleName {
                 { Install-NuGetExe -OutFile $TestDrive -Uri $mockDummyUri } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
-                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, '3.4.4', 'NuGet.exe')
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, 'v3.4.4', 'NuGet.exe')
                 } -Exactly -Times 1 -Scope It
             }
 
@@ -640,7 +640,7 @@ InModuleScope $script:ModuleName {
                 { Install-NuGetExe -OutFile $TestDrive -Uri $mockDummyUri -RequiredVersion '4.1.0' } | Should -Not -Throw
 
                 Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
-                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, '4.1.0', 'NuGet.exe')
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, 'v4.1.0', 'NuGet.exe')
                 } -Exactly -Times 1 -Scope It
             }
         }

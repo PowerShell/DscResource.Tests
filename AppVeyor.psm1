@@ -50,10 +50,10 @@ function Invoke-AppveyorInstallTask
     Write-Info -Message 'Installing the latest PowerShellGet from the PowerShell Gallery.'
     Install-Module -Name PowerShellGet -Force -Repository PSGallery
 
-    $nugetExePath = Join-Path -Path $env:TEMP -ChildPath 'nuget.exe'
-    $nugetExeVersion = '3.4.4'
-    Write-Info -Message ('Saving nuget.exe (v{1}), to path ''{0}'', to enable package creation.' -f $nugetExePath, $nugetExeVersion)
-    Install-NugetExe -OutFile $nugetExePath -RequiredVersion $nugetExeVersion
+    $nuGetExePath = Join-Path -Path $env:TEMP -ChildPath 'nuget.exe'
+    $nuGetExeVersion = '3.4.4'
+    Write-Info -Message ('Saving nuget.exe (v{1}), to path ''{0}'', to enable package creation.' -f $nuGetExePath, $nuGetExeVersion)
+    Install-NugetExe -OutFile $nuGetExePath -RequiredVersion $nuGetExeVersion
 
     Write-Info -Message 'Installing the latest Pester module.'
 
