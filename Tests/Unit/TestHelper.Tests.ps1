@@ -606,12 +606,42 @@ InModuleScope $script:ModuleName {
         Context 'When downloading NuGet' {
             BeforeAll {
                 Mock -CommandName 'Invoke-WebRequest'
+
+                $mockDownloadUri = 'https://dist.nuget.org/win-x86-commandline'
             }
 
-            It 'Should download NuGet without throwing' {
+            It 'Should download NuGet, using default values, without throwing' {
                 { Install-NuGetExe -OutFile $TestDrive } | Should -Not -Throw
 
-                Assert-MockCalled -CommandName 'Invoke-WebRequest' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, '3.4.4', 'NuGet.exe')
+                } -Exactly -Times 1 -Scope It
+            }
+
+            It 'Should download NuGet, using specific version, without throwing' {
+                { Install-NuGetExe -OutFile $TestDrive -RequiredVersion '4.0.0' } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDownloadUri, '4.0.0', 'NuGet.exe')
+                } -Exactly -Times 1 -Scope It
+            }
+
+            It 'Should download NuGet, using specific uri, without throwing' {
+                $mockDummyUri = 'https://dummyurl'
+                { Install-NuGetExe -OutFile $TestDrive -Uri $mockDummyUri } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, '3.4.4', 'NuGet.exe')
+                } -Exactly -Times 1 -Scope It
+            }
+
+            It 'Should download NuGet, using specific uri and specific version, without throwing' {
+                $mockDummyUri = 'https://dummyurl'
+                { Install-NuGetExe -OutFile $TestDrive -Uri $mockDummyUri -RequiredVersion '4.1.0' } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName 'Invoke-WebRequest' -ParameterFilter {
+                    $Uri -eq ('{0}/{1}/{2}' -f $mockDummyUri, '4.1.0', 'NuGet.exe')
+                } -Exactly -Times 1 -Scope It
             }
         }
     }
@@ -1680,7 +1710,7 @@ InModuleScope $script:ModuleName {
                     ScriptName = 'Pester.ps1'
                 }
                 $testRuleType = 'Test'
-                
+
                 Mock -CommandName 'Write-Warning'
             }
 

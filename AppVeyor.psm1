@@ -52,7 +52,7 @@ function Invoke-AppveyorInstallTask
 
     Write-Info -Message 'Installing nuget.exe v3.4.4 to enable package creation.'
     $nugetExePath = Join-Path -Path $env:TEMP -ChildPath 'nuget.exe'
-    Install-NugetExe -OutFile $nugetExePath
+    Install-NugetExe -OutFile $nugetExePath -RequiredVersion '3.4.4'
 
     Write-Info -Message 'Installing the latest Pester module.'
 

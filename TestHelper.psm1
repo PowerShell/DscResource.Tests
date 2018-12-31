@@ -883,18 +883,26 @@ function Install-NugetExe
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $OutFile,
 
-        [String]
-        $Uri = 'https://dist.nuget.org/win-x86-commandline/v3.4.4/NuGet.exe'
+        [Parameter()]
+        [System.String]
+        $Uri = 'https://dist.nuget.org/win-x86-commandline',
+
+        [Parameter()]
+        [System.Version]
+        $RequiredVersion = '3.4.4'
     )
+
+    $downloadUri = '{0}/{1}/NuGet.exe' -f $Uri, $RequiredVersion.ToString()
 
     if (Test-Path -Path $OutFile)
     {
         Remove-Item -Path $OutFile -Force
     }
-    Invoke-WebRequest -Uri $Uri -OutFile $OutFile
+
+    Invoke-WebRequest -Uri $downloadUri -OutFile $OutFile
 } # Install-NugetExe
 
 <#
