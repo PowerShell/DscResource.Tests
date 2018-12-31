@@ -900,7 +900,7 @@ function Install-NugetExe
     )
 
     $downloadUri = '{0}/v{1}/NuGet.exe' -f $Uri, $RequiredVersion.ToString()
-    Write-Info -Message ('Downloading NuGet.exe from URL ''{0}''.' -f $downloadUri)
+    Write-Info -Message ('Downloading NuGet.exe (v{2}) from URL ''{0}'', and installing it to local path ''{1}''.' -f $downloadUri, $OutFile, $RequiredVersion.ToString())
 
     if (Test-Path -Path $OutFile)
     {
