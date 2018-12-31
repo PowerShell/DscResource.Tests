@@ -862,20 +862,24 @@ function Get-SuppressedPSSARuleNameList
 
 <#
     .SYNOPSIS
-        Downloads and installs a specific version of Nuget.exe to be used to produce
-        DSC Resource NUPKG files.
+        Downloads and saves a specific version of NuGet.exe to a local path, to
+        be used to produce DSC Resource NUPKG files.
 
-        This allows control over the version of Nuget.exe that is used. This helps
-        resolve an issue with different versions of Nuget.exe formatting the version
+        This allows control over the version of NuGet.exe that is used. This helps
+        resolve an issue with different versions of NuGet.exe formatting the version
         number in the filename of a produced NUPKG file.
 
         See https://github.com/PowerShell/xNetworking/issues/177 for more information.
 
     .PARAMETER OutFile
-        The path to the download Nuget.exe to.
+        The local path to save the downloaded NuGet.exe to.
 
     .PARAMETER Uri
-        The URI to use to download Nuget.exe from.
+        The URI to use as the location from where to download NuGet.exe
+        i.e. 'https://dist.nuget.org/win-x86-commandline'.
+
+    .PARAMETER RequiredVersion
+        The specific version of the NuGet.exe to download.
 #>
 function Install-NugetExe
 {
