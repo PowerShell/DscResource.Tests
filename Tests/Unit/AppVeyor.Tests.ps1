@@ -759,4 +759,60 @@ InModuleScope $script:ModuleName {
             }
         }
     }
+
+    Describe 'AppVeyor\Invoke-AppveyorInstallTask' {
+        BeforeAll {
+            Mock -CommandName Write-Info
+            Mock -CommandName Get-PackageProvider
+            Mock -CommandName Install-Module
+            Mock -CommandName Install-NugetExe
+            Mock -CommandName New-DscSelfSignedCertificate
+        }
+
+        Context 'When installing tests prerequisites using default parameter values' {
+            It 'Should call the correct mocks' {
+                {
+                    Invoke-AppveyorInstallTask
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Install-NugetExe -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+
+                Assert-MockCalled -CommandName Install-Module -ParameterFilter {
+                    $Name -eq 'PowerShellGet'
+                } -Exactly -Times 1 -Scope It
+
+                Assert-MockCalled -CommandName Install-Module -ParameterFilter {
+                    $Name -eq 'Pester' `
+                    -and $PSBoundParameters.ContainsKey('MaximumVersion') -eq $false
+                } -Exactly -Times 1 -Scope It
+            }
+        }
+
+        Context 'When installing tests prerequisites using specific Pester version' {
+            BeforeEach {
+                $mockPesterMaximumVersion = '1.0.0'
+            }
+
+            It 'Should call the correct mocks' {
+                {
+                    Invoke-AppveyorInstallTask -PesterMaximumVersion $mockPesterMaximumVersion
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Get-PackageProvider -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName Install-NugetExe -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName New-DscSelfSignedCertificate -Exactly -Times 1 -Scope It
+
+                Assert-MockCalled -CommandName Install-Module -ParameterFilter {
+                    $Name -eq 'PowerShellGet'
+                } -Exactly -Times 1 -Scope It
+
+                Assert-MockCalled -CommandName Install-Module -ParameterFilter {
+                    $Name -eq 'Pester' `
+                    -and $MaximumVersion -eq [Version] $mockPesterMaximumVersion
+                } -Exactly -Times 1 -Scope It
+            }
+        }
+    }
 } # End InModuleScope
