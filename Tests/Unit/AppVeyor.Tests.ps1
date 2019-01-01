@@ -150,7 +150,7 @@ InModuleScope $script:ModuleName {
             }
         }
 
-        Context 'When there are no Tests folder' {
+        Context 'When there is no Tests folder' {
             BeforeAll {
                 Mock -CommandName Copy-Item
                 Mock -CommandName Remove-Item

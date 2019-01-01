@@ -219,6 +219,7 @@ function Invoke-AppveyorTestScriptTask
     if (Test-Path -Path $testsPath)
     {
         $configurationFiles = Get-ChildItem -Path $testsPath -Include '*.config.ps1' -Recurse
+
         foreach ($configurationFile in $configurationFiles)
         {
             # Get the list of additional modules required by the example
