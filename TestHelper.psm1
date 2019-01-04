@@ -192,7 +192,7 @@ function Install-ModuleFromPowerShellGallery {
         '-ExcludeVersion'
     )
 
-    $result = Start-Process -FilePath $nugetPath -ArgumentList $arguments -Wait
+    $result = Start-Process -FilePath $nugetPath -ArgumentList $arguments -PassThru -Wait
 
     if ($result.ExitCode -ne 0)
     {
