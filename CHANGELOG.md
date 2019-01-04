@@ -14,6 +14,16 @@
   and increased unit test coverage and function ([issue #256](https://github.com/PowerShell/DscResource.Tests/issues/256)).
 - Added .gitignore file and suppressed ```package-lock.json``` file from being
   included in repo.
+- Changes to AppVeyor.psm1
+  - Updated Invoke-AppveyorInstallTask to provide better informational messages
+    when installing each prerequisite
+    ([issue #293](https://github.com/PowerShell/DscResource.Tests/issues/293)).
+  - Added unit tests for Invoke-AppveyorInstallTask.
+- Changes to TestHelper.psm1
+  - Updated `Install-NuGetExe` to have a new parameter `RequiredVersion`.
+    Also the `Uri` parameter no longer takes the entire download URL but
+    just the URI, i.e. `https://dist.nuget.org/win-x86-commandline`. The
+    correct download URL is now concatenated withing the helper function.
 
 ## 0.3.0.0
 
