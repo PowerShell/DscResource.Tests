@@ -18,7 +18,8 @@
         "vors",
         "subfolders",
         "PSPKI",
-        "gitignore"
+        "gitignore",
+        "Nuget"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
