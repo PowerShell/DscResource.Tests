@@ -216,17 +216,25 @@ function Invoke-AppveyorTestScriptTask
     $moduleName = Split-Path -Path $env:APPVEYOR_BUILD_FOLDER -Leaf
     $testsPath = Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'Tests'
 
-    $configurationFiles = Get-ChildItem -Path $testsPath -Include '*.config.ps1' -Recurse
-    foreach ($configurationFile in $configurationFiles)
+    if (Test-Path -Path $testsPath)
     {
-        # Get the list of additional modules required by the example
-        $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $configurationFile.FullName |
-            Where-Object -Property Name -ne $moduleName
+        $configurationFiles = Get-ChildItem -Path $testsPath -Include '*.config.ps1' -Recurse
 
-        if ($requiredModules)
+        foreach ($configurationFile in $configurationFiles)
         {
-            Install-DependentModule -Module $requiredModules
+            # Get the list of additional modules required by the example
+            $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $configurationFile.FullName |
+                Where-Object -Property Name -ne $moduleName
+
+            if ($requiredModules)
+            {
+                Install-DependentModule -Module $requiredModules
+            }
         }
+    }
+    else
+    {
+        Write-Warning -Message 'The ''Tests'' folder is missing, the test framework will only run the common tests.'
     }
 
     <#
