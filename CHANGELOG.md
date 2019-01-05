@@ -21,7 +21,7 @@
   - Added unit tests for Invoke-AppveyorInstallTask.
 - Changes to TestHelper.psm1
   - Updated `Install-NuGetExe` to have a new parameter `RequiredVersion`.
-    Also the `Uri` parameter no longer takes the entire download URL but
+    Also, the `Uri` parameter no longer takes the entire download URL but
     just the URI, i.e. `https://dist.nuget.org/win-x86-commandline`. The
     correct download URL is now concatenated withing the helper function.
 - Now outputs a warning when a repository does not have a Tests folder
