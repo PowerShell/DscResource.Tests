@@ -26,6 +26,10 @@
     correct download URL is now concatenated withing the helper function.
 - Now outputs a warning when a repository does not have a Tests folder
   ([issue #296](https://github.com/PowerShell/DscResource.Tests/issues/296)).
+- Update PSSA rule Measure-IfStatement to handle when there is a clause spanning
+  multiple rows and the first rows ends correctly with an open brace (see example
+  in the regression test for this issue)
+  ([issue #238](https://github.com/PowerShell/DscResource.Tests/issues/238)).
 
 ## 0.3.0.0
 
