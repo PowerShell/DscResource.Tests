@@ -756,9 +756,9 @@ environment:
 > with the following content. This will always make git checkout files with CRLF
 > as the end-of-line (eol) characters.
 
-> ```plaintext
-> * text eol=crlf
-> ```
+```plaintext
+* text eol=crlf
+```
 
 #### Contributor responsibilities
 
