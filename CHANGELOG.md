@@ -30,7 +30,9 @@
   multiple rows and the first rows ends correctly with an open brace (see example
   in the regression test for this issue)
   ([issue #238](https://github.com/PowerShell/DscResource.Tests/issues/238)).
-- Update calls to Install-Module in AppVeyor.psm1 to use AllowClobber.
+- Update call to install PowerShellGet via Install-Module in AppVeyor.psm1 to
+  use AllowClobber
+  ([issue #310](https://github.com/PowerShell/DscResource.Tests/issues/310)).
 
 ## 0.3.0.0
 
