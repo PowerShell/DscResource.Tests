@@ -72,8 +72,6 @@ function Invoke-AppveyorInstallTask
         $installPesterParameters['MaximumVersion'] = $PesterMaximumVersion
     }
 
-    $installPesterParameters.Add('AllowClobber', $true)
-
     Install-Module @installPesterParameters
 
     Write-Info -Message 'Create a self-signed certificate for encrypting DSC configuration credentials.'
