@@ -48,7 +48,7 @@ function Invoke-AppveyorInstallTask
     $getPackageProviderResult | Format-Table -Property @('Name', 'ProviderName', 'Version')
 
     Write-Info -Message 'Installing the latest PowerShellGet from the PowerShell Gallery.'
-    Install-Module -Name PowerShellGet -Force -Repository PSGallery
+    Install-Module -Name PowerShellGet -Force -Repository PSGallery -AllowClobber
 
     $nuGetExePath = Join-Path -Path $env:TEMP -ChildPath 'nuget.exe'
     Write-Info -Message 'Installing nuget.exe to enable package creation.'
