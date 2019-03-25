@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
+  configuration is not currently running.
 - Added issue templates.
 - Added the ability to temporary skip common test for debugging purposes
   ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
