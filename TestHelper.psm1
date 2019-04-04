@@ -483,7 +483,7 @@ function Reset-DSC {
 
     Write-Verbose -Message 'Resetting the DSC LCM'
 
-    Stop-DscConfiguration -ErrorAction 'SilentlyContinue' -Force
+    Stop-DscConfiguration -ErrorAction 'SilentlyContinue' -WarningAction 'SilentlyContinue' -Force
     Remove-DscConfigurationDocument -Stage 'Current' -Force
     Remove-DscConfigurationDocument -Stage 'Pending' -Force
     Remove-DscConfigurationDocument -Stage 'Previous' -Force
