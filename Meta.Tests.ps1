@@ -1531,6 +1531,17 @@ Describe 'Common Tests - Validate Localization' {
                     )
 
                     $localizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key exist in the en-US localization resource file'
+                }  -ErrorVariable itBlockError
+
+                # If the It-block did not pass the test, output the a text explaining hwo to resolve the issue.
+                if ($itBlockError.Count -ne 0)
+                {
+                    $message = @"
+If you cannot translate the english string in the localized file, then please just add the en-US localization string key together with the en-US text string.
+"@
+
+                    Write-Host -BackgroundColor Yellow -ForegroundColor Black -Object $message
+                    Write-Host -ForegroundColor White -Object ''
                 }
 
                 It "Should not be missing the localization string key <LocalizedKey> in the english resource file for the resource/module <Folder>" -TestCases $testCases_MissingEnglishLocalizedKeys {
