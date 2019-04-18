@@ -1323,6 +1323,9 @@ Describe 'Common Tests - Validate Localization' {
 
             foreach ($testCase in $testCases)
             {
+                $skipTest_LocalizedKeys = $false
+                $skipTest_UsedLocalizedKeys = $false
+
                 $testCases_LocalizedKeys = @()
                 $testCases_UsedLocalizedKeys= @()
 
@@ -1362,17 +1365,32 @@ Describe 'Common Tests - Validate Localization' {
                     -and $_.Expression.VariablePath.UserPath -eq 'script:localizedData'
                 }
 
-                $usedLocalizationKeys = $localizationExpressionMembers.Member.Value | Sort-Object -Unique
-
-                foreach ($localizedKey in $usedLocalizationKeys)
+                if ($localizationExpressionMembers)
                 {
-                    $testCases_UsedLocalizedKeys += @{
-                        Folder = $testCase.Folder
-                        LocalizedKey = $localizedKey
+                    $usedLocalizationKeys = $localizationExpressionMembers.Member.Value | Sort-Object -Unique
+
+                    foreach ($localizedKey in $usedLocalizationKeys)
+                    {
+                        $testCases_UsedLocalizedKeys += @{
+                            Folder = $testCase.Folder
+                            LocalizedKey = $localizedKey
+                        }
                     }
                 }
 
-                It 'Should use the localized string key <LocalizedKey>, from the localization resource file, in the resource/module <Folder>' -TestCases $testCases_LocalizedKeys {
+                if (-not $testCases_LocalizedKeys)
+                {
+                    # There are no test cases to build, skipping test.
+                    $skipTest_LocalizedKeys = $true
+                }
+
+                if (-not $testCases_UsedLocalizedKeys)
+                {
+                    # There are no test cases to build, skipping test.
+                    $skipTest_UsedLocalizedKeys = $true
+                }
+
+                It 'Should use the localized string key <LocalizedKey>, from the localization resource file, in the resource/module <Folder>' -TestCases $testCases_LocalizedKeys -Skip:$skipTest_LocalizedKeys {
                     param
                     (
                         [Parameter()]
@@ -1387,7 +1405,7 @@ Describe 'Common Tests - Validate Localization' {
                     $usedLocalizationKeys | Should -Contain $LocalizedKey -Because 'the key exist in the localized string resource file'
                 }
 
-                It 'Should not be missing the localized string key <LocalizedKey>, from the resource/module <Folder>, in the localization resource file' -TestCases $testCases_UsedLocalizedKeys {
+                It 'Should not be missing the localized string key <LocalizedKey>, from the resource/module <Folder>, in the localization resource file' -TestCases $testCases_UsedLocalizedKeys -Skip:$skipTest_UsedLocalizedKeys {
                     param
                     (
                         [Parameter()]
