@@ -1341,10 +1341,10 @@ Describe 'Common Tests - Validate Localization' {
                     }
                 }
 
-                $resourceModulePath = Join-Path -Path $testCase.Path -ChildPath "$($testCase.Folder).psm1"
+                $modulePath = Join-Path -Path $testCase.Path -ChildPath "$($testCase.Folder).psm1"
 
                 $parseErrors = $null
-                $definitionAst = [System.Management.Automation.Language.Parser]::ParseFile($resourceModulePath, [ref] $null, [ref] $parseErrors)
+                $definitionAst = [System.Management.Automation.Language.Parser]::ParseFile($modulePath, [ref] $null, [ref] $parseErrors)
 
                 if ($parseErrors)
                 {
@@ -1357,7 +1357,11 @@ Describe 'Common Tests - Validate Localization' {
 
                 $configurationDefinition = $definitionAst.FindAll($astFilter, $true)
 
-                $localizationExpressionMembers = $configurationDefinition | Where-Object -FilterScript { $_.Expression.VariablePath.UserPath -eq 'script:localizedData' }
+                $localizationExpressionMembers = $configurationDefinition | Where-Object -FilterScript {
+                    $_.Expression -is [System.Management.Automation.Language.VariableExpressionAst] `
+                    -and $_.Expression.VariablePath.UserPath -eq 'script:localizedData'
+                }
+
                 $usedLocalizationKeys = $localizationExpressionMembers.Member.Value | Sort-Object -Unique
 
                 foreach ($localizedKey in $usedLocalizationKeys)
