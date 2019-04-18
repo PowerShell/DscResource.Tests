@@ -38,6 +38,7 @@ A full list of changes in each version can be found in the [change log](CHANGELO
   - [Common Meta Test Opt-In](#common-meta-test-opt-in)
     - [Common Tests - Validate Markdown Links](#common-tests---validate-markdown-links)
     - [Common Tests - Spellcheck Markdown Files](#common-tests---spellcheck-markdown-files)
+    - [Common Tests - Validating Localization](#common-tests---validating-localization)
   - [Markdown Testing](#markdown-testing)
   - [Example Testing](#example-testing)
   - [PSScriptAnalyzer Rules](#psscriptanalyzer-rules)
@@ -181,6 +182,23 @@ To configure [cSpell](https://www.npmjs.com/package/cspell)
 to ignore the word combination `AppVeyor`, then we can add a regular expression,
 in this case `AppVeyor`. This will cause [cSpell](https://www.npmjs.com/package/cspell)
 to ignore part of the text that matches the regular expression.
+
+#### Common Tests - Validating Localization
+
+These tests validate the localization folders and files, and also so that
+each localization string key is used and there are no missing or extra
+localization string keys.
+
+- Should have an en-US localization folder.
+- The en-US localization folder should have the correct casing.
+- Should exist a resource file with the correct name in the localization folder.
+- The resource or module should use all the localization string keys from the localization resource file.
+- The localization resource file should not be missing any localization string key that are used in the resource or module.
+- If there are other localization folders (other than en-US)
+  - They should contain a resource file with the correct name.
+  - The folders should use the correct casing.
+  - All en-US resource file localized string keys must also exist in the resource file.
+  - There should be no additional localized string keys in the resource file that does not exist in the en-US resource file.
 
 ### Markdown Testing
 
