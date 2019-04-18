@@ -1243,3 +1243,307 @@ Describe 'Common Tests - Validate Markdown Links' -Tag 'Markdown' {
         }
     }
 }
+
+Describe 'Common Tests - Validate localization' {
+    $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
+
+    # Due to verbose output, only run these test if opt-in.
+    if ($optIn)
+    {
+        BeforeAll {
+            $allFolders = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources') -Directory
+            $allFolders += Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Modules') -Directory
+            $allFolders = $allFolders | Sort-Object -Property Name
+        }
+
+        Context 'When a resource or module should have localization files' {
+            BeforeAll {
+                $testCases = @()
+
+                foreach ($folder in $allFolders)
+                {
+                    $testCases += @{
+                        Folder = $folder.Name
+                        Path = $folder.FullName
+                    }
+                }
+            }
+
+            It 'Should have en-US localization folder for the resource/module <Folder>' -TestCases $testCases {
+                param
+                (
+                    [Parameter()]
+                    [System.String]
+                    $Folder,
+
+                    [Parameter()]
+                    [System.String]
+                    $Path
+                )
+
+                $localizationFolderPath = Join-Path -Path $Path -ChildPath 'en-US'
+
+                Test-Path -Path $localizationFolderPath | Should -BeTrue -Because 'the en-US folder must exist'
+            }
+
+            It 'Should have en-US localization folder with the correct casing for the resource/module <Folder>' -TestCases $testCases {
+                param
+                (
+                    [Parameter()]
+                    [System.String]
+                    $Folder,
+
+                    [Parameter()]
+                    [System.String]
+                    $Path
+                )
+
+                <#
+                    This will return both 'en-us' and 'en-US' folders so we can
+                    evaluate casing.
+                #>
+                $localizationFolderOnDisk = Get-ChildItem -Path $Path -Directory -Filter 'en-US'
+                $localizationFolderOnDisk.Name | Should -MatchExactly 'en-US' -Because 'the en-US folder must have the correct casing'
+            }
+
+            It 'Should have en-US localization string resource file for the resource/module <Folder>' -TestCases $testCases {
+                param
+                (
+                    [Parameter()]
+                    [System.String]
+                    $Folder,
+
+                    [Parameter()]
+                    [System.String]
+                    $Path
+                )
+
+                $localizationResourceFilePath = Join-Path -Path (Join-Path -Path $Path -ChildPath 'en-US') -ChildPath "$Folder.strings.psd1"
+
+                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because 'the there must exist a string resource file in the localization folder en-US'
+            }
+
+            foreach ($testCase in $testCases)
+            {
+                $testCases_LocalizedKeys = @()
+                $testCases_UsedLocalizedKeys= @()
+
+                $sourceLocalizationFolderPath = Join-Path -Path $testCase.Path -ChildPath 'en-US'
+
+                Import-LocalizedData `
+                    -BindingVariable 'englishLocalizedStrings' `
+                    -FileName "$($testCase.Folder).strings.psd1" `
+                    -BaseDirectory $sourceLocalizationFolderPath
+
+                foreach ($localizedKey in $englishLocalizedStrings.Keys)
+                {
+                    $testCases_LocalizedKeys += @{
+                        Folder = $testCase.Folder
+                        LocalizedKey = $localizedKey
+                    }
+                }
+
+                $resourceModulePath = Join-Path -Path $testCase.Path -ChildPath "$($testCase.Folder).psm1"
+
+                $parseErrors = $null
+                $definitionAst = [System.Management.Automation.Language.Parser]::ParseFile($resourceModulePath, [ref] $null, [ref] $parseErrors)
+
+                if ($parseErrors)
+                {
+                    throw $parseErrors
+                }
+
+                $astFilter = {
+                    $args[0] -is [System.Management.Automation.Language.MemberExpressionAst]
+                }
+
+                $configurationDefinition = $definitionAst.FindAll($astFilter, $true)
+
+                $localizationExpressionMembers = $configurationDefinition | Where-Object -FilterScript { $_.Expression.VariablePath.UserPath -eq 'script:localizedData' }
+                $usedLocalizationKeys = $localizationExpressionMembers.Member.Value | Sort-Object -Unique
+
+                foreach ($localizedKey in $usedLocalizationKeys)
+                {
+                    $testCases_UsedLocalizedKeys += @{
+                        Folder = $testCase.Folder
+                        LocalizedKey = $localizedKey
+                    }
+                }
+
+                It 'Should use the localized string key <LocalizedKey>, from the localization resource file, in the resource/module <Folder>' -TestCases $testCases_LocalizedKeys {
+                    param
+                    (
+                        [Parameter()]
+                        [System.String]
+                        $Folder,
+
+                        [Parameter()]
+                        [System.String]
+                        $LocalizedKey
+                    )
+
+                    $usedLocalizationKeys | Should -Contain $LocalizedKey -Because 'the key exist in the localized string resource file'
+                }
+
+                It 'Should not be missing the localized string key <LocalizedKey>, from the resource/module <Folder>, in the localization resource file' -TestCases $testCases_UsedLocalizedKeys {
+                    param
+                    (
+                        [Parameter()]
+                        [System.String]
+                        $Folder,
+
+                        [Parameter()]
+                        [System.String]
+                        $LocalizedKey
+                    )
+
+                    $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key is used in the resource/module script file'
+                }
+            }
+        }
+
+        Context 'When a resource or module is localized to other languages' {
+            BeforeAll {
+                $testCases = @()
+
+                foreach ($folder in $allFolders)
+                {
+                    <#
+                        Get all localization folders except the en-US.
+                        We want all regardless of casing.
+                    #>
+                    $localizationFolders = Get-ChildItem -Path $folder.FullName -Directory -Filter '*-*' |
+                        Where-Object -FilterScript {
+                            $_.Name -ne 'en-US'
+                        }
+
+                    foreach ($localizationFolder in $localizationFolders)
+                    {
+                        $testCases += @{
+                            Folder = $folder.Name
+                            Path = $folder.FullName
+                            LocalizationFolder = $localizationFolder.Name
+                        }
+                    }
+                }
+            }
+
+            It 'Should have localization string resource file for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases {
+                param
+                (
+                    [Parameter()]
+                    [System.String]
+                    $Folder,
+
+                    [Parameter()]
+                    [System.String]
+                    $Path,
+
+                    [Parameter()]
+                    [System.String]
+                    $LocalizationFolder
+                )
+
+                $localizationResourceFilePath = Join-Path -Path (Join-Path -Path $Path -ChildPath $LocalizationFolder) -ChildPath "$Folder.strings.psd1"
+
+                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because ('the there must exist a string resource file in the localization folder {0}' -f $LocalizationFolder)
+            }
+
+            It 'Should have the localization folder with the correct casing for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases {
+                param
+                (
+                    [Parameter()]
+                    [System.String]
+                    $Folder,
+
+                    [Parameter()]
+                    [System.String]
+                    $Path,
+
+                    [Parameter()]
+                    [System.String]
+                    $LocalizationFolder
+                )
+
+                $localizationFolderOnDisk = Get-ChildItem -Path $Path -Directory -Filter $LocalizationFolder
+                $localizationFolderOnDisk.Name | Should -MatchExactly '[a-z]{2}-[A-Z]{2}' -Because 'the localization folder must have the correct casing'
+            }
+
+            foreach ($testCase in $testCases)
+            {
+                $testCases_CompareAgainstEnglishLocalizedKeys = @()
+                $testCases_MissingEnglishLocalizedKeys = @()
+
+                $sourceLocalizationFolderPath = Join-Path -Path $testCase.Path -ChildPath 'en-US'
+
+                Import-LocalizedData `
+                    -BindingVariable 'englishLocalizedStrings' `
+                    -FileName "$($testCase.Folder).strings.psd1" `
+                    -BaseDirectory $sourceLocalizationFolderPath
+
+                $localizationFolderPath = Join-Path -Path $testCase.Path -ChildPath $testCase.LocalizationFolder
+
+                Import-LocalizedData `
+                    -BindingVariable 'localizedStrings' `
+                    -FileName "$($testCase.Folder).strings.psd1" `
+                    -BaseDirectory $localizationFolderPath
+
+                foreach ($localizedKey in $englishLocalizedStrings.Keys)
+                {
+                    $testCases_CompareAgainstEnglishLocalizedKeys += @{
+                        LocalizationFolder = $testCase.LocalizationFolder
+                        Folder = $testCase.Folder
+                        LocalizedKey = $localizedKey
+                    }
+                }
+
+                foreach ($localizedKey in $localizedStrings.Keys)
+                {
+                    $testCases_MissingEnglishLocalizedKeys += @{
+                        LocalizationFolder = $testCase.LocalizationFolder
+                        Folder = $testCase.Folder
+                        LocalizedKey = $localizedKey
+                    }
+                }
+
+                It "Should have the english localization string key <LocalizedKey> in the localization resource file '<LocalizationFolder>\<Folder>.strings.psd1' for the resource/module <Folder>" -TestCases $testCases_CompareAgainstEnglishLocalizedKeys {
+                    param
+                    (
+                        [Parameter()]
+                        [System.String]
+                        $LocalizedKey,
+
+                        [Parameter()]
+                        [System.String]
+                        $Folder,
+
+                        [Parameter()]
+                        [System.String]
+                        $LocalizationFolder
+                    )
+
+                    $localizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key exist in the en-US localization resource file'
+                }
+
+                It "Should not be missing the localization string key <LocalizedKey> in the english resource file for the resource/module <Folder>" -TestCases $testCases_MissingEnglishLocalizedKeys {
+                    param
+                    (
+                        [Parameter()]
+                        [System.String]
+                        $LocalizedKey,
+
+                        [Parameter()]
+                        [System.String]
+                        $Folder,
+
+                        [Parameter()]
+                        [System.String]
+                        $LocalizationFolder
+                    )
+
+                    $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because ('the key exist in the resource file for the location folder {0}' -f $LocalizationFolder)
+                }
+            }
+        }
+    }
+}
