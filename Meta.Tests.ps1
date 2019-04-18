@@ -1244,7 +1244,7 @@ Describe 'Common Tests - Validate Markdown Links' -Tag 'Markdown' {
     }
 }
 
-Describe 'Common Tests - Validate localization' {
+Describe 'Common Tests - Validate Localization' {
     $optIn = Get-PesterDescribeOptInStatus -OptIns $optIns
 
     # Due to verbose output, only run these test if opt-in.
