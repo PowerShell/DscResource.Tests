@@ -1426,7 +1426,17 @@ Describe 'Common Tests - Validate Localization' {
                 }
             }
 
-            It 'Should have localization string resource file for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases {
+            # Only run these tests if there are test cases to be tested.
+            if ($testCases)
+            {
+                $skipTests = $false
+            }
+            else
+            {
+                $skipTests = $true
+            }
+
+            It 'Should have localization string resource file for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases -Skip:$skipTests {
                 param
                 (
                     [Parameter()]
@@ -1447,7 +1457,7 @@ Describe 'Common Tests - Validate Localization' {
                 Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because ('the there must exist a string resource file in the localization folder {0}' -f $LocalizationFolder)
             }
 
-            It 'Should have the localization folder with the correct casing for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases {
+            It 'Should have the localization folder with the correct casing for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases -Skip:$skipTests {
                 param
                 (
                     [Parameter()]
