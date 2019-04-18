@@ -1250,11 +1250,9 @@ Describe 'Common Tests - Validate localization' {
     # Due to verbose output, only run these test if opt-in.
     if ($optIn)
     {
-        BeforeAll {
-            $allFolders = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources') -Directory
-            $allFolders += Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Modules') -Directory
-            $allFolders = $allFolders | Sort-Object -Property Name
-        }
+        $allFolders = Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources') -Directory
+        $allFolders += Get-ChildItem -Path (Join-Path -Path $moduleRootFilePath -ChildPath 'Modules') -Directory
+        $allFolders = $allFolders | Sort-Object -Property Name
 
         Context 'When a resource or module should have localization files' {
             BeforeAll {
