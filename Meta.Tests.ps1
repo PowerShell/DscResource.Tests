@@ -1330,10 +1330,19 @@ Describe 'Common Tests - Validate Localization' {
                 $testCases_UsedLocalizedKeys = @()
 
                 $sourceLocalizationFolderPath = Join-Path -Path $testCase.Path -ChildPath 'en-US'
+                $localizationResourceFile = '{0}.strings.psd1' -f $testCase.Folder
+
+                # Skip files that do not exist yet (they were caught in a previous test above)
+                if (-not (Test-Path -Path (Join-Path -Path $sourceLocalizationFolderPath -ChildPath $localizationResourceFile)))
+                {
+                    Write-Warning -Message ('Missing the localized string resource file ''{0}''' -f $testCase.Path)
+
+                    continue
+                }
 
                 Import-LocalizedData `
                     -BindingVariable 'englishLocalizedStrings' `
-                    -FileName "$($testCase.Folder).strings.psd1" `
+                    -FileName $localizationResourceFile `
                     -BaseDirectory $sourceLocalizationFolderPath
 
                 foreach ($localizedKey in $englishLocalizedStrings.Keys)
@@ -1354,19 +1363,17 @@ Describe 'Common Tests - Validate Localization' {
                 }
 
                 $astFilter = {
-                    $args[0] -is [System.Management.Automation.Language.MemberExpressionAst]
+                     $args[0] -is [System.Management.Automation.Language.StringConstantExpressionAst] `
+                    -and $args[0].Parent -is [System.Management.Automation.Language.MemberExpressionAst] `
+                    -and $args[0].Parent.Expression -is [System.Management.Automation.Language.VariableExpressionAst] `
+                    -and $args[0].Parent.Expression.VariablePath.UserPath -eq 'script:localizedData'
                 }
 
-                $configurationDefinition = $definitionAst.FindAll($astFilter, $true)
+                $localizationStringConstantsAst = $definitionAst.FindAll($astFilter, $true)
 
-                $localizationExpressionMembers = $configurationDefinition | Where-Object -FilterScript {
-                    $_.Expression -is [System.Management.Automation.Language.VariableExpressionAst] `
-                    -and $_.Expression.VariablePath.UserPath -eq 'script:localizedData'
-                }
-
-                if ($localizationExpressionMembers)
+                if ($localizationStringConstantsAst)
                 {
-                    $usedLocalizationKeys = $localizationExpressionMembers.Member.Value | Sort-Object -Unique
+                    $usedLocalizationKeys = $localizationStringConstantsAst.Value | Sort-Object -Unique
 
                     foreach ($localizedKey in $usedLocalizationKeys)
                     {
@@ -1376,19 +1383,10 @@ Describe 'Common Tests - Validate Localization' {
                     }
                 }
 
-                if (-not $testCases_LocalizedKeys)
-                {
-                    # There are no test cases to build, skipping test.
-                    $skipTest_LocalizedKeys = $true
-                }
-
-                if (-not $testCases_UsedLocalizedKeys)
-                {
-                    # There are no test cases to build, skipping test.
-                    $skipTest_UsedLocalizedKeys = $true
-                }
-
                 Context ('When validating resource/module {0}' -f $testCase.Folder) {
+                    # If there are no test cases built, skip this test.
+                    $skipTest_LocalizedKeys = -not $testCases_LocalizedKeys
+
                     It 'Should use the localized string key <LocalizedKey> from the localization resource file' -TestCases $testCases_LocalizedKeys -Skip:$skipTest_LocalizedKeys {
                         param
                         (
@@ -1399,6 +1397,9 @@ Describe 'Common Tests - Validate Localization' {
 
                         $usedLocalizationKeys | Should -Contain $LocalizedKey -Because 'the key exists in the localized string resource file so it should also exist in the code'
                     }
+
+                    # If there are no test cases built, skip this test.
+                    $skipTest_UsedLocalizedKeys = -not $testCases_UsedLocalizedKeys
 
                     It 'Should not be missing the localized string key <LocalizedKey> from the localization resource file' -TestCases $testCases_UsedLocalizedKeys -Skip:$skipTest_UsedLocalizedKeys {
                         param

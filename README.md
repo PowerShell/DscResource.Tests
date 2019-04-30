@@ -188,7 +188,8 @@ to ignore part of the text that matches the regular expression.
 These tests validate the localization folders and files, and also that
 each localization string key is used and there are no missing or extra
 localization string keys. These tests will only work if the localization
-variable is `$script:localizedData`.
+variable is `$script:localizedData`, and it is a string constant, e.g.
+`$script:localizedData.MyStringKey`.
 
 - Should have an en-US localization folder.
 - The en-US localization folder should have the correct casing.
