@@ -1256,18 +1256,18 @@ Describe 'Common Tests - Validate Localization' {
 
         Context 'When a resource or module should have localization files' {
             BeforeAll {
-                $testCases = @()
+                $foldersToTest = @()
 
                 foreach ($folder in $allFolders)
                 {
-                    $testCases += @{
+                    $foldersToTest += @{
                         Folder = $folder.Name
                         Path = $folder.FullName
                     }
                 }
             }
 
-            It 'Should have en-US localization folder for the resource/module <Folder>' -TestCases $testCases {
+            It 'Should have en-US localization folder for the resource/module <Folder>' -TestCases $foldersToTest {
                 param
                 (
                     [Parameter()]
@@ -1284,7 +1284,7 @@ Describe 'Common Tests - Validate Localization' {
                 Test-Path -Path $localizationFolderPath | Should -BeTrue -Because 'the en-US folder must exist'
             }
 
-            It 'Should have en-US localization folder with the correct casing for the resource/module <Folder>' -TestCases $testCases {
+            It 'Should have en-US localization folder with the correct casing for the resource/module <Folder>' -TestCases $foldersToTest {
                 param
                 (
                     [Parameter()]
@@ -1304,7 +1304,7 @@ Describe 'Common Tests - Validate Localization' {
                 $localizationFolderOnDisk.Name | Should -MatchExactly 'en-US' -Because 'the en-US folder must have the correct casing'
             }
 
-            It 'Should have en-US localization string resource file for the resource/module <Folder>' -TestCases $testCases {
+            It 'Should have en-US localization string resource file for the resource/module <Folder>' -TestCases $foldersToTest {
                 param
                 (
                     [Parameter()]
@@ -1318,16 +1318,16 @@ Describe 'Common Tests - Validate Localization' {
 
                 $localizationResourceFilePath = Join-Path -Path (Join-Path -Path $Path -ChildPath 'en-US') -ChildPath "$Folder.strings.psd1"
 
-                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because 'the there must exist a string resource file in the localization folder en-US'
+                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because 'there must exist a string resource file in the localization folder en-US'
             }
 
-            foreach ($testCase in $testCases)
+            foreach ($testCase in $foldersToTest)
             {
                 $skipTest_LocalizedKeys = $false
                 $skipTest_UsedLocalizedKeys = $false
 
                 $testCases_LocalizedKeys = @()
-                $testCases_UsedLocalizedKeys= @()
+                $testCases_UsedLocalizedKeys = @()
 
                 $sourceLocalizationFolderPath = Join-Path -Path $testCase.Path -ChildPath 'en-US'
 
@@ -1389,7 +1389,7 @@ Describe 'Common Tests - Validate Localization' {
                 }
 
                 Context ('When validating resource/module {0}' -f $testCase.Folder) {
-                    It 'Should use the localized string key <LocalizedKey>, from the localization resource file' -TestCases $testCases_LocalizedKeys -Skip:$skipTest_LocalizedKeys {
+                    It 'Should use the localized string key <LocalizedKey> from the localization resource file' -TestCases $testCases_LocalizedKeys -Skip:$skipTest_LocalizedKeys {
                         param
                         (
                             [Parameter()]
@@ -1397,10 +1397,10 @@ Describe 'Common Tests - Validate Localization' {
                             $LocalizedKey
                         )
 
-                        $usedLocalizationKeys | Should -Contain $LocalizedKey -Because 'the key exist in the localized string resource file'
+                        $usedLocalizationKeys | Should -Contain $LocalizedKey -Because 'the key exists in the localized string resource file so it should also exist in the code'
                     }
 
-                    It 'Should not be missing the localized string key <LocalizedKey>, in the localization resource file' -TestCases $testCases_UsedLocalizedKeys -Skip:$skipTest_UsedLocalizedKeys {
+                    It 'Should not be missing the localized string key <LocalizedKey> from the localization resource file' -TestCases $testCases_UsedLocalizedKeys -Skip:$skipTest_UsedLocalizedKeys {
                         param
                         (
                             [Parameter()]
@@ -1408,7 +1408,7 @@ Describe 'Common Tests - Validate Localization' {
                             $LocalizedKey
                         )
 
-                        $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key is used in the resource/module script file'
+                        $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key is used in the resource/module script file so it should also exist in the localized string resource files'
                     }
                 }
             }
@@ -1416,7 +1416,7 @@ Describe 'Common Tests - Validate Localization' {
 
         Context 'When a resource or module is localized to other languages' {
             BeforeAll {
-                $testCases = @()
+                $otherLanguagesToTest = @()
 
                 foreach ($folder in $allFolders)
                 {
@@ -1431,7 +1431,7 @@ Describe 'Common Tests - Validate Localization' {
 
                     foreach ($localizationFolder in $localizationFolders)
                     {
-                        $testCases += @{
+                        $otherLanguagesToTest += @{
                             Folder = $folder.Name
                             Path = $folder.FullName
                             LocalizationFolder = $localizationFolder.Name
@@ -1441,16 +1441,9 @@ Describe 'Common Tests - Validate Localization' {
             }
 
             # Only run these tests if there are test cases to be tested.
-            if ($testCases)
-            {
-                $skipTests = $false
-            }
-            else
-            {
-                $skipTests = $true
-            }
+            $skipTests = -not $otherLanguagesToTest
 
-            It 'Should have localization string resource file for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases -Skip:$skipTests {
+            It 'Should have a localization string resource file for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $otherLanguagesToTest -Skip:$skipTests {
                 param
                 (
                     [Parameter()]
@@ -1468,10 +1461,10 @@ Describe 'Common Tests - Validate Localization' {
 
                 $localizationResourceFilePath = Join-Path -Path (Join-Path -Path $Path -ChildPath $LocalizationFolder) -ChildPath "$Folder.strings.psd1"
 
-                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because ('the there must exist a string resource file in the localization folder {0}' -f $LocalizationFolder)
+                Test-Path -Path $localizationResourceFilePath | Should -BeTrue -Because ('there must exist a string resource file in the localization folder {0}' -f $LocalizationFolder)
             }
 
-            It 'Should have the localization folder with the correct casing for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $testCases -Skip:$skipTests {
+            It 'Should have a localization folder with the correct casing for the resource/module <Folder> and localization folder <LocalizationFolder>' -TestCases $otherLanguagesToTest -Skip:$skipTests {
                 param
                 (
                     [Parameter()]
@@ -1491,7 +1484,7 @@ Describe 'Common Tests - Validate Localization' {
                 $localizationFolderOnDisk.Name | Should -MatchExactly '[a-z]{2}-[A-Z]{2}' -Because 'the localization folder must have the correct casing'
             }
 
-            foreach ($testCase in $testCases)
+            foreach ($testCase in $otherLanguagesToTest)
             {
                 $testCases_CompareAgainstEnglishLocalizedKeys = @()
                 $testCases_MissingEnglishLocalizedKeys = @()
@@ -1545,10 +1538,13 @@ Describe 'Common Tests - Validate Localization' {
                             $LocalizationFolder
                         )
 
-                        $localizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key exist in the en-US localization resource file'
+                        $localizedStrings.Keys | Should -Contain $LocalizedKey -Because 'the key exists in the en-US localization resource file so the key should also exist in this language file'
                     }  -ErrorVariable itBlockError
 
-                    # If the It-block did not pass the test, output the a text explaining hwo to resolve the issue.
+                    <#
+                        If the It-block did not pass the test, output the a text
+                        explaining how to resolve the issue.
+                    #>
                     if ($itBlockError.Count -ne 0)
                     {
                         $message = @"
@@ -1561,7 +1557,7 @@ with the en-US text string.
                         Write-Host -ForegroundColor White -Object ''
                     }
 
-                    It "Should not be missing the localization string key <LocalizedKey> in the english resource file for the resource/module <Folder>" -TestCases $testCases_MissingEnglishLocalizedKeys {
+                    It "Should not be missing the localization string key <LocalizedKey> from the english resource file for the resource/module <Folder>" -TestCases $testCases_MissingEnglishLocalizedKeys {
                         param
                         (
                             [Parameter()]
@@ -1577,7 +1573,7 @@ with the en-US text string.
                             $LocalizationFolder
                         )
 
-                        $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because ('the key exist in the resource file for the location folder {0}' -f $LocalizationFolder)
+                        $englishLocalizedStrings.Keys | Should -Contain $LocalizedKey -Because ('the key exists in the resource file for the location folder {0} so it should also exist in the en-US string resource file' -f $LocalizationFolder)
                     }
                 }
             }
