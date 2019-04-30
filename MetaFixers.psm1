@@ -26,8 +26,11 @@ function ConvertTo-UTF8
         $FileInfo
     )
 
-    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
-    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::UTF8)
+    process
+    {
+        $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+        [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::UTF8)
+    }
 }
 
 <#
@@ -47,8 +50,11 @@ function ConvertTo-ASCII
         $FileInfo
     )
 
-    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
-    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::ASCII)
+    process
+    {
+        $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+        [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent, [System.Text.Encoding]::ASCII)
+    }
 }
 
 function Convert-TabsToSpaceIndentation
@@ -61,9 +67,12 @@ function Convert-TabsToSpaceIndentation
         $FileInfo
     )
 
-    $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
-    $newFileContent = $fileContent.Replace("`t", '    ')
-    [System.IO.File]::WriteAllText($FileInfo.FullName, $newFileContent)
+    process
+    {
+        $fileContent = Get-Content -Path $FileInfo.FullName -Encoding 'Unicode' -Raw
+        $newFileContent = $fileContent.Replace("`t", '    ')
+        [System.IO.File]::WriteAllText($FileInfo.FullName, $newFileContent)
+    }
 }
 
 function Get-UnicodeFilesList
@@ -90,7 +99,10 @@ function Add-NewLineAtEndOfFile
         $FileInfo
     )
 
-    $fileContent = Get-Content -Path $FileInfo.FullName -Raw
-    $fileContent += "`r`n"
-    [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent)
+    process
+    {
+        $fileContent = Get-Content -Path $FileInfo.FullName -Raw
+        $fileContent += "`r`n"
+        [System.IO.File]::WriteAllText($FileInfo.FullName, $fileContent)
+    }
 }
