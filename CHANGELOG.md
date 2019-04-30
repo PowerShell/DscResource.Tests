@@ -35,7 +35,7 @@
 - Update call to install PowerShellGet via Install-Module in AppVeyor.psm1 to
   use AllowClobber
   ([issue #310](https://github.com/PowerShell/DscResource.Tests/issues/310)).
-- Fix MetaFixers Functions Pipeline Processing
+- Fix MetaFixers Functions Pipeline Processing.
 
 ## 0.3.0.0
 
