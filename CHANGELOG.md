@@ -36,6 +36,22 @@
   use AllowClobber
   ([issue #310](https://github.com/PowerShell/DscResource.Tests/issues/310)).
 - Fix MetaFixers Functions Pipeline Processing.
+- Added common opt-in tests for localization ([issue #145](https://github.com/PowerShell/DscResource.Tests/issues/145)).
+  - Should have an en-US localization folder.
+  - The en-US localization folder should have the correct casing.
+  - A resource file with the correct name should exist in the localization
+    folder.
+  - The resource or module should use all the localization string keys
+    from the localization resource file.
+  - The localization resource file should not be missing any localization
+    string key that is used in the resource or module.
+  - If there are other localization folders (other than en-US)
+    - They should contain a resource file with the correct name.
+    - The folders should use the correct casing.
+    - All en-US resource file localized string keys must also exist in
+      the resource file.
+    - There should be no additional localized string keys in the resource
+      file that do not exist in the en-US resource file.
 
 ## 0.3.0.0
 
