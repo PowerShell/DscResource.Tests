@@ -410,8 +410,8 @@ function Publish-WikiContent
     Invoke-Git config --global credential.helper store
     Add-Content "$HOME\.git-credentials" "https://$($GitUserName):$($GithubAccessToken)@github.com`n"
 
-    Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
     $wikiRepoName = "https://github.com/$RepoName.wiki.git"
+    Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
     Invoke-Git clone $wikiRepoName $path --quiet
 
     $jobArtifactsUrl = "$apiUrl/buildjobs/$JobId/artifacts"
