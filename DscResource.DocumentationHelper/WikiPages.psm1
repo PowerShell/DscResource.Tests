@@ -418,11 +418,9 @@ function Publish-WikiContent
     Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
     try
     {
-        Write-Verbose -Verbose "Try"
         $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
     }
     catch {
-        Write-Verbose -Verbose "Catch"
         Switch (($_ | ConvertFrom-Json).Message)
         {
             'Job not found.'
