@@ -917,4 +917,209 @@ Configuration CertificateExport_CertByFriendlyName_Config
                 -Exactly -Times 1
         }
     }
+
+    Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Publish-WikiContent' {
+
+        $mockRepoName = 'PowerShell/DummyServiceDsc'
+        $mockResourceModuleName = ($mockRepoName -split '/')[1]
+        $mockPath = "C:\Windows\Temp"
+        $mockJobId = 'imy2wgh1ylo9qcpb'
+        $mockBuildVersion = '2.1.456.0'
+        $mockapiUrl = 'https://ci.appveyor.com/api'
+        $mockJobArtifactsUrl = "$mockapiUrl/buildjobs/$mockJobId/artifacts"
+        $mockGitRepoNotFoundMessage = 'git.exe : fatal: remote error'
+        $mockInvokeRestMethodJobIdNotFoundMessage = '{"Message":"Job not found."}'
+
+        $mockInvokeRestMethodJobArtifactsObject = @(
+            @{
+                created  = '2019-06-04T15:23:53.8064505+00:00'
+                filename = "TestsResults.xml"
+                size     = 1049288
+                type     = 'File'
+
+            }
+            @{
+                created  = '2019-06-04T15:24:28.0273896+00:00'
+                filename = "$($mockResourceModuleName)_$($mockBuildVersion)_wikicontent.zip"
+                size     = 20692
+                type     = 'Zip'
+            }
+        )
+        $mockInvokeRestMethodJobArtifactsObjectNoWikiContent = $mockInvokeRestMethodJobArtifactsObject[0]
+        $mockWikiContentArtifactUrl = "$mockapiUrl/buildjobs/$mockJobId/artifacts/$($mockInvokeRestMethodJobArtifactsObject[1].fileName)"
+
+        # Parameter filters
+        $script:invokeGitClone_parameterFilter = {
+            $arguments -eq 'clone'
+        }
+        $script:invokeRestMethodJobArtifacts_parameterFilter = {
+            $uri -eq $mockJobArtifactsUrl
+        }
+
+        $script:invokeRestMethodWikiContentArtifact_parameterFilter = {
+            $uri -eq $mockWikiContentArtifactUrl
+        }
+
+        # Function call parameters
+        $script:publishWikiContent_parameters = @{
+            RepoName           = $mockRepoName
+            JobId              = $mockJobId
+            ResourceModuleName = $mockResourceModuleName
+            BuildVersion       = $mockbuildVersion
+        }
+
+        $script:mockNewItemObject = @{
+            FullName = $mockPath
+        }
+
+        BeforeAll {
+            Mock -CommandName New-Item -MockWith { $script:mockNewItemObject }
+            Mock -CommandName Invoke-Git
+            Mock -CommandName Invoke-RestMethod
+            Mock -CommandName Expand-Archive
+            Mock -CommandName Remove-Item
+            Mock -CommandName Set-Location
+    }
+
+        Context 'When the Wiki Git repo is not found' {
+            BeforeAll {
+                Mock -CommandName Invoke-Git -MockWith { Throw $mockGitRepoNotFoundMessage }
+            }
+
+            It 'Should throw the correct exception' {
+                { Publish-WikiContent @script:publishWikiContent_parameters } |
+                    Should -Throw $mockGitRepoNotFoundMessage
+            }
+        }
+
+        Context 'When the Wiki Git repo is found' {
+            BeforeAll {
+                Mock -CommandName Invoke-RestMethod `
+                    -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                    -MockWith { $mockInvokeRestMethodJobArtifactsObject }
+            }
+
+            It 'Should not throw an exception' {
+                { Publish-WikiContent @script:publishWikiContent_parameters } |
+                    Should -Not -Throw
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Invoke-Git `
+                    -ParameterFilter $script:invokeGitClone_parameterFilter `
+                    -Exactly -Times 1
+            }
+
+            Context 'When the AppVeyor job ID is not found' {
+                BeforeAll {
+                    Mock -CommandName Invoke-RestMethod `
+                    -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                    -MockWith { Throw $mockInvokeRestMethodJobIdNotFoundMessage }
+                }
+
+                It 'Should throw the correct exception' {
+                    { Publish-WikiContent @script:publishWikiContent_parameters } |
+                        Should -Throw ($script:LocalizedData.NoAppVeyorJobFoundError -f $mockJobId)
+                }
+            }
+
+            Context 'When the AppVeyor job ID is found' {
+                BeforeAll {
+                    Mock -CommandName Invoke-RestMethod `
+                        -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                        -MockWith { $mockInvokeRestMethodJobArtifactsObject }
+                }
+
+                It 'Should not throw an exception' {
+                    { Publish-WikiContent @script:publishWikiContent_parameters } | Should -Not -Throw
+                }
+
+                It 'Should call the expected mocks ' {
+                    Assert-MockCalled `
+                        -CommandName Invoke-RestMethod `
+                        -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                        -Exactly -Times 1
+                }
+                Context 'When the AppVeyor job has no artifacts' {
+                    BeforeAll {
+                        Mock -CommandName Invoke-RestMethod `
+                            -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                            -MockWith { @() }
+                    }
+
+                    It 'Should throw the correct exception' {
+                        { Publish-WikiContent @script:publishWikiContent_parameters } |
+                            Should -Throw ($LocalizedData.NoWikiContentArtifactError -f $mockJobId)
+                    }
+                }
+
+                Context 'When the AppVeyor job does not have a WikiContent artifact' {
+                    BeforeAll {
+                        Mock -CommandName Invoke-RestMethod `
+                            -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                            -MockWith { $mockInvokeRestMethodJobArtifactsObjectNoWikiContent }
+                    }
+
+                    It 'Should throw the correct exception' {
+                        { Publish-WikiContent @script:publishWikiContent_parameters } |
+                            Should -Throw ($LocalizedData.NoWikiContentArtifactError -f $mockJobId)
+                    }
+                }
+
+                Context 'When the AppVeyor job does have a WikiContent artifact' {
+                    BeforeAll {
+                        Mock -CommandName Invoke-RestMethod `
+                            -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                            -MockWith { $mockInvokeRestMethodJobArtifactsObject }
+                    }
+
+                    It 'Should not throw' {
+                        { Publish-WikiContent @script:publishWikiContent_parameters } |
+                            Should -Not -Throw
+                    }
+
+                    It 'Should call the expected mocks ' {
+                        Assert-MockCalled `
+                            -CommandName Invoke-RestMethod `
+                            -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                            -Exactly -Times 1
+                    }
+
+                    Context 'When the AppVeyor WikiContent artifact cannot be downloaded' {
+                        BeforeAll {
+                            Mock -CommandName Invoke-RestMethod `
+                                -ParameterFilter $script:invokeRestMethodWikiContentArtifact_parameterFilter `
+                                -MockWith { Throw ($LocalizedData.NoWikiContentArtifactError -f $mockJobId) }
+                        }
+
+                        It 'Should throw the correct exception' {
+                            { Publish-WikiContent @script:publishWikiContent_parameters } |
+                                Should -Throw ($LocalizedData.NoWikiContentArtifactError -f $mockJobId)
+                        }
+                    }
+
+                    Context 'When the AppVeyor WikiContent artifact can be downloaded' {
+                        BeforeAll {
+                            Mock -CommandName Invoke-RestMethod `
+                                -ParameterFilter $script:invokeRestMethodWikiContentArtifact_parameterFilter `
+                        }
+
+                        It 'Should not throw' {
+                            { Publish-WikiContent @script:publishWikiContent_parameters } |
+                                Should -Not -Throw
+                        }
+
+                        It 'Should call the expected mocks ' {
+                            Assert-MockCalled `
+                                -CommandName Invoke-RestMethod `
+                                -ParameterFilter $script:invokeRestMethodWikiContentArtifact_parameterFilter `
+                                -Exactly -Times 1
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
