@@ -1239,7 +1239,7 @@ function Invoke-AppVeyorDeployTask
     param
     (
         [Parameter()]
-        [ValidateSet('PublishExample')]
+        [ValidateSet('PublishExample', 'PublishWikiContent')]
         [String[]]
         $OptIn = @(
             'PublishExample'
@@ -1285,6 +1285,21 @@ function Invoke-AppVeyorDeployTask
     else
     {
         Write-Info -Message 'Skip publish examples to Gallery. Either not opt-in, or building on the wrong branch.'
+    }
+
+    # Will only publish Wiki Content on pull request merge to master.
+    if ($OptIn -contains 'PublishWikiContent' -and $Branch -contains $env:APPVEYOR_REPO_BRANCH)
+    {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'DscResource.DocumentationHelper')
+
+        $publishWikiContentParameters = @{
+            RepoName           = $env:APPVEYOR_REPO_NAME
+            JobId              = $env:APPVEYOR_JOB_ID
+            ResourceModuleName = $ResourceModuleName
+            Verbose            = $true
+        }
+
+        Publish-WikiContent @publishWikiContentParameters
     }
 }
 
