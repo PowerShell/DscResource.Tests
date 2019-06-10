@@ -52,6 +52,8 @@
       the resource file.
     - There should be no additional localized string keys in the resource
       file that do not exist in the en-US resource file.
+- Added a new function `Publish-WikiContent` to publish the contents of the
+  DSC Resource Wiki content artifact to the relevant GitHub Wiki.
 
 ## 0.3.0.0
 
