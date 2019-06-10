@@ -929,6 +929,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
         $mockJobArtifactsUrl = "$mockapiUrl/buildjobs/$mockJobId/artifacts"
         $mockGitRepoNotFoundMessage = 'git.exe : fatal: remote error'
         $mockInvokeRestMethodJobIdNotFoundMessage = '{"Message":"Job not found."}'
+        $mockInvokeRestMethodUnexpectedErrorMessage = '{"Message":"Unexpected Error."}'
 
         $mockInvokeRestMethodJobArtifactsObject = @(
             @{
@@ -1021,6 +1022,19 @@ Configuration CertificateExport_CertByFriendlyName_Config
                 It 'Should throw the correct exception' {
                     { Publish-WikiContent @script:publishWikiContent_parameters } |
                         Should -Throw ($script:LocalizedData.NoAppVeyorJobFoundError -f $mockJobId)
+                }
+            }
+
+            Context 'When the AppVeyor artifact details download Invoke-RestMethod produces an unexpected error' {
+                BeforeAll {
+                    Mock -CommandName Invoke-RestMethod `
+                    -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
+                    -MockWith { Throw $mockInvokeRestMethodUnexpectedErrorMessage }
+                }
+
+                It 'Should throw the correct exception' {
+                    { Publish-WikiContent @script:publishWikiContent_parameters } |
+                        Should -Throw (($mockInvokeRestMethodUnexpectedErrorMessage | ConvertTo-Json).Message)
                 }
             }
 
