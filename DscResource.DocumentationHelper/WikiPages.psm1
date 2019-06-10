@@ -446,6 +446,7 @@ function Publish-WikiContent
     Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
 
     Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
+    Invoke-Git push origin --quiet
     Invoke-Git push origin $BuildVersion --quiet
 
     Pop-Location
