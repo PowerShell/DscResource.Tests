@@ -428,7 +428,7 @@ function Publish-WikiContent
         -Verbose:$false
 
     Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
-    Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path
+    Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
     Remove-Item -Path $wikiContentArtifactPath
 
     Push-Location
