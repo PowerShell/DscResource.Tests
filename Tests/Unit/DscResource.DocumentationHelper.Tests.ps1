@@ -1005,7 +1005,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                     Should -Not -Throw
             }
 
-            It 'Should call the expected mocks ' {
+            It 'Should call the expected mocks' {
                 Assert-MockCalled `
                     -CommandName Invoke-Git `
                     -ParameterFilter $script:invokeGitClone_parameterFilter `
@@ -1049,7 +1049,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                     { Publish-WikiContent @script:publishWikiContent_parameters } | Should -Not -Throw
                 }
 
-                It 'Should call the expected mocks ' {
+                It 'Should call the expected mocks' {
                     Assert-MockCalled `
                         -CommandName Invoke-RestMethod `
                         -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
@@ -1093,7 +1093,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                             Should -Not -Throw
                     }
 
-                    It 'Should call the expected mocks ' {
+                    It 'Should call the expected mocks' {
                         Assert-MockCalled `
                             -CommandName Invoke-RestMethod `
                             -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
@@ -1124,7 +1124,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                                 Should -Not -Throw
                         }
 
-                        It 'Should call the expected mocks ' {
+                        It 'Should call the expected mocks' {
                             Assert-MockCalled `
                                 -CommandName Invoke-RestMethod `
                                 -ParameterFilter $script:invokeRestMethodWikiContentArtifact_parameterFilter `
