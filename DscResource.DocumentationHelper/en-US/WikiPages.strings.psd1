@@ -1,7 +1,8 @@
 # culture="en-US"
 ConvertFrom-StringData @'
     CreateTempDirMessage                       = Creating a temporary working directory.
-    InitializeGitMessage                       = Initialising Git.
+    ConfigGlobalGitMessage                     = Configuring global Git settings.
+    ConfigLocalGitMessage                      = Configuring local Git settings.
     CloneWikiGitRepoMessage                    = Cloning the Wiki Git Repository '{0}'.
     DownloadAppVeyorArtifactDetailsMessage     = Downloading the Appveyor Artifact Details for job '{0}' from '{1}'.
     DownloadAppVeyorWikiContentArtifactMessage = Downloading the Appveyor WikiContent Artifact '{0}'.

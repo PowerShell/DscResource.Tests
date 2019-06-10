@@ -388,6 +388,9 @@ function Publish-WikiContent
     }
     while (-not $path)
 
+    Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
+    Invoke-Git config --global core.autocrlf true
+
     $wikiRepoName = "https://github.com/$RepoName.wiki.git"
     Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
     Invoke-Git clone $wikiRepoName $path --quiet
@@ -431,12 +434,10 @@ function Publish-WikiContent
     Push-Location
     Set-Location -Path $path
 
-    Write-Verbose -Message $script:localizedData.InitializeGitMessage
+    Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
     Invoke-Git config --local user.email $GitUserEmail
     Invoke-Git config --local user.name $GitUserName
-    Invoke-Git config --local credential.helper store
-    Invoke-Git config --local core.autocrlf true
-    Add-Content "$HOME\.git-credentials" "https://$($GitUserName):$($GithubAccessToken)@github.com`n"
+    Invoke-Git remote set-url origin "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
 
     Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
     Invoke-Git add *
