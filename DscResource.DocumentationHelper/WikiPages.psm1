@@ -364,11 +364,11 @@ function Publish-WikiContent
 
         [Parameter()]
         [System.String]
-        $GitUserEmail = "appveyor@microsoft.com",
+        $GitUserEmail = 'appveyor@microsoft.com',
 
         [Parameter()]
         [System.String]
-        $GitUserName = "AppVeyor"
+        $GitUserName = 'AppVeyor'
         )
 
     $ErrorActionPreference = 'Stop'
@@ -383,17 +383,10 @@ function Publish-WikiContent
     $tempPath = [System.IO.Path]::GetTempPath()
     do
     {
-      $name = [System.IO.Path]::GetRandomFileName()
-      $path = New-Item -Path $tempPath -Name $name -ItemType "directory" -ErrorAction SilentlyContinue
+        $name = [System.IO.Path]::GetRandomFileName()
+        $path = New-Item -Path $tempPath -Name $name -ItemType "directory" -ErrorAction SilentlyContinue
     }
     while (-not $path)
-
-    Write-Verbose -Message $script:localizedData.InitializeGitMessage
-    Invoke-Git config --global user.email $GitUserEmail
-    Invoke-Git config --global user.name $GitUserName
-    Invoke-Git config --global core.autocrlf true
-    Invoke-Git config --global credential.helper store
-    Add-Content "$HOME\.git-credentials" "https://$($GitUserName):$($GithubAccessToken)@github.com`n"
 
     $wikiRepoName = "https://github.com/$RepoName.wiki.git"
     Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
@@ -405,8 +398,9 @@ function Publish-WikiContent
     {
         $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
     }
-    catch {
-        Switch (($_ | ConvertFrom-Json).Message)
+    catch
+    {
+        switch (($_ | ConvertFrom-Json).Message)
         {
             'Job not found.'
             {
@@ -414,12 +408,12 @@ function Publish-WikiContent
             }
             Default
             {
-                Throw $_
+                throw $_
             }
         }
     }
 
-    $wikiContentArtifact = $artifacts | Where-Object fileName -like "$ResourceModuleName_*_wikicontent.zip"
+    $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
     if ($null -eq $wikiContentArtifact) {
         Throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
     }
@@ -431,11 +425,18 @@ function Publish-WikiContent
         -Verbose:$false
 
     Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
-    Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $Path
+    Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path
     Remove-Item -Path $wikiContentArtifactPath
 
     Push-Location
-    Set-Location -Path $Path
+    Set-Location -Path $path
+
+    Write-Verbose -Message $script:localizedData.InitializeGitMessage
+    Invoke-Git config --local user.email $GitUserEmail
+    Invoke-Git config --local user.name $GitUserName
+    Invoke-Git config --local credential.helper store
+    Invoke-Git config --local core.autocrlf true
+    Add-Content "$HOME\.git-credentials" "https://$($GitUserName):$($GithubAccessToken)@github.com`n"
 
     Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
     Invoke-Git add *
@@ -445,7 +446,7 @@ function Publish-WikiContent
     Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
 
     Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
-    Invoke-Git push --quiet
+    Invoke-Git push origin $BuildVersion --quiet
 
     Pop-Location
 
@@ -485,7 +486,7 @@ function Invoke-Git
     {
         if ($LASTEXITCODE -ne 0)
         {
-            Throw $_
+            throw $_
         }
     }
 }
