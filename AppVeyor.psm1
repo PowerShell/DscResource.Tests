@@ -1301,6 +1301,10 @@ function Invoke-AppVeyorDeployTask
 
         Publish-WikiContent @publishWikiContentParameters
     }
+    else
+    {
+        Write-Info -Message 'Skip publish Wiki Content. Either not opt-in, or building on the wrong branch.'
+    }
 }
 
 Export-ModuleMember -Function *
