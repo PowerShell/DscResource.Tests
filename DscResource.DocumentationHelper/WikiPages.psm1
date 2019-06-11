@@ -407,7 +407,7 @@ function Publish-WikiContent
         {
             'Job not found.'
             {
-                Throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
+                throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
             }
             Default
             {
@@ -418,7 +418,7 @@ function Publish-WikiContent
 
     $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
     if ($null -eq $wikiContentArtifact) {
-        Throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
+        throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
     }
     $artifactUrl = "$apiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
 
