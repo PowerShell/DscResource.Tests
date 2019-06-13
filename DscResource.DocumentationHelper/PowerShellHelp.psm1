@@ -194,7 +194,7 @@ function Get-DscResourceHelpExampleContent
         \<#...#\> - Drop .EXAMPLE, .SYNOPSIS and .DESCRIPTION but include all other lines
         Configuration ... - Include entire block until EOF
     #>
-    $blockType = [WikiExampleBlockType]::None
+    $blockType = [HelpExampleBlockType]::None
 
     foreach ($exampleLine in $exampleContent)
     {
@@ -213,7 +213,7 @@ function Get-DscResourceHelpExampleContent
                     Write-Debug -Message 'PSScriptInfo Block Ended'
 
                     # End of the PSScriptInfo block
-                    $blockType = [WikiExampleBlockType]::None
+                    $blockType = [HelpExampleBlockType]::None
                 }
             }
 
@@ -243,7 +243,7 @@ function Get-DscResourceHelpExampleContent
                     Write-Debug -Message 'ExampleCommentHeader Block Ended'
 
                     # End of the Example Comment Header block
-                    $blockType = [WikiExampleBlockType]::None
+                    $blockType = [HelpExampleBlockType]::None
                 }
             }
 
@@ -256,20 +256,20 @@ function Get-DscResourceHelpExampleContent
                 {
                     Write-Debug -Message 'PSScriptInfo Block Started'
 
-                    $blockType = [WikiExampleBlockType]::PSScriptInfo
+                    $blockType = [HelpExampleBlockType]::PSScriptInfo
                 }
                 elseif ($exampleLine -match 'Configuration')
                 {
                     Write-Debug -Message 'Configuration Block Started'
 
                     $null = $exampleCodeStringBuilder.AppendLine($exampleLine)
-                    $blockType = [WikiExampleBlockType]::Configuration
+                    $blockType = [HelpExampleBlockType]::Configuration
                 }
                 elseif ($exampleLine.TrimStart() -eq '<#')
                 {
                     Write-Debug -Message 'ExampleCommentHeader Block Started'
 
-                    $blockType = [WikiExampleBlockType]::ExampleCommentHeader
+                    $blockType = [HelpExampleBlockType]::ExampleCommentHeader
                 }
             }
         }
