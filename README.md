@@ -378,29 +378,29 @@ The test helper module (TestHelper.psm1) contains the following functions:
 ## Templates for Creating Tests
 
 The Template files that are used for creating Unit and Integration tests for a
-DSC resource are available in the [DSCResources GitHub Repository](https://github.com/PowerShell/DscResources)
-in the [Tests.Template folder](https://github.com/PowerShell/DscResources/tree/master/Tests.Template)
+DSC resource are available in the [DSCResource.Template GitHub Repository](https://github.com/PowerShell/DscResource.Template)
+in the [Tests folder](https://github.com/PowerShell/DscResource.Template/tree/master/Tests)
 
 To use these files, see the [test guidelines](https://github.com/PowerShell/DscResources/blob/master/TestsGuidelines.md)
 document and the instructions at the top of each template file.
 
 The resource files are:
 
-- **[Unit_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+- **[Unit_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/Unit/unit_test_template.ps1)**:
   Use to create a set of Unit Pester tests for a single DSC Resource.
-- **[Integration_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/integration_template.ps1)**:
+- **[Integration_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/integration/integration_test_template.ps1)**:
   Use to create a set of Integration Pester tests for a single DSC Resource.
-- **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResources/blob/master/Tests.Template/unit_template.ps1)**:
+- **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/Integration/integration_test_template.config.ps1)**:
   Use to create a DSC Configuration file for a single DSC Resource. Used in
   conjunction with Integration_Template.ps1.
 
 ## Example Test Usage
 
-To see examples of the Unit/Integration tests in practice, see the xNetworking
-MSFT_xFirewall resource:
-[Unit Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Unit/MSFT_xFirewall.Tests.ps1)
-[Integration Tests](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.Integration.Tests.ps1)
-[Resource DSC Configuration](https://github.com/PowerShell/xNetworking/blob/dev/Tests/Integration/MSFT_xFirewall.config.ps1)
+To see examples of the Unit/Integration tests in practice, see the NetworkingDsc
+MSFT_Firewall resource:
+[Unit Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Unit/MSFT_Firewall.Tests.ps1)
+[Integration Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall.Integration.Tests.ps1)
+[Resource DSC Configuration](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall_add.config.ps1)
 
 ## Example Usage of DSCResource.Tests in AppVeyor.yml
 
