@@ -22,6 +22,8 @@ Import-Module -Name $testHelperPath -Force
 
 $script:localizedData = Get-LocalizedData -ModuleName 'WikiPages' -ModuleRoot $PSScriptRoot
 
+$appVeyorApiUrl = 'https://ci.appveyor.com/api'
+
 <#
     .SYNOPSIS
         New-DscResourceWikiSite generates wiki pages that can be uploaded to GitHub to use as
@@ -364,29 +366,21 @@ function Publish-WikiContent
 
         [Parameter()]
         [System.String]
-        $GitUserEmail = 'appveyor@microsoft.com',
+        $GitUserEmail = $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL,
 
         [Parameter()]
         [System.String]
-        $GitUserName = 'AppVeyor'
-        )
+        $GitUserName = $env:APPVEYOR_REPO_COMMIT_AUTHOR
+    )
 
     $ErrorActionPreference = 'Stop'
-
-    $script:apiUrl = 'https://ci.appveyor.com/api'
 
     $headers = @{
         'Content-type' = 'application/json'
     }
 
     Write-Verbose -Message $script:localizedData.CreateTempDirMessage
-    $tempPath = [System.IO.Path]::GetTempPath()
-    do
-    {
-        $name = [System.IO.Path]::GetRandomFileName()
-        $path = New-Item -Path $tempPath -Name $name -ItemType "directory" -ErrorAction SilentlyContinue
-    }
-    while (-not $path)
+    $path = New-TempPath
 
     Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
     Invoke-Git config --global core.autocrlf true
@@ -395,8 +389,9 @@ function Publish-WikiContent
     Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
     Invoke-Git clone $wikiRepoName $path --quiet
 
-    $jobArtifactsUrl = "$apiUrl/buildjobs/$JobId/artifacts"
+    $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
     Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
+
     try
     {
         $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
@@ -409,7 +404,8 @@ function Publish-WikiContent
             {
                 throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
             }
-            Default
+
+            default
             {
                 throw $_
             }
@@ -417,10 +413,13 @@ function Publish-WikiContent
     }
 
     $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
-    if ($null -eq $wikiContentArtifact) {
+
+    if ($null -eq $wikiContentArtifact)
+    {
         throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
     }
-    $artifactUrl = "$apiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
+
+    $artifactUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
 
     Write-Verbose -Message ($localizedData.DownloadAppVeyorWikiContentArtifactMessage -f $artifactUrl)
     $wikiContentArtifactPath = Join-Path -Path $tempPath -ChildPath $wikiContentArtifact.filename
@@ -480,6 +479,7 @@ function Invoke-Git
     )
 
     Write-Debug "Invoking Git $Arguments"
+
     try
     {
         & git.exe @Arguments 2>$null
@@ -491,6 +491,36 @@ function Invoke-Git
             throw $_
         }
     }
+}
+
+<#
+    .SYNOPSIS
+        Creates a new temporary folder with a random name
+
+    .EXAMPLE
+        New-TempFolder
+
+        This command creates a new temporary folder with a random name
+
+    .OUTPUTS
+        System.IO.DirectoryInfo
+#>
+function New-TempFolder
+{
+    [CmdletBinding()]
+    [OutputType([System.IO.DirectoryInfo])]
+    param ()
+
+    $tempPath = [System.IO.Path]::GetTempPath()
+
+    do
+    {
+        $name = [System.IO.Path]::GetRandomFileName()
+        $path = New-Item -Path $tempPath -Name $name -ItemType "directory" -ErrorAction SilentlyContinue
+    }
+    while (-not $path)
+
+    return $path
 }
 
 Export-ModuleMember -Function New-DscResourceWikiSite, Publish-WikiContent

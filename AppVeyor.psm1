@@ -1275,9 +1275,9 @@ function Invoke-AppVeyorDeployTask
 
         $startGalleryDeployParameters = @{
             ResourceModuleName = $ResourceModuleName
-            Path = (Join-Path -Path $MainModulePath -ChildPath 'Examples')
-            Branch = $env:APPVEYOR_REPO_BRANCH
-            ModuleRootPath = $ModuleRootPath
+            Path               = (Join-Path -Path $MainModulePath -ChildPath 'Examples')
+            Branch             = $env:APPVEYOR_REPO_BRANCH
+            ModuleRootPath     = $ModuleRootPath
         }
 
         Start-GalleryDeploy @startGalleryDeployParameters
