@@ -380,7 +380,7 @@ function Publish-WikiContent
     }
 
     Write-Verbose -Message $script:localizedData.CreateTempDirMessage
-    $path = New-TempPath
+    $path = New-TempFolder
 
     Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
     Invoke-Git config --global core.autocrlf true
