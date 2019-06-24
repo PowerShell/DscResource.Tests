@@ -422,7 +422,7 @@ function Publish-WikiContent
     $artifactUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
 
     Write-Verbose -Message ($localizedData.DownloadAppVeyorWikiContentArtifactMessage -f $artifactUrl)
-    $wikiContentArtifactPath = Join-Path -Path $tempPath -ChildPath $wikiContentArtifact.filename
+    $wikiContentArtifactPath = Join-Path -Path $Path -ChildPath $wikiContentArtifact.filename
     Invoke-RestMethod -Method Get -Uri $artifactUrl -OutFile $wikiContentArtifactPath -Headers $headers `
         -Verbose:$false
 
