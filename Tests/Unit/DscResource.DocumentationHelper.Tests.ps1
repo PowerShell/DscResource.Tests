@@ -1019,13 +1019,11 @@ Configuration Example
     $script:mockReadmePath = Join-Path -Path $script:mockSchemaFolder -ChildPath 'readme.md'
     $script:mockOutputFile = Join-Path -Path $script:mockOutputPath -ChildPath "$($script:mockResourceName).md"
     $script:mockSavePath = Join-Path -Path $script:mockModulePath -ChildPath "DscResources\$($script:mockResourceName)\en-US\about_$($script:mockResourceName).help.txt"
-    $script:mockGetContentReadme = '
-# Description
-The description of the resource.'
+    $script:mockGetContentReadme = '# Description
 
+The description of the resource.'
     $script:mockPowerShellHelpOutput = '.NAME
     MyResource
-
 
 .DESCRIPTION
     The description of the resource.

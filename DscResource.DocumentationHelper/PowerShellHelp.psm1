@@ -84,7 +84,7 @@ function New-DscResourcePowerShellHelp
 
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
             $descriptionContent = $descriptionContent -replace "\n", "`n    "
-            $descriptionContent = $descriptionContent -replace "    # Description", ".DESCRIPTION"
+            $descriptionContent = $descriptionContent -replace "# Description\r\n    ", ".DESCRIPTION"
 
             $script:output += $descriptionContent
             $script:output += [Environment]::NewLine
@@ -128,7 +128,8 @@ function New-DscResourcePowerShellHelp
                     $script:output += [Environment]::NewLine
                 }
             }
-            else {
+            else
+            {
                 Write-Warning -Message ($script:localizedData.NoExampleFileFoundWarning -f $result.FriendlyName)
             }
 
