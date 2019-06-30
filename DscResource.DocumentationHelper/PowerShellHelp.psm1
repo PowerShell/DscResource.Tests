@@ -61,24 +61,25 @@ function New-DscResourcePowerShellHelp
         $ModulePath
     )
 
-    Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "MofHelper.psm1") -Verbose:$false
+    Import-Module (Join-Path -Path $PSScriptRoot -ChildPath 'MofHelper.psm1') -Verbose:$false
 
-    $mofSearchPath = (Join-Path -Path $ModulePath -ChildPath "\**\*.schema.mof")
+    $mofSearchPath = (Join-Path -Path $ModulePath -ChildPath '\**\*.schema.mof')
     $mofSchemas = Get-ChildItem -Path $mofSearchPath -Recurse
     Write-Verbose -Message ($script:localizedData.FoundMofFilesMessage -f $mofSchemas.Count, $ModulePath)
     $mofSchemas | ForEach-Object {
         $mofFileObject = $_
 
-        $result = (Get-MofSchemaObject -FileName $_.FullName) | Where-Object {
-            ($_.ClassName -eq $mofFileObject.Name.Replace(".schema.mof", "")) `
+        $result = (Get-MofSchemaObject -FileName $_.FullName) | Where-Object -FilterScript {
+            ($_.ClassName -eq $mofFileObject.Name.Replace('.schema.mof', '')) `
                 -and ($null -ne $_.FriendlyName)
         }
-        $descriptionPath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath "readme.md"
+        $descriptionPath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath 'readme.md'
+
         if (Test-Path -Path $descriptionPath)
         {
             Write-Verbose -Message ($script:localizedData.GenerateHelpDocumentMessage -f $result.FriendlyName)
 
-            $script:output = ".NAME" + [Environment]::NewLine
+            $script:output = '.NAME' + [Environment]::NewLine
             $script:output += "    $($result.FriendlyName)"
             $script:output += [Environment]::NewLine + [Environment]::NewLine
 
@@ -118,6 +119,7 @@ function New-DscResourcePowerShellHelp
                 $exampleCount = 1
 
                 Write-Verbose -Message "Found $($exampleFiles.count) Examples for resource $($result.FriendlyName)"
+
                 foreach ($exampleFile in $exampleFiles)
                 {
                     $exampleContent = Get-DscResourceHelpExampleContent `
@@ -165,7 +167,6 @@ function New-DscResourcePowerShellHelp
         Reads the content of 'C:\repos\NetworkingDsc\Examples\Resources\DhcpClient\1-DhcpClient_EnableDHCP.ps1'
         and converts it to help text in preparation for being added to a PowerShell help file.
 #>
-
 function Get-DscResourceHelpExampleContent
 {
     [CmdletBinding()]
