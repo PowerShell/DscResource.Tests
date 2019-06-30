@@ -1135,5 +1135,50 @@ Configuration CertificateExport_CertByFriendlyName_Config
             }
         }
     }
+
+    Describe 'DscResource.DocumentationHelper\WikiPages.psm1\New-TempFile' {
+        $mockPath = @{
+            Name = 'l55xoanl.ojy'
+
+        }
+        Context 'When a new temp folder is created' {
+            BeforeAll {
+            Mock -CommandName New-Item `
+                -ParameterFilter { $ItemType -eq 'Directory' } `
+                -MockWith { $mockPath }
+            }
+
+            It 'Should not throw' {
+                { New-TempFolder } | Should -Not -Throw
+            }
+
+            It 'Should call the expected mocks' {
+                Assert-MockCalled `
+                    -CommandName New-Item `
+                    -ParameterFilter { $ItemType -eq 'Directory' } `
+                    -Exactly -Times 1
+            }
+        }
+
+        Context 'When a new temp folder cannot be created' {
+            BeforeAll {
+            Mock -CommandName New-Item `
+                -ParameterFilter { $ItemType -eq 'Directory' } `
+                -MockWith { $false }
+            }
+
+            It 'Should throw the correct error' {
+                $tempPath = [System.IO.Path]::GetTempPath()
+                { New-TempFolder } | Should -Throw ($localizedData.NewTempFolderCreationError -f $tempPath)
+            }
+
+            It 'Should call the expected mocks' {
+                Assert-MockCalled `
+                    -CommandName New-Item `
+                    -ParameterFilter { $ItemType -eq 'Directory' } `
+                    -Exactly -Times 10
+            }
+        }
+    }
 }
 

@@ -14,4 +14,5 @@ ConvertFrom-StringData @'
     UpdateWikiCommitMessage                    = Updating Wiki from AppVeyor Job ID '{0}'.
     NoAppVeyorJobFoundError                    = No AppVeyor Job found with ID '{0}'.
     NoWikiContentArtifactError                 = No Wiki Content artifact found in AppVeyor job id '{0}'.
+    NewTempFolderCreationError                 = Unable to create a temporary working folder in '{0}'.
 '@
