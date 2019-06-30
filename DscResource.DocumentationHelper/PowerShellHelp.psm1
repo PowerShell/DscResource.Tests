@@ -79,35 +79,35 @@ function New-DscResourcePowerShellHelp
         {
             Write-Verbose -Message ($script:localizedData.GenerateHelpDocumentMessage -f $result.FriendlyName)
 
-            $script:output = '.NAME' + [Environment]::NewLine
-            $script:output += "    $($result.FriendlyName)"
-            $script:output += [Environment]::NewLine + [Environment]::NewLine
+            $output = '.NAME' + [Environment]::NewLine
+            $output += "    $($result.FriendlyName)"
+            $output += [Environment]::NewLine + [Environment]::NewLine
 
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
             $descriptionContent = $descriptionContent -replace "\n", "`n    "
             $descriptionContent = $descriptionContent -replace "# Description\r\n    ", ".DESCRIPTION"
 
-            $script:output += $descriptionContent
-            $script:output += [Environment]::NewLine
+            $output += $descriptionContent
+            $output += [Environment]::NewLine
 
             foreach ($property in $result.Attributes)
             {
-                $script:output += ".PARAMETER $($property.Name)" + [Environment]::NewLine
-                $script:output += "    $($property.State) - $($property.DataType)"
-                $script:output += [Environment]::NewLine
+                $output += ".PARAMETER $($property.Name)" + [Environment]::NewLine
+                $output += "    $($property.State) - $($property.DataType)"
+                $output += [Environment]::NewLine
 
                 if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
-                    $script:output += "    Allowed values: "
+                    $output += "    Allowed values: "
                     $property.ValueMap | ForEach-Object {
-                        $script:output += $_ + ", "
+                        $output += $_ + ", "
                     }
-                    $script:output = $script:output.TrimEnd(" ")
-                    $script:output = $script:output.TrimEnd(",")
-                    $script:output +=  [Environment]::NewLine
+                    $output = $output.TrimEnd(" ")
+                    $output = $output.TrimEnd(",")
+                    $output +=  [Environment]::NewLine
                 }
-                $script:output += "    " + $property.Description
-                $script:output += [Environment]::NewLine + [Environment]::NewLine
+                $output += "    " + $property.Description
+                $output += [Environment]::NewLine + [Environment]::NewLine
             }
 
             $exampleSearchPath = "\Examples\Resources\$($result.FriendlyName)\*.ps1"
@@ -126,8 +126,8 @@ function New-DscResourcePowerShellHelp
                         -ExamplePath $exampleFile.FullName `
                         -ExampleNumber ($exampleCount++)
 
-                    $script:output += $exampleContent
-                    $script:output += [Environment]::NewLine
+                    $output += $exampleContent
+                    $output += [Environment]::NewLine
                 }
             }
             else
@@ -137,7 +137,7 @@ function New-DscResourcePowerShellHelp
 
             $savePath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath "\en-US\about_$($result.FriendlyName).help.txt"
             Write-Verbose -Message ($script:localizedData.OutputHelpDocumentMessage -f $savePath)
-            $script:output | Out-File -FilePath $savePath -Encoding utf8 -Force
+            $output | Out-File -FilePath $savePath -Encoding utf8 -Force
         }
         else
         {
