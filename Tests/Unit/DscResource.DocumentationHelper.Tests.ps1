@@ -919,9 +919,11 @@ Configuration CertificateExport_CertByFriendlyName_Config
     }
 
     Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Publish-WikiContent' {
-
         $mockRepoName = 'PowerShell/DummyServiceDsc'
         $mockResourceModuleName = ($mockRepoName -split '/')[1]
+        $mockGitUserEmail = 'mock@contoso.com'
+        $mockGitUserName = 'mock'
+        $mockGithubAccessToken = '1234567890'
         $mockPath = "C:\Windows\Temp"
         $mockJobId = 'imy2wgh1ylo9qcpb'
         $mockBuildVersion = '2.1.456.0'
@@ -953,6 +955,61 @@ Configuration CertificateExport_CertByFriendlyName_Config
         $script:invokeGitClone_parameterFilter = {
             $arguments -eq 'clone'
         }
+
+        $script:invokeGitConfigUserEmail_parameterFilter = {
+            $Arguments[0] -eq 'config' -and
+            $Arguments[1] -eq '--local' -and
+            $Arguments[2] -eq 'user.email' -and
+            $Arguments[3] -eq $mockGitUserEmail
+        }
+
+        $script:invokeGitConfigUserName_parameterFilter = {
+            $Arguments[0] -eq 'config' -and
+            $Arguments[1] -eq '--local' -and
+            $Arguments[2] -eq 'user.name' -and
+            $Arguments[3] -eq $mockGitUserName
+        }
+
+        $script:invokeGitRemoteSetUrl_parameterFilter = {
+            $Arguments[0] -eq 'remote' -and
+            $Arguments[1] -eq 'set-url' -and
+            $Arguments[2] -eq 'origin' -and
+            $Arguments[3] -eq "https://$($mockGitUserName):$($mockGithubAccessToken)@github.com/$mockRepoName.wiki.git"
+        }
+
+        $script:invokeGitAdd_parameterFilter = {
+            $Arguments[0] -eq 'add' -and
+            $Arguments[1] -eq '*'
+        }
+
+        $script:invokeGitCommit_parameterFilter = {
+            $Arguments[0] -eq 'commit' -and
+            $Arguments[1] -eq '--message' -and
+            $Arguments[2] -eq ($localizedData.UpdateWikiCommitMessage -f $mockJobId) -and
+            $Arguments[3] -eq '--quiet'
+        }
+
+        $script:invokeGitTag_parameterFilter = {
+            $Arguments[0] -eq 'tag' -and
+            $Arguments[1] -eq '--annotate' -and
+            $Arguments[2] -eq $mockBuildVersion -and
+            $Arguments[3] -eq '--message' -and
+            $Arguments[4] -eq $mockBuildVersion
+        }
+
+        $script:invokeGitPush_parameterFilter = {
+            $Arguments[0] -eq 'push' -and
+            $Arguments[1] -eq 'origin' -and
+            $Arguments[2] -eq '--quiet'
+        }
+
+        $script:invokeGitPushBuildVersion_parameterFilter = {
+            $Arguments[0] -eq 'push' -and
+            $Arguments[1] -eq 'origin' -and
+            $Arguments[2] -eq $mockBuildVersion -and
+            $Arguments[3] -eq '--quiet'
+        }
+
         $script:invokeRestMethodJobArtifacts_parameterFilter = {
             $uri -eq $mockJobArtifactsUrl
         }
@@ -967,6 +1024,9 @@ Configuration CertificateExport_CertByFriendlyName_Config
             JobId              = $mockJobId
             ResourceModuleName = $mockResourceModuleName
             BuildVersion       = $mockbuildVersion
+            GitUserEmail       = $mockGitUserEmail
+            GitUserName        = $mockGitUserName
+            GithubAccessToken  = $mockGithubAccessToken
         }
 
         $script:mockNewItemObject = @{
@@ -1055,6 +1115,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                         -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
                         -Exactly -Times 1
                 }
+
                 Context 'When the AppVeyor job has no artifacts' {
                     BeforeAll {
                         Mock -CommandName Invoke-RestMethod `
@@ -1128,6 +1189,46 @@ Configuration CertificateExport_CertByFriendlyName_Config
                             Assert-MockCalled `
                                 -CommandName Invoke-RestMethod `
                                 -ParameterFilter $script:invokeRestMethodWikiContentArtifact_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitConfigUserEmail_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                               -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitConfigUserName_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitRemoteSetUrl_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitAdd_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitCommit_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitTag_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitPush_parameterFilter `
+                                -Exactly -Times 1
+
+                            Assert-MockCalled `
+                                -CommandName Invoke-Git `
+                                -ParameterFilter $script:invokeGitPushBuildVersion_parameterFilter `
                                 -Exactly -Times 1
                         }
                     }

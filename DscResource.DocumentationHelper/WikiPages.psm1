@@ -382,77 +382,80 @@ function Publish-WikiContent
     Write-Verbose -Message $script:localizedData.CreateTempDirMessage
     $path = New-TempFolder
 
-    Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
-    Invoke-Git config --global core.autocrlf true
+    try {
+        Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
+        Invoke-Git config --global core.autocrlf true
 
-    $wikiRepoName = "https://github.com/$RepoName.wiki.git"
-    Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
-    Invoke-Git clone $wikiRepoName $path --quiet
+        $wikiRepoName = "https://github.com/$RepoName.wiki.git"
+        Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
+        Invoke-Git clone $wikiRepoName $path --quiet
 
-    $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
-    Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
+        $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
+        Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
 
-    try
-    {
-        $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
-    }
-    catch
-    {
-        switch (($_ | ConvertFrom-Json).Message)
+        try
         {
-            'Job not found.'
+            $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
+        }
+        catch
+        {
+            switch (($_ | ConvertFrom-Json).Message)
             {
-                throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
-            }
+                'Job not found.'
+                {
+                    throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
+                }
 
-            default
-            {
-                throw $_
+                default
+                {
+                    throw $_
+                }
             }
         }
+
+        $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
+
+        if ($null -eq $wikiContentArtifact)
+        {
+            throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
+        }
+
+        $artifactUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
+
+        Write-Verbose -Message ($localizedData.DownloadAppVeyorWikiContentArtifactMessage -f $artifactUrl)
+        $wikiContentArtifactPath = Join-Path -Path $Path -ChildPath $wikiContentArtifact.filename
+        Invoke-RestMethod -Method Get -Uri $artifactUrl -OutFile $wikiContentArtifactPath -Headers $headers `
+            -Verbose:$false
+
+        Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
+        Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
+        Remove-Item -Path $wikiContentArtifactPath
+
+        Push-Location
+        Set-Location -Path $path
+
+        Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
+        Invoke-Git config --local user.email $GitUserEmail
+        Invoke-Git config --local user.name $GitUserName
+        Invoke-Git remote set-url origin "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
+
+        Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
+        Invoke-Git add *
+
+        Write-Verbose -Message ($localizedData.CommitAndTagRepoChangesMessage -f $BuildVersion)
+        Invoke-Git commit --message ($localizedData.UpdateWikiCommitMessage -f $JobId) --quiet
+        Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
+
+        Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
+        Invoke-Git push origin --quiet
+        Invoke-Git push origin $BuildVersion --quiet
+
+        Pop-Location
     }
-
-    $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
-
-    if ($null -eq $wikiContentArtifact)
-    {
-        throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
+    finally {
+        Remove-Item -Path $path -Recurse -Force
+        Write-Verbose -Message $localizedData.PublishWikiContentCompleteMessage
     }
-
-    $artifactUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
-
-    Write-Verbose -Message ($localizedData.DownloadAppVeyorWikiContentArtifactMessage -f $artifactUrl)
-    $wikiContentArtifactPath = Join-Path -Path $Path -ChildPath $wikiContentArtifact.filename
-    Invoke-RestMethod -Method Get -Uri $artifactUrl -OutFile $wikiContentArtifactPath -Headers $headers `
-        -Verbose:$false
-
-    Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
-    Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
-    Remove-Item -Path $wikiContentArtifactPath
-
-    Push-Location
-    Set-Location -Path $path
-
-    Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
-    Invoke-Git config --local user.email $GitUserEmail
-    Invoke-Git config --local user.name $GitUserName
-    Invoke-Git remote set-url origin "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
-
-    Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
-    Invoke-Git add *
-
-    Write-Verbose -Message ($localizedData.CommitAndTagRepoChangesMessage -f $BuildVersion)
-    Invoke-Git commit --message ($localizedData.UpdateWikiCommitMessage -f $JobId) --quiet
-    Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
-
-    Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
-    Invoke-Git push origin --quiet
-    Invoke-Git push origin $BuildVersion --quiet
-
-    Pop-Location
-
-    Remove-Item -Path $path -Recurse -Force
-    Write-Verbose -Message $localizedData.PublishWikiContentCompleteMessage
 }
 
 <#
