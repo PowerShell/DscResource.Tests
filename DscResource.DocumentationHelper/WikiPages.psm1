@@ -382,7 +382,8 @@ function Publish-WikiContent
     Write-Verbose -Message $script:localizedData.CreateTempDirMessage
     $path = New-TempFolder
 
-    try {
+    try
+    {
         Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
         Invoke-Git config --global core.autocrlf true
 
@@ -452,7 +453,8 @@ function Publish-WikiContent
 
         Pop-Location
     }
-    finally {
+    finally
+    {
         Remove-Item -Path $path -Recurse -Force
         Write-Verbose -Message $localizedData.PublishWikiContentCompleteMessage
     }
@@ -481,7 +483,7 @@ function Invoke-Git
         $Arguments
     )
 
-    Write-Debug "Invoking Git $Arguments"
+    Write-Debug -Message ($localizedData.InvokingGitMessage -f $Arguments)
 
     try
     {
