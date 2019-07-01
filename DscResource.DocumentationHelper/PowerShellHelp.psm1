@@ -287,4 +287,4 @@ function Get-DscResourceHelpExampleContent
     return $exampleStringBuilder.ToString()
 }
 
-Export-ModuleMember -Function *
+Export-ModuleMember -Function New-DscResourcePowerShellHelp
