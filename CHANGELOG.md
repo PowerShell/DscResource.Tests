@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update New-DscResourcePowerShellHelp to output the PowerShell help files to
+  the resource specific path and fix the example processing.
 - Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
   configuration is not currently running.
 - Added issue templates.
