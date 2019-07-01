@@ -279,7 +279,7 @@ function Get-DscResourceHelpExampleContent
 
     # Assemble the final output
     $null = $exampleStringBuilder = New-Object -TypeName System.Text.StringBuilder
-    $null = $exampleStringBuilder.AppendLine(".Example $ExampleNumber")
+    $null = $exampleStringBuilder.AppendLine(".EXAMPLE $ExampleNumber")
     $null = $exampleStringBuilder.AppendLine()
     $null = $exampleStringBuilder.AppendLine($exampleDescriptionStringBuilder)
     $null = $exampleStringBuilder.Append($exampleCodeStringBuilder)
