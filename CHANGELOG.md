@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
+  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
 - Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
   configuration is not currently running.
 - Added issue templates.
