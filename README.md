@@ -713,7 +713,7 @@ Example opt-in to both Example Publishing and Wiki Content Publishing:
 ```yml
 deploy_script:
   - ps: |
-        Invoke-AppVeyorDeployTask -Optin PublishExample, PublishWikiContent
+        Invoke-AppVeyorDeployTask -OptIn PublishExample, PublishWikiContent
 ```
 
 ### Publish examples to PowerShell Gallery
@@ -810,7 +810,7 @@ repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANC
   [secure variable](https://www.appveyor.com/docs/build-configuration/#secure-variables)
   called `github_access_token` to the `environment` section of the repository's
   `appveyor.yml` file.
-- The GitHub Wiki needs to be initialised on a repository before this function is run.
+- The GitHub Wiki needs to be initialized on a repository before this function is run.
 
 > **Note:** Currently Wiki content files are only added or updated by the function,
 > not deleted. Any deletions must be done manually by cloning the Wiki repository and
