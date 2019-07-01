@@ -996,7 +996,7 @@ InModuleScope -ModuleName 'PowerShellHelp' {
             FullName  = $script:mockExampleFilePath
         }
     )
-    $script:mockExampleContent = '.Example 1
+    $script:mockExampleContent = '.EXAMPLE 1
 
 Example description.
 
@@ -1044,7 +1044,7 @@ The description of the resource.'
     Read - String
     Read Description.
 
-.Example 1
+.EXAMPLE 1
 
 Example description.
 
@@ -1360,7 +1360,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 1
+            $script:mockExampleContent = '.EXAMPLE 1
 
 Example Description.
 
@@ -1411,7 +1411,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1429,7 +1429,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 2
+            $script:mockExampleContent = '.EXAMPLE 2
 
 Example Description.
 
@@ -1480,7 +1480,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1498,7 +1498,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 3
+            $script:mockExampleContent = '.EXAMPLE 3
 
 Example Description.
 
@@ -1549,7 +1549,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1567,7 +1567,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 4
+            $script:mockExampleContent = '.EXAMPLE 4
 
 Example Description.
 
@@ -1621,7 +1621,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1639,7 +1639,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 5
+            $script:mockExampleContent = '.EXAMPLE 5
 
 Example Description.
 
@@ -1710,7 +1710,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1728,7 +1728,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 6
+            $script:mockExampleContent = '.EXAMPLE 6
 
 Example Synopsis.
 
@@ -1801,7 +1801,7 @@ Configuration Example
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1819,7 +1819,7 @@ Configuration Example
                 Verbose       = $true
             }
 
-            $script:mockExampleContent = '.Example 7
+            $script:mockExampleContent = '.EXAMPLE 7
 
 This example shows how to deploy Access Services 2013 to the local SharePoint farm.
 
@@ -1881,7 +1881,7 @@ This example shows how to deploy Access Services 2013 to the local SharePoint fa
             }
 
             It 'Should return the expected string' {
-                $script:result | Should -Be $script:mockExampleContent
+                $script:result | Should -BeExactly $script:mockExampleContent
             }
 
             It 'Should call the expected mocks ' {
@@ -1900,7 +1900,7 @@ This example shows how to deploy Access Services 2013 to the local SharePoint fa
             Verbose       = $true
         }
 
-        $script:mockExampleContent = '.Example 8
+        $script:mockExampleContent = '.EXAMPLE 8
 
 Exports a certificate as a CERT using the friendly name to identify it.
 
@@ -1970,7 +1970,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
         }
 
         It 'Should return the expected string' {
-            $script:result | Should -Be $script:mockExampleContent
+            $script:result | Should -BeExactly $script:mockExampleContent
         }
 
         It 'Should call the expected mocks ' {
