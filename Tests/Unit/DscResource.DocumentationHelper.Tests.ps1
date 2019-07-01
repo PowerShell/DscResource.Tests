@@ -1087,6 +1087,10 @@ Configuration Example
         $script:outFile_parameterFilter = {
             $FilePath -eq $script:mockSavePath
         }
+        $script:outFileInputObject_parameterFilter = {
+            $InputObject -eq $script:mockPowerShellHelpOutput -and
+            $FilePath -eq $script:mockSavePath
+        }
         $script:writeWarningDescription_parameterFilter = {
             $Message -eq ($script:localizedData.NoDescriptionFileFoundWarning -f $mockResourceName)
         }
@@ -1103,6 +1107,10 @@ Configuration Example
                 Mock `
                     -CommandName Get-ChildItem `
                     -ParameterFilter $script:getChildItemSchema_parameterFilter
+
+                Mock `
+                    -CommandName Out-File `
+                    -ParameterFilter $script:outFile_parameterFilter
             }
 
             It 'Should not throw an exception' {
@@ -1114,6 +1122,10 @@ Configuration Example
                     -CommandName Get-ChildItem `
                     -ParameterFilter $script:getChildItemSchema_parameterFilter `
                     -Exactly -Times 1
+
+                Assert-MockCalled `
+                    -CommandName Out-File `
+                    -Exactly -Times 0
             }
         }
 
@@ -1295,7 +1307,10 @@ Configuration Example
             }
 
             It 'Should produce the correct output' {
-                $script:output | Should -Be $script:mockPowerShellHelpOutput
+                Assert-MockCalled `
+                    -CommandName Out-File `
+                    -ParameterFilter $script:outFileInputObject_parameterFilter `
+                    -Exactly -Times 1
             }
 
             It 'Should call the expected mocks ' {
@@ -1327,11 +1342,6 @@ Configuration Example
                 Assert-MockCalled `
                     -CommandName Get-DscResourceHelpExampleContent `
                     -ParameterFilter $script:getDscResourceHelpExampleContent_parameterFilter `
-                    -Exactly -Times 1
-
-                Assert-MockCalled `
-                    -CommandName Out-File `
-                    -ParameterFilter $script:outFile_parameterFilter `
                     -Exactly -Times 1
 
                 Assert-MockCalled `
