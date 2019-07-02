@@ -601,6 +601,37 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
             }
         }
 
+        Context 'When a script file has an invalid GUID in its metadata' {
+            BeforeAll {
+                Mock -CommandName Write-Warning
+
+                $errorMessage = 'Cannot convert value ''a18e0a9-2a4b-4406-939e-ac2bb7b6e917'' to type ''System.Guid'''
+
+                Mock -CommandName Test-ScriptFileInfo -MockWith {
+                    $getInvalidArgumentRecordParameters = @{
+                        Message      = $errorMessage
+                        # This is the FullyQualifiedErrorId
+                        ArgumentName = 'InvalidGuid,Test-ScriptFileInfo'
+                    }
+
+                    throw Get-InvalidArgumentRecord @getInvalidArgumentRecordParameters
+                }
+            }
+
+            It 'Should call the correct mocks and return the correct warning message' {
+                { Test-PublishMetadata -Path $TestDrive } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Test-ScriptFileInfo -Exactly -Times 1 -Scope It
+
+                $warningMessage = $script:localizedData.InvalidGuid -f $errorMessage
+
+                Assert-MockCalled -CommandName Write-Warning -ParameterFilter {
+                    $Message -match ($script:localizedData.SkipPublish -f ($TestDrive -replace '\\','\\')) `
+                    -and $Message -match [Regex]::Escape($warningMessage)
+                } -Exactly -Times 1 -Scope It
+            }
+        }
+
         Context 'When cmdlet Test-ScriptFileInfo throws an unknown error' {
             BeforeAll {
                 $throwMessage = 'Unknown error'
@@ -612,7 +643,8 @@ InModuleScope -ModuleName 'DscResource.GalleryDeploy' {
             }
 
             It 'Should throw the correct error message' {
-                { Test-PublishMetadata -Path $TestDrive } | Should -Throw $throwMessage
+                $errorMessage = $script:localizedData.TestScriptFileInfoError -f $TestDrive, $throwMessage
+                { Test-PublishMetadata -Path $TestDrive } | Should -Throw $errorMessage
 
                 Assert-MockCalled -CommandName Test-ScriptFileInfo -Exactly -Times 1 -Scope It
             }
