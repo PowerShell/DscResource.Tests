@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 - Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
   configuration is not currently running.
 - Added issue templates.
