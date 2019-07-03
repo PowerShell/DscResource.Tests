@@ -727,10 +727,18 @@ InModuleScope $script:ModuleName {
             {
             }
 
+            function Publish-WikiContent
+            {
+            }
+
             Mock -CommandName Write-Info
             Mock -CommandName Start-GalleryDeploy
+            Mock -CommandName Publish-WikiContent
             Mock -CommandName Import-Module -ParameterFilter {
                 $Name -match 'DscResource\.GalleryDeploy'
+            }
+            Mock -CommandName Import-Module -ParameterFilter {
+                $Name -match 'DscResource\.DocumentationHelper'
             }
 
             $mockBranchName = 'MockTestBranch'
@@ -795,6 +803,48 @@ InModuleScope $script:ModuleName {
                 } -Exactly -Times 1 -Scope It
 
                 Assert-MockCalled -CommandName Start-GalleryDeploy -Exactly -Times 1 -Scope It
+            }
+        }
+
+        Context 'When not opt-in for publishing Wiki Content' {
+            It 'Should not call Publish-WikiContent' {
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @() -Branch $mockBranchName
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                    $Name -match 'DscResource\.DocumentationHelper'
+                } -Exactly -Times 0 -Scope It
+
+                Assert-MockCalled -CommandName Publish-WikiContent -Exactly -Times 0 -Scope It
+            }
+        }
+
+        Context 'When opt-in for publishing Wiki Content, but building on the wrong branch' {
+            It 'Should not call Publish-WikiContent' {
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @('PublishWikiContent') -Branch 'WrongBranch'
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                    $Name -match 'DscResource\.DocumentationHelper'
+                } -Exactly -Times 0 -Scope It
+
+                Assert-MockCalled -CommandName Publish-WikiContent -Exactly -Times 0 -Scope It
+            }
+        }
+
+        Context 'When opt-in for publishing Wiki Content and building on the correct branch' {
+            It 'Should call Publish-WikiContent' {
+                {
+                    Invoke-AppVeyorDeployTask -OptIn @('PublishWikiContent') -Branch $mockBranchName
+                } | Should -Not -Throw
+
+                Assert-MockCalled -CommandName Import-Module -ParameterFilter {
+                    $Name -match 'DscResource\.DocumentationHelper'
+                } -Exactly -Times 1 -Scope It
+
+                Assert-MockCalled -CommandName Publish-WikiContent -Exactly -Times 1 -Scope It
             }
         }
     }
