@@ -576,7 +576,7 @@ PowerShell help files for each resource into the resource's en-US subdirectory. 
 help files include details on the property types for each resource, as well as a text
 description and examples where they exist.
 
-a README.md with a text description must exist in the resource's subdirectory for the
+A README.md with a text description must exist in the resource's subdirectory for the
 help file to be generated.
 
 When the DSC resource module is imported, these help files can then be read by passing
