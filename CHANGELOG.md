@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 - Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
   configuration is not currently running.
 - Added issue templates.
@@ -53,6 +52,10 @@
       the resource file.
     - There should be no additional localized string keys in the resource
       file that do not exist in the en-US resource file.
+- Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
+  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
+  ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 
 ## 0.3.0.0
 
