@@ -561,14 +561,32 @@ replacing `<repoName>` with the name of the repository.
 
 ## Documentation Helper Module
 
-> DscResource.DocumentationHelper\DscResource.DocumentationHelper.psd1
-> DscResource.DocumentationHelper\MofHelper.psm1
-> DscResource.DocumentationHelper\PowerShellHelp.psm1
-> DscResource.DocumentationHelper\WikiPages.psm1
+This module consists of the following three nested modules:
 
-This module is used by some HQRM DSC Resource modules to produce Wiki Content to
-be distributed with the DSC Resource module as well as published in the Wiki
-section of the DSC Resource repo on GitHub.
+### MofHelper
+
+A helper module containing the `Get-MofSchemaObject` function used to return the
+contents of the schema.mof files as a PowerShell object to be used in other scripts.
+
+### PowerShellHelp
+
+A module containing the function `New-DscResourcePowerShellHelp` that when run will
+process all of the MOF based resources in a specified module directory and create
+PowerShell help files for each resource into the resource's en-US subdirectory. These
+help files include details on the property types for each resource, as well as a text
+description and examples where they exist.
+
+A README.md with a text description must exist in the resource's subdirectory for the
+help file to be generated.
+
+When the DSC resource module is imported, these help files can then be read by passing
+the name of the resource as a parameter to `Get-Help`.
+
+### WikiPages
+
+A module containing the function `New-DscResourceWikiSite` that is used by some HQRM
+DSC Resource modules to produce Wiki Content to be distributed with the DSC Resource
+module as well as published in the Wiki section of the DSC Resource repo on GitHub.
 
 It is usually called by the ```Invoke-AppveyorAfterTestTask``` task in AppVeyor.psm1
 when the ```-type``` parameter is set to 'Wiki'. For example:
