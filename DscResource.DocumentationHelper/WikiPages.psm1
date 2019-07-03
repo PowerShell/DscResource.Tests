@@ -16,6 +16,14 @@ if (-not ([System.Management.Automation.PSTypeName]'WikiExampleBlockType').Type)
     Add-Type -TypeDefinition $typeDefinition
 }
 
+$projectRootPath = Split-Path -Path $PSScriptRoot -Parent
+$testHelperPath = Join-Path -Path $projectRootPath -ChildPath 'TestHelper.psm1'
+Import-Module -Name $testHelperPath -Force
+
+$script:localizedData = Get-LocalizedData -ModuleName 'WikiPages' -ModuleRoot $PSScriptRoot
+
+$appVeyorApiUrl = 'https://ci.appveyor.com/api'
+
 <#
     .SYNOPSIS
         New-DscResourceWikiSite generates wiki pages that can be uploaded to GitHub to use as
@@ -293,4 +301,244 @@ function Get-DscResourceWikiExampleContent
     return $exampleStringBuilder.ToString()
 }
 
-Export-ModuleMember -Function New-DscResourceWikiSite
+<#
+    .SYNOPSIS
+        Publishes the Wiki Content from an AppVeyor job artifact.
+
+    .DESCRIPTION
+        This function adds the content pages from the Wiki Content artifact of a specified
+        AppVeyor job to the Wiki of a specified GitHub repository.
+
+    .PARAMETER RepoName
+        The name of the Github Repo, in the format <account>/<repo>.
+
+    .PARAMETER JobId
+        The AppVeyor job id that contains the wiki artifact to publish.
+
+    .PARAMETER ResourceModuleName
+        The name of the Dsc Resource Module.
+
+    .PARAMETER BuildVersion
+        The build version number to tag the Wiki Github commit with.
+
+    .PARAMETER GithubAccessToken
+        The GitHub access token to allow a push to the GitHub Wiki.
+
+    .PARAMETER GitUserEmail
+        The email address to use for the Git commit.
+
+    .PARAMETER GitUserName
+        The user name to use for the Git commit.
+
+    .EXAMPLE
+        Publish-WikiContent -RepoName 'PowerShell/xActiveDirectory' -JobId 'imy2wgp1ylo9bcpb' -ResourceModuleName 'xActiveDirectory' `
+                            -BuildVersion 'v1.0.0'
+
+        Adds the Content pages from the AppVeyor Job artifact to the Wiki for the specified GitHub repository.
+
+    .NOTES
+        Appveyor - Push to remote Git repository from a build: https://www.appveyor.com/docs/how-to/git-push/
+#>
+function Publish-WikiContent
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter()]
+        [System.String]
+        $RepoName = $env:APPVEYOR_REPO_NAME,
+
+        [Parameter()]
+        [System.String]
+        $JobId = $env:APPVEYOR_JOB_ID,
+
+        [Parameter()]
+        [System.String]
+        $ResourceModuleName = (($env:APPVEYOR_REPO_NAME -split '/')[1]),
+
+        [Parameter()]
+        [System.String]
+        $BuildVersion = $env:APPVEYOR_BUILD_VERSION,
+
+        [Parameter()]
+        [System.String]
+        $GithubAccessToken = $env:github_access_token,
+
+        [Parameter()]
+        [System.String]
+        $GitUserEmail = $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL,
+
+        [Parameter()]
+        [System.String]
+        $GitUserName = $env:APPVEYOR_REPO_COMMIT_AUTHOR
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    $headers = @{
+        'Content-type' = 'application/json'
+    }
+
+    Write-Verbose -Message $script:localizedData.CreateTempDirMessage
+    $path = New-TempFolder
+
+    try
+    {
+        Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
+        Invoke-Git config --global core.autocrlf true
+
+        $wikiRepoName = "https://github.com/$RepoName.wiki.git"
+        Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
+        Invoke-Git clone $wikiRepoName $path --quiet
+
+        $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
+        Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
+
+        try
+        {
+            $artifacts = Invoke-RestMethod -Method Get -Uri $jobArtifactsUrl -Headers $headers -Verbose:$false
+        }
+        catch
+        {
+            switch (($_ | ConvertFrom-Json).Message)
+            {
+                'Job not found.'
+                {
+                    throw ($script:localizedData.NoAppVeyorJobFoundError -f $JobId)
+                }
+
+                default
+                {
+                    throw $_
+                }
+            }
+        }
+
+        $wikiContentArtifact = $artifacts | Where-Object -Property fileName -like "$ResourceModuleName_*_wikicontent.zip"
+
+        if ($null -eq $wikiContentArtifact)
+        {
+            throw ($LocalizedData.NoWikiContentArtifactError -f $JobId)
+        }
+
+        $artifactUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts/$($wikiContentArtifact.fileName)"
+
+        Write-Verbose -Message ($localizedData.DownloadAppVeyorWikiContentArtifactMessage -f $artifactUrl)
+        $wikiContentArtifactPath = Join-Path -Path $Path -ChildPath $wikiContentArtifact.filename
+        Invoke-RestMethod -Method Get -Uri $artifactUrl -OutFile $wikiContentArtifactPath -Headers $headers `
+            -Verbose:$false
+
+        Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
+        Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
+        Remove-Item -Path $wikiContentArtifactPath
+
+        Push-Location
+        Set-Location -Path $path
+
+        Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
+        Invoke-Git config --local user.email $GitUserEmail
+        Invoke-Git config --local user.name $GitUserName
+        Invoke-Git remote set-url origin "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
+
+        Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
+        Invoke-Git add *
+
+        Write-Verbose -Message ($localizedData.CommitAndTagRepoChangesMessage -f $BuildVersion)
+        Invoke-Git commit --message ($localizedData.UpdateWikiCommitMessage -f $JobId) --quiet
+        Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
+
+        Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
+        Invoke-Git push origin --quiet
+        Invoke-Git push origin $BuildVersion --quiet
+
+        Pop-Location
+    }
+    finally
+    {
+        Remove-Item -Path $path -Recurse -Force
+        Write-Verbose -Message $localizedData.PublishWikiContentCompleteMessage
+    }
+}
+
+<#
+    .SYNOPSIS
+        Invokes the git command.
+
+    .PARAMETER Arguments
+        The arguments to pass to the Git executable.
+
+    .EXAMPLE
+        Invoke-Git clone https://github.com/X-Guardian/xActiveDirectory.wiki.git --quiet
+
+        Invokes the Git executable to clone the specified repository to the current working directory.
+#>
+
+function Invoke-Git
+{
+    [CmdletBinding()]
+    param
+    (
+        [parameter(ValueFromRemainingArguments = $true)]
+        [System.String[]]
+        $Arguments
+    )
+
+    Write-Debug -Message ($localizedData.InvokingGitMessage -f $Arguments)
+
+    try
+    {
+        & git.exe @Arguments 2>$null
+    }
+    catch
+    {
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw $_
+        }
+    }
+}
+
+<#
+    .SYNOPSIS
+        Creates a new temporary folder with a random name.
+
+    .EXAMPLE
+        New-TempFolder
+
+        This command creates a new temporary folder with a random name.
+
+    .PARAMETER MaximumRetries
+        Specifies the maximum number of time to retry creating the temp folder.
+
+    .OUTPUTS
+        System.IO.DirectoryInfo
+#>
+function New-TempFolder
+{
+    [CmdletBinding()]
+    [OutputType([System.IO.DirectoryInfo])]
+    param (
+        [Parameter()]
+        [Int]
+        $MaximumRetries = 10
+    )
+
+    $tempPath = [System.IO.Path]::GetTempPath()
+
+    $retries = 0
+    do
+    {
+        $retries++
+        if ($Retries -gt $MaximumRetries)
+        {
+            throw ($localizedData.NewTempFolderCreationError -f $tempPath)
+        }
+        $name = [System.IO.Path]::GetRandomFileName()
+        $path = New-Item -Path $tempPath -Name $name -ItemType Directory -ErrorAction SilentlyContinue
+    }
+    while (-not $path)
+
+    return $path
+}
+
+Export-ModuleMember -Function New-DscResourceWikiSite, Publish-WikiContent

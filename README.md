@@ -62,6 +62,7 @@ A full list of changes in each version can be found in the [change log](CHANGELO
   - [Run tests in a Docker Windows container](#run-tests-in-a-docker-windows-container)
 - [Deploy](#deploy)
   - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)
+  - [Publish Wiki Content](#publish-wiki-content)
 - [Change Log](#change-log)
 
 <!-- /TOC -->
@@ -722,22 +723,23 @@ These are the artifacts that differ when running tests using a container.
 ## Deploy
 
 To run the deploy steps the following must be added to the appveyor.yml. The
-default is to opt-in for all the deploy tasks. See comment-based help for
+default is that opt-in is required for all the deploy tasks. See comment-based help for
 the optional parameters.
+
+Example opt-in to both Example Publishing and Wiki Content Publishing:
 
 ```yml
 deploy_script:
   - ps: |
-        Invoke-AppVeyorDeployTask
+        Invoke-AppVeyorDeployTask -OptIn PublishExample, PublishWikiContent
 ```
 
 ### Publish examples to PowerShell Gallery
 
-This deploy task is a default opt-in. To opt-out, change the appveyor.yml
-to not include the opt-in task *PublishExample*,
-e.g. `Invoke-AppVeyorDeployTask -OptIn @()`.
+To opt-in to this task, change the appveyor.yml to include the opt-in task
+*PublishExample*, e.g. `Invoke-AppVeyorDeployTask -OptIn PublishExample`.
 
-By opt-in for the task *PublishExample* allows the test framework to publish the
+By opting-in to the *PublishExample* task, the test framework will publish the
 examples in the AppVeyor deploy step, but only if it is a 'master' branch build
 (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
 
@@ -802,6 +804,35 @@ environment:
 ```plaintext
 * text eol=crlf
 ```
+
+### Publish Wiki Content
+
+To opt-in to this task, change the appveyor.yml to include the opt-in task
+*PublishWikiContent*, e.g. `Invoke-AppVeyorDeployTask -OptIn PublishWikiContent`.
+
+By opting-in to the *PublishWikiContent* task, the test framework will publish the
+contents of a DSC Resource Module Wiki Content artifact to the relevant GitHub Wiki
+repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
+
+> **Note:** It is possible to override the deploy branch in appveyor.yml,
+> e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.
+
+#### Requirements/dependencies for publishing Wiki Content
+
+- Publish only on 'master' build.
+- The `Invoke-AppveyorAfterTestTask` function must be present in the Appveyor
+  configuration with a Type of 'Wiki' to generate the Wiki artifact.
+- A GitHub Personal Access Token with `repo/public_repo` permissions for a user
+  that has at least `Collaborator` access to the relevant DSC Module GitHub repository
+  must be generated and then added as a
+  [secure variable](https://www.appveyor.com/docs/build-configuration/#secure-variables)
+  called `github_access_token` to the `environment` section of the repository's
+  `appveyor.yml` file.
+- The GitHub Wiki needs to be initialized on a repository before this function is run.
+
+> **Note:** Currently Wiki content files are only added or updated by the function,
+> not deleted. Any deletions must be done manually by cloning the Wiki repository and
+> deleting the required content.
 
 #### Contributor responsibilities
 

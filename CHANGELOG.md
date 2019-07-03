@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-- Update New-DscResourcePowerShellHelp to output the PowerShell help files to
-  the resource specific path and fix the example processing.
 - Fixes issue where Reset-DSC causes a Warning to be logged if a DSC
   configuration is not currently running.
 - Added issue templates.
@@ -54,6 +52,10 @@
       the resource file.
     - There should be no additional localized string keys in the resource
       file that do not exist in the en-US resource file.
+- Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
+  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Update New-DscResourcePowerShellHelp to output the PowerShell help files to
+  the resource specific path and fix the example processing.
 
 ## 0.3.0.0
 
