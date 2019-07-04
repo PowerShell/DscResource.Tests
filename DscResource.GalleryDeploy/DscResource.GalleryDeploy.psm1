@@ -289,10 +289,16 @@ function Test-PublishMetadata
                         $skipWarningMessage, ($script:localizedData.MissingRequiredMetadataProperties -f $errorMessage))
             }
 
+            'InvalidGuid,Test-ScriptFileInfo'
+            {
+                Write-Warning -Message ('{0} {1}' -f `
+                        $skipWarningMessage, ($script:localizedData.InvalidGuid -f $errorMessage))
+            }
+
             default
             {
                 # If the error is not recognized then throw.
-                throw $_
+                throw ($script:localizedData.TestScriptFileInfoError -f $Path, $_)
             }
         }
     }
