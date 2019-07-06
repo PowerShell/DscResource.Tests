@@ -279,7 +279,6 @@ function Test-StatementContainsUpperCase
         $StatementBlock
     )
 
-    $statementBlockRows = Get-StatementBlockAsRows @PSBoundParameters
-    $statement = [System.Text.RegularExpressions.Regex]::Match($statementBlockRows,'^[a-zA-Z]*').Value
+    $statement = [System.Text.RegularExpressions.Regex]::Match($statementBlock,'^[a-zA-Z]*').Value
     return ($statement -cne $statement.ToLower())
 }
