@@ -13,7 +13,7 @@
         [System.Boolean]
 
    .NOTES
-        I initially just walked up the AST tree till I hit 
+        I initially just walked up the AST tree till I hit
         a TypeDefinitionAst that was a class
 
         But...
@@ -60,7 +60,7 @@ function Test-IsInClass
     if ($Ast -is [System.Management.Automation.Language.NamedAttributeArgumentAst])
     {
         # Parent is an Attribute Ast AND
-        $inAClass = $Ast.Parent -is [System.Management.Automation.Language.AttributeAst] -and 
+        $inAClass = $Ast.Parent -is [System.Management.Automation.Language.AttributeAst] -and
             # Grandparent is a Property Member Ast (This Ast Type ONLY shows up inside a TypeDefinitionAst) AND
             $Ast.Parent.Parent -is [System.Management.Automation.Language.PropertyMemberAst] -and
             # Great Grandparent is a Type Definition Ast AND
@@ -73,7 +73,7 @@ function Test-IsInClass
     {
         # Parent is a Function Definition Ast AND
         $inAClass = $Ast.Parent -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
-            # Grandparent is a Function Member Ast (This Ast Type ONLY shows up inside a TypeDefinitionAst) AND 
+            # Grandparent is a Function Member Ast (This Ast Type ONLY shows up inside a TypeDefinitionAst) AND
             $Ast.Parent.Parent -is [System.Management.Automation.Language.FunctionMemberAst] -and
             # Great Grandparent is a Type Definition Ast AND
             $Ast.Parent.Parent.Parent -is [System.Management.Automation.Language.TypeDefinitionAst] -and
@@ -246,4 +246,40 @@ function Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine
     } # if
 
     return $false
+}
+
+<#
+    .SYNOPSIS
+        Helper function for the Measure-*Statement PSScriptAnalyzer rules.
+        Tests if the statement at the beginning of the string contains any
+        upper case letters.
+
+    .EXAMPLE
+        Test-StatementContainsUpperCase -StatementBlock $ScriptBlockAst.Extent
+
+    .PARAMETER StatementBlock
+        The StatementBlock that contains the statement to check contains any
+        upper case letters.
+
+    .OUTPUTS
+        [System.Boolean]
+
+   .NOTES
+        None
+#>
+function Test-StatementContainsUpperCase
+{
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $StatementBlock
+    )
+
+    $statementBlockRows = Get-StatementBlockAsRows @PSBoundParameters
+    $statement = [System.Text.RegularExpressions.Regex]::Match($statementBlockRows,'^[a-zA-Z]*').Value
+    return ($statement -cne $statement.ToLower())
 }
