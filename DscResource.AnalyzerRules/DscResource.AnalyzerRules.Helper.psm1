@@ -12,7 +12,7 @@
     .OUTPUTS
         [System.Boolean]
 
-   .NOTES
+    .NOTES
         I initially just walked up the AST tree till I hit
         a TypeDefinitionAst that was a class
 
@@ -98,7 +98,7 @@ function Test-IsInClass
     .OUTPUTS
         [System.String[]]
 
-   .NOTES
+    .NOTES
         None
 #>
 function Get-StatementBlockAsRows
@@ -136,7 +136,7 @@ function Get-StatementBlockAsRows
     .OUTPUTS
         [System.Boolean]
 
-   .NOTES
+    .NOTES
         None
 #>
 function Test-StatementOpeningBraceOnSameLine
@@ -178,7 +178,7 @@ function Test-StatementOpeningBraceOnSameLine
     .OUTPUTS
         [System.Boolean]
 
-   .NOTES
+    .NOTES
         None
 #>
 function Test-StatementOpeningBraceIsNotFollowedByNewLine
@@ -220,7 +220,7 @@ function Test-StatementOpeningBraceIsNotFollowedByNewLine
     .OUTPUTS
         [System.Boolean]
 
-   .NOTES
+    .NOTES
         None
 #>
 function Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine
@@ -254,17 +254,17 @@ function Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine
         Tests if the statement at the beginning of the string contains any
         upper case letters.
 
-    .EXAMPLE
-        Test-StatementContainsUpperCase -StatementBlock $ScriptBlockAst.Extent
-
     .PARAMETER StatementBlock
         The StatementBlock that contains the statement to check contains any
         upper case letters.
 
+    .EXAMPLE
+        Test-StatementContainsUpperCase -StatementBlock $ScriptBlockAst.Extent
+
     .OUTPUTS
         [System.Boolean]
 
-   .NOTES
+    .NOTES
         None
 #>
 function Test-StatementContainsUpperCase

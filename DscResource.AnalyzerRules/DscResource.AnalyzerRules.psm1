@@ -310,7 +310,7 @@ function Measure-IfStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'if')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'if'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -382,7 +382,7 @@ function Measure-ForEachStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'foreach')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'foreach'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -454,7 +454,7 @@ function Measure-DoUntilStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -526,7 +526,7 @@ function Measure-DoWhileStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -598,7 +598,7 @@ function Measure-WhileStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'while')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'while'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -670,7 +670,7 @@ function Measure-ForStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'for')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'for'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -746,7 +746,7 @@ function Measure-SwitchStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'switch')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'switch'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -818,7 +818,7 @@ function Measure-TryStatement
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'try')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'try'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -890,7 +890,7 @@ function Measure-CatchClause
 
         if (Test-StatementContainsUpperCase @testParameters)
         {
-            $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'catch')
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'catch'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
     }
@@ -963,7 +963,7 @@ function Measure-TypeDefinition
 
             if (Test-StatementContainsUpperCase @testParameters)
             {
-                $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'enum')
+                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'enum'
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if
@@ -989,7 +989,7 @@ function Measure-TypeDefinition
 
             if (Test-StatementContainsUpperCase @testParameters)
             {
-                $script:diagnosticRecord['Message'] = ($localizedData.StatementsContainsUpperCaseLetter -f 'class')
+                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'class'
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if

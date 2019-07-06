@@ -1205,7 +1205,7 @@ Describe 'Measure-IfStatement' {
         }
 
         Context 'When if-statement contains upper case letters' {
-            It 'Should not write an error record' {
+            It 'Should write the correct error record' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                     function Get-Something
                     {
@@ -3018,7 +3018,7 @@ Describe 'Measure-TypeDefinition' {
                     $definition = '
                         class Test {
                             [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -3037,7 +3037,7 @@ Describe 'Measure-TypeDefinition' {
                     $definition = '
                         class Test
                         {   [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -3058,7 +3058,7 @@ Describe 'Measure-TypeDefinition' {
                         {
 
                             [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -3078,7 +3078,7 @@ Describe 'Measure-TypeDefinition' {
                         Class Test
                         {
                             [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -3176,7 +3176,7 @@ Describe 'Measure-TypeDefinition' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                     class Test {
                         [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -3194,7 +3194,7 @@ Describe 'Measure-TypeDefinition' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                     class Test
                     {   [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -3214,7 +3214,7 @@ Describe 'Measure-TypeDefinition' {
                     {
 
                         [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -3233,7 +3233,7 @@ Describe 'Measure-TypeDefinition' {
                     Class Test
                     {
                         [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
