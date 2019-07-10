@@ -353,6 +353,11 @@ function Publish-WikiContent
         $JobId = $env:APPVEYOR_JOB_ID,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [String]
+        $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter()]
         [System.String]
         $ResourceModuleName = (($env:APPVEYOR_REPO_NAME -split '/')[1]),
 
@@ -431,6 +436,10 @@ function Publish-WikiContent
         Write-Verbose -Message ($localizedData.UnzipWikiContentArtifactMessage -f $wikiContentArtifact.filename)
         Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
         Remove-Item -Path $wikiContentArtifactPath
+
+        Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
+        Set-WikiFooter -Path $path
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path
 
         Push-Location
         Set-Location -Path $path
@@ -539,6 +548,124 @@ function New-TempFolder
     while (-not $path)
 
     return $path
+}
+
+<#
+    .SYNOPSIS
+        Creates the Wiki side bar file from the list of markdown files in the path
+
+    .PARAMETER ResourceModuleName
+        The name of the resource module
+
+    .PARAMETER Path
+        The path of the Wiki page files
+
+    .EXAMPLE
+        Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
+
+        Creates the Wiki side bar from the list of markdown files in the path
+#>
+function Set-WikiSidebar {
+    [CmdletBinding()]
+    param
+    (
+        [parameter(Mandatory = $true)]
+        [System.String]
+        $ResourceModuleName,
+        [parameter(Mandatory = $true)]
+        [System.String]
+        $Path
+    )
+
+    $wikiSideBarFileBaseName = '_Sidebar.md'
+    $wikiSideBarFileFullName = Join-Path -Path $path -ChildPath $wikiSideBarFileBaseName
+
+    Write-Verbose -Message ($localizedData.GenerateWikiSidebarMessage -f $wikiSideBarFileBaseName)
+    $WikiSidebar = @(
+        "# $ResourceModuleName Module"
+        ' '
+    )
+
+    $wikiFiles = Get-ChildItem -Path $Path -Filter '*.md'
+    Foreach ($file in $wikiFiles)
+    {
+        $wikiSidebar += "- [$($file.BaseName)]($($file.BaseName))"
+    }
+    Out-File -InputObject $wikiSideBar -FilePath $wikiSideBarFileFullName -Encoding ASCII
+}
+
+<#
+    .SYNOPSIS
+        Creates the Wiki footer file if one does not already exist.
+
+    .PARAMETER Path
+        The path for the Wiki footer file.
+
+    .EXAMPLE
+        Set-WikiFooter -Path $path
+
+        Creates the Wiki footer.
+#>
+function Set-WikiFooter {
+    [CmdletBinding()]
+    param
+    (
+        [parameter(Mandatory = $true)]
+        [System.String]
+        $ResourceModuleName,
+        [parameter(Mandatory = $true)]
+        [System.String]
+        $Path
+    )
+
+    $wikiFooterFileBaseName = '_Footer.md'
+    $wikiFooterFileFullName = Join-Path -Path $path -ChildPath $wikiFooterFileBaseName
+
+    if (-not (Test-Path -Path $wikiFooterFileFullName))
+    {
+        Write-Verbose -Message ($localizedData.GenerateWikiFooterMessage -f $wikiFooterFileBaseName)
+        $wikiFooter = @()
+
+        Out-File -InputObject $wikiFooter -FilePath $wikiFooterFileFullName -Encoding ASCII
+    }
+}
+
+<#
+    .SYNOPSIS
+        Copies any Wiki files from the module into the Wiki.
+
+    .PARAMETER MainModulePath
+        The path of the module.
+
+    .PARAMETER Path
+        The destination path for the Wiki files.
+
+    .EXAMPLE
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path
+
+        Copies any Wiki files from the module into the Wiki.
+#>
+function Copy-WikiFile {
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $MainModulePath,
+        [parameter(Mandatory = $true)]
+        [System.String]
+        $Path
+    )
+
+    $wikiSourcePath = Join-Path -Path $MainModulePath -ChildPath 'WikiSource'
+    Write-Verbose -Message ($localizedData.CopyWikiFilesMessage -f $wikiSourcePath)
+
+    $wikiFiles = Get-ChildItem -Path $wikiSourcePath
+    Foreach ($file in $wikiFiles)
+    {
+        Write-Verbose -Message ($localizedData.CopyFileMessage -f $file.name)
+        Copy-Item -Path $file.fullname -Destination $Path
+    }
 }
 
 Export-ModuleMember -Function New-DscResourceWikiSite, Publish-WikiContent

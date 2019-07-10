@@ -16,4 +16,8 @@ ConvertFrom-StringData @'
     NoWikiContentArtifactError                 = No Wiki Content artifact found in AppVeyor job id '{0}'.
     NewTempFolderCreationError                 = Unable to create a temporary working folder in '{0}'.
     InvokingGitMessage                         = Invoking Git '{0}'.
+    GenerateWikiSidebarMessage                 = Generating Wiki Sidebar '{0}'.
+    GenerateWikiFooterMessage                  = Generating Wiki Footer '{0}'.
+    CopyWikiFilesMessage                       = Copying Wiki files from '{0}'.
+    CopyFileMessage                            = Copying file '{0}'.
 '@
