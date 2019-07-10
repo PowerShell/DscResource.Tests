@@ -1042,7 +1042,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
             Mock -CommandName Set-Location
             Mock -CommandName Set-WikiSidebar
             Mock -CommandName Set-WikiFooter
-            Mock -CommandName Copy-WikiFiles
+            Mock -CommandName Copy-WikiFile
         }
 
         Context 'When the Wiki Git repo is not found' {
