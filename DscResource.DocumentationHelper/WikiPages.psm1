@@ -438,7 +438,7 @@ function Publish-WikiContent
         Remove-Item -Path $wikiContentArtifactPath
 
         Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
-        Set-WikiFooter -Path $path
+        Set-WikiFooter -ResourceModuleName $ResourceModuleName -Path $path
         Copy-WikiFile -MainModulePath $MainModulePath -Path $path
 
         Push-Location
