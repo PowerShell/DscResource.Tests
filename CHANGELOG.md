@@ -54,7 +54,7 @@
       file that do not exist in the en-US resource file.
 - Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
   to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
-- Update New-DscResourcePowerShellHelp to output the PowerShell help files to
+- Update New-DscResourcePowerShellHelp to optionally output the PowerShell help files to
   the resource specific path and fix the example processing.
 - Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
   ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
