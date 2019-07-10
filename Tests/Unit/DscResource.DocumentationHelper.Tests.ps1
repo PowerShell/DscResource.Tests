@@ -924,7 +924,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
         $mockGitUserEmail = 'mock@contoso.com'
         $mockGitUserName = 'mock'
         $mockGithubAccessToken = '1234567890'
-        $mockPath = "C:\Windows\Temp"
+        $mockPath = $env:temp
         $mockJobId = 'imy2wgh1ylo9qcpb'
         $mockBuildVersion = '2.1.456.0'
         $mockapiUrl = 'https://ci.appveyor.com/api'
@@ -1022,6 +1022,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
         $script:publishWikiContent_parameters = @{
             RepoName           = $mockRepoName
             JobId              = $mockJobId
+            MainModulePath     = $mockPath
             ResourceModuleName = $mockResourceModuleName
             BuildVersion       = $mockbuildVersion
             GitUserEmail       = $mockGitUserEmail
