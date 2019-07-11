@@ -303,17 +303,23 @@ function Get-DscResourceWikiExampleContent
 
 <#
     .SYNOPSIS
-        Publishes the Wiki Content from an AppVeyor job artifact.
+        Publishes the Wiki Content from a module and AppVeyor job artifact.
 
     .DESCRIPTION
-        This function adds the content pages from the Wiki Content artifact of a specified
-        AppVeyor job to the Wiki of a specified GitHub repository.
+        This function publishes the content pages from the Wiki Content artifact
+        of a specified AppVeyor job along with any additional files stored in the
+        'WikiSource' directory of the repository and an auto-generated sidebar file
+        containing links to all the markdown files to the Wiki of a specified GitHub
+        repository.
 
     .PARAMETER RepoName
         The name of the Github Repo, in the format <account>/<repo>.
 
     .PARAMETER JobId
         The AppVeyor job id that contains the wiki artifact to publish.
+
+    .PARAMETER MainModulePath
+        The path of the DSC Resource Module.
 
     .PARAMETER ResourceModuleName
         The name of the Dsc Resource Module.
@@ -332,9 +338,9 @@ function Get-DscResourceWikiExampleContent
 
     .EXAMPLE
         Publish-WikiContent -RepoName 'PowerShell/xActiveDirectory' -JobId 'imy2wgp1ylo9bcpb' -ResourceModuleName 'xActiveDirectory' `
-                            -BuildVersion 'v1.0.0'
+                            -MainModulePath 'C:\ModulePath' -BuildVersion 'v1.0.0'
 
-        Adds the Content pages from the AppVeyor Job artifact to the Wiki for the specified GitHub repository.
+        Adds the Content pages from the AppVeyor Job artifact and module path to the Wiki for the specified GitHub repository.
 
     .NOTES
         Appveyor - Push to remote Git repository from a build: https://www.appveyor.com/docs/how-to/git-push/
@@ -487,7 +493,7 @@ function Invoke-Git
     [CmdletBinding()]
     param
     (
-        [parameter(ValueFromRemainingArguments = $true)]
+        [Parameter(ValueFromRemainingArguments = $true)]
         [System.String[]]
         $Arguments
     )
@@ -565,14 +571,16 @@ function New-TempFolder
 
         Creates the Wiki side bar from the list of markdown files in the path
 #>
-function Set-WikiSidebar {
+function Set-WikiSidebar
+{
     [CmdletBinding()]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $ResourceModuleName,
-        [parameter(Mandatory = $true)]
+
+        [Parameter(Mandatory = $true)]
         [System.String]
         $Path
     )
@@ -587,7 +595,7 @@ function Set-WikiSidebar {
     )
 
     $wikiFiles = Get-ChildItem -Path $Path -Filter '*.md'
-    Foreach ($file in $wikiFiles)
+    foreach ($file in $wikiFiles)
     {
         $wikiSidebar += "- [$($file.BaseName)]($($file.BaseName))"
     }
@@ -606,14 +614,16 @@ function Set-WikiSidebar {
 
         Creates the Wiki footer.
 #>
-function Set-WikiFooter {
+function Set-WikiFooter
+{
     [CmdletBinding()]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $ResourceModuleName,
-        [parameter(Mandatory = $true)]
+
+        [Parameter(Mandatory = $true)]
         [System.String]
         $Path
     )
@@ -645,14 +655,16 @@ function Set-WikiFooter {
 
         Copies any Wiki files from the module into the Wiki.
 #>
-function Copy-WikiFile {
+function Copy-WikiFile
+{
     [CmdletBinding()]
     param
     (
         [Parameter(Mandatory = $true)]
         [System.String]
         $MainModulePath,
-        [parameter(Mandatory = $true)]
+
+        [Parameter(Mandatory = $true)]
         [System.String]
         $Path
     )
@@ -661,7 +673,7 @@ function Copy-WikiFile {
     Write-Verbose -Message ($localizedData.CopyWikiFilesMessage -f $wikiSourcePath)
 
     $wikiFiles = Get-ChildItem -Path $wikiSourcePath
-    Foreach ($file in $wikiFiles)
+    foreach ($file in $wikiFiles)
     {
         Write-Verbose -Message ($localizedData.CopyFileMessage -f $file.name)
         Copy-Item -Path $file.fullname -Destination $Path

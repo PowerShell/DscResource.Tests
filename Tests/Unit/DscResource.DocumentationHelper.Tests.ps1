@@ -1287,27 +1287,30 @@ Configuration CertificateExport_CertByFriendlyName_Config
     }
 
     Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Set-WikiSideBar' {
+        BeforeAll {
+            $mockSetWikiSideBarParms = @{
+                ResourceModuleName = 'TestResource'
+                Path               = $env:temp
+            }
 
-        $mockSetWikiSideBarParms = @{
-            ResourceModuleName = 'TestResource'
-            Path               = $env:temp
+            $mockFileInfo = @(
+                @{
+                    Name     = 'resource1.md'
+                    BaseName = 'resource1'
+                    FullName = "$($env:temp)\resource1.md"
+                }
+            )
+
+            $wikiSideBarFileBaseName = '_Sidebar.md'
+            $wikiSideBarFileFullName = Join-Path -Path $mockSetWikiSideBarParms.Path -ChildPath $wikiSideBarFileBaseName
+
+            Mock Out-File
         }
 
-        $mockFileInfo = @(
-            @{
-                Name     = 'resource1.md'
-                BaseName = 'resource1'
-                FullName = "$($env:temp)\resource1.md"
-            }
-        )
-
-        $wikiSideBarFileBaseName = '_Sidebar.md'
-        $wikiSideBarFileFullName = Join-Path -Path $mockSetWikiSideBarParms.Path -ChildPath $wikiSideBarFileBaseName
-
-        Mock Out-File
-
         Context 'When there are markdown files to add to the side bar' {
-            Mock Get-ChildItem -MockWith { $mockFileInfo }
+            BeforeAll {
+                Mock Get-ChildItem -MockWith { $mockFileInfo }
+            }
 
             It 'Should not throw an exception' {
                 { Set-WikiSideBar @mockSetWikiSideBarParms -Verbose } | Should -Not -Throw
@@ -1328,20 +1331,23 @@ Configuration CertificateExport_CertByFriendlyName_Config
     }
 
     Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Set-WikiFooter' {
+        BeforeAll {
+            $mockSetWikiFooterParms = @{
+                ResourceModuleName = 'TestResource'
+                Path               = $env:temp
+            }
 
-        $mockSetWikiFooterParms = @{
-            ResourceModuleName = 'TestResource'
-            Path               = $env:temp
+            $mockWikiFooterPath = Join-Path -Path $mockSetWikiFooterParms.Path -ChildPath '_Footer.md'
+
+            Mock Out-File
         }
 
-        $mockWikiFooterPath = Join-Path -Path $mockSetWikiFooterParms.Path -ChildPath '_Footer.md'
-
-        Mock Out-File
-
         Context 'When there is no pre-existing Wiki footer file' {
-            Mock Test-Path `
-                -ParameterFilter { $Path -eq $mockWikiFooterPath } `
-                -MockWith { $false }
+            BeforeAll {
+                Mock Test-Path `
+                    -ParameterFilter { $Path -eq $mockWikiFooterPath } `
+                    -MockWith { $false }
+            }
 
             It 'Should not throw an exception' {
                 { Set-WikiFooter @mockSetWikiFooterParms } | Should -Not -Throw
@@ -1356,9 +1362,11 @@ Configuration CertificateExport_CertByFriendlyName_Config
         }
 
         Context 'When there is a pre-existing Wiki footer file' {
-            Mock Test-Path `
-                -ParameterFilter { $Path -eq $mockWikiFooterPath } `
-                -MockWith { $true }
+            BeforeAll {
+                Mock Test-Path `
+                    -ParameterFilter { $Path -eq $mockWikiFooterPath } `
+                    -MockWith { $true }
+            }
 
             It 'Should not throw an exception' {
                 { Set-WikiFooter @mockSetWikiFooterParms } | Should -Not -Throw
@@ -1374,27 +1382,30 @@ Configuration CertificateExport_CertByFriendlyName_Config
     }
 
     Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Copy-WikiFile' {
+        BeforeAll {
+            $mockCopyWikiFileParms = @{
+                MainModulePath = "$env:temp\TestModule"
+                Path           = $env:temp
+            }
 
-        $mockCopyWikiFileParms = @{
-            MainModulePath = "$env:temp\TestModule"
-            Path           = $env:temp
+            $mockFileInfo = @(
+                @{
+                    Name     = 'Home.md'
+                    FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\Home.md"
+                }
+                @{
+                    Name     = 'image.png'
+                    FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\image.png"
+                }
+            )
+
+            Mock Copy-Item
         }
 
-        $mockFileInfo = @(
-            @{
-                Name     = 'Home.md'
-                FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\Home.md"
-            }
-            @{
-                Name     = 'image.png'
-                FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\image.png"
-            }
-        )
-
-        Mock Copy-Item
-
         Context 'When there are no files to copy' {
-            Mock Get-ChildItem
+            BeforeAll {
+                Mock Get-ChildItem
+            }
 
             It 'Should not throw an exception' {
                 { Copy-WikiFile @mockCopyWikiFileParms } | Should -Not -Throw
@@ -1408,8 +1419,10 @@ Configuration CertificateExport_CertByFriendlyName_Config
         }
 
         Context 'When there are files to copy' {
-            Mock Get-ChildItem `
-                -MockWith { $mockfileInfo }
+            BeforeAll {
+                Mock Get-ChildItem `
+                    -MockWith { $mockfileInfo }
+            }
 
             It 'Should not throw an exception' {
                 { Copy-WikiFile @mockCopyWikiFileParms } | Should -Not -Throw
