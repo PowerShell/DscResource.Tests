@@ -660,7 +660,7 @@ function Set-WikiFooter
     .PARAMETER Path
         The destination path for the Wiki files.
 
-    .PARAMETER WikiSourcePath
+    .PARAMETER WikiSourceFolder
         The name of the folder that contains the source Wiki files.
 
     .EXAMPLE

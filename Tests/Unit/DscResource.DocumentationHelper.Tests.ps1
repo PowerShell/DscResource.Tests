@@ -1384,8 +1384,9 @@ Configuration CertificateExport_CertByFriendlyName_Config
     Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Copy-WikiFile' {
         BeforeAll {
             $mockCopyWikiFileParms = @{
-                MainModulePath = "$env:temp\TestModule"
-                Path           = $env:temp
+                MainModulePath   = "$env:temp\TestModule"
+                Path             = $env:temp
+                WikiSourceFolder = 'WikiSource'
             }
 
             $mockFileInfo = @(
