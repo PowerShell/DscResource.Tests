@@ -25,27 +25,28 @@ $script:localizedData = Get-LocalizedData -ModuleName $moduleName -ModuleRoot $P
 
 <#
 .SYNOPSIS
-
 New-DscResourcePowerShellHelp generates PowerShell compatible help files for a DSC
 resource module
 
 .DESCRIPTION
-
 The New-DscResourcePowerShellHelp cmdlet will review all of the MOF based resources
-in a specified module directory and will inject PowerShell help files for each resource
-in to the resource's subdirectory. These help files include details on the property types for
-each resource, as well as a text description and examples where they exist.
-a README.md with a text description must exist in the resource's subdirectory for the
+in a specified module directory and will inject PowerShell help files for each resource.
+These help files include details on the property types for each resource, as well as a text
+description and examples where they exist.
+
+The help files are output to the OutputPath directory if specified, or if not, they are
+output to the releveant resource's 'en-US' directory.
+
+A README.md with a text description must exist in the resource's subdirectory for the
 help file to be generated.
+
 These help files can then be read by passing the name of the resource as a parameter to Get-Help.
 
 .PARAMETER ModulePath
-
 The path to the root of the DSC resource module (where the PSD1 file is found, not the folder for
 each individual DSC resource)
 
 .EXAMPLE
-
 This example shows how to generate help for a specific module
 
     New-DscResourcePowerShellHelp -ModulePath C:\repos\SharePointdsc
@@ -58,7 +59,11 @@ function New-DscResourcePowerShellHelp
     (
         [parameter(Mandatory = $true)]
         [System.String]
-        $ModulePath
+        $ModulePath,
+
+        [parameter()]
+        [System.String]
+        $OutputPath
     )
 
     Import-Module (Join-Path -Path $PSScriptRoot -ChildPath 'MofHelper.psm1') -Verbose:$false
@@ -135,7 +140,16 @@ function New-DscResourcePowerShellHelp
                 Write-Warning -Message ($script:localizedData.NoExampleFileFoundWarning -f $result.FriendlyName)
             }
 
-            $savePath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath "\en-US\about_$($result.FriendlyName).help.txt"
+            # Output to $OutputPath if specified or the resource 'en-US' directory if not.
+            $outputFileName = "about_$($result.FriendlyName).help.txt"
+            if ($OutputPath)
+            {
+                $savePath = Join-Path -Path $OutputPath -ChildPath $outputFileName
+            }
+            else
+            {
+                $savePath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath 'en-US' | Join-Path -ChildPath $outputFileName
+            }
             Write-Verbose -Message ($script:localizedData.OutputHelpDocumentMessage -f $savePath)
             $output | Out-File -FilePath $savePath -Encoding utf8 -Force
         }
