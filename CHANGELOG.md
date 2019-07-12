@@ -56,6 +56,7 @@
   to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
 - Update New-DscResourcePowerShellHelp to optionally output the PowerShell help files to
   the resource specific path and fix the example processing.
+  - The files are now outputted as UTF-8 (ASCII).
 - Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
   ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 
