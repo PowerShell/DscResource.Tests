@@ -58,6 +58,8 @@
   [issue #227](https://github.com/PowerShell/DscResource.Tests/issues/227) and
   [issue #228](https://github.com/PowerShell/DscResource.Tests/issues/228)).
 - Update New-DscResourcePowerShellHelp to output the PowerShell help files to
+  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Update New-DscResourcePowerShellHelp to optionally output the PowerShell help files to
   the resource specific path and fix the example processing.
 - Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
   ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
