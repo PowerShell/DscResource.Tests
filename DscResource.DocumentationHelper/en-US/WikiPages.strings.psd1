@@ -19,5 +19,5 @@ ConvertFrom-StringData @'
     GenerateWikiSidebarMessage                 = Generating Wiki Sidebar '{0}'.
     GenerateWikiFooterMessage                  = Generating Wiki Footer '{0}'.
     CopyWikiFilesMessage                       = Copying Wiki files from '{0}'.
-    CopyFileMessage                            = Copying file '{0}'.
+    CopyFileMessage                            = Copying file '{0}' to the Wiki.
 '@

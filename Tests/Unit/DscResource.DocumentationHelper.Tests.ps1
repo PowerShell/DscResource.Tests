@@ -1304,12 +1304,12 @@ Configuration CertificateExport_CertByFriendlyName_Config
             $wikiSideBarFileBaseName = '_Sidebar.md'
             $wikiSideBarFileFullName = Join-Path -Path $mockSetWikiSideBarParms.Path -ChildPath $wikiSideBarFileBaseName
 
-            Mock Out-File
+            Mock -CommandName Out-File
         }
 
         Context 'When there are markdown files to add to the side bar' {
             BeforeAll {
-                Mock Get-ChildItem -MockWith { $mockFileInfo }
+                Mock -CommandName Get-ChildItem -MockWith { $mockFileInfo }
             }
 
             It 'Should not throw an exception' {
@@ -1339,12 +1339,12 @@ Configuration CertificateExport_CertByFriendlyName_Config
 
             $mockWikiFooterPath = Join-Path -Path $mockSetWikiFooterParms.Path -ChildPath '_Footer.md'
 
-            Mock Out-File
+            Mock -CommandName Out-File
         }
 
         Context 'When there is no pre-existing Wiki footer file' {
             BeforeAll {
-                Mock Test-Path `
+                Mock -CommandName Test-Path `
                     -ParameterFilter { $Path -eq $mockWikiFooterPath } `
                     -MockWith { $false }
             }
@@ -1363,7 +1363,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
 
         Context 'When there is a pre-existing Wiki footer file' {
             BeforeAll {
-                Mock Test-Path `
+                Mock -CommandName Test-Path `
                     -ParameterFilter { $Path -eq $mockWikiFooterPath } `
                     -MockWith { $true }
             }
@@ -1399,12 +1399,12 @@ Configuration CertificateExport_CertByFriendlyName_Config
                 }
             )
 
-            Mock Copy-Item
+            Mock -CommandName Copy-Item
         }
 
         Context 'When there are no files to copy' {
             BeforeAll {
-                Mock Get-ChildItem
+                Mock -CommandName Get-ChildItem
             }
 
             It 'Should not throw an exception' {
@@ -1420,7 +1420,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
 
         Context 'When there are files to copy' {
             BeforeAll {
-                Mock Get-ChildItem `
+                Mock -CommandName Get-ChildItem `
                     -MockWith { $mockfileInfo }
             }
 

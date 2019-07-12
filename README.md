@@ -815,7 +815,8 @@ contents of a DSC Resource Module Wiki Content artifact to the relevant GitHub W
 repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
 A Wiki Sidebar file will be generated, containing links to all of the markdown
 files in the Wiki, as well as as a Wiki Footer file. Any files contained within the
-`WikiSource` directory of the repository will also be published to the Wiki.
+`WikiSource` directory of the repository will also be published to the Wiki
+overriding any auto generated files.
 
 > **Note:** It is possible to override the deploy branch in appveyor.yml,
 > e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.

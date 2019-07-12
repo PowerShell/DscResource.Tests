@@ -321,6 +321,9 @@ function Get-DscResourceWikiExampleContent
     .PARAMETER MainModulePath
         The path of the DSC Resource Module.
 
+    .PARAMETER WikiSourceFolder
+        The name of the folder in the DSC Resource Module that contains any Wiki source files.
+
     .PARAMETER ResourceModuleName
         The name of the Dsc Resource Module.
 
@@ -360,8 +363,13 @@ function Publish-WikiContent
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $WikiSourceFolder = 'WikiSource',
 
         [Parameter()]
         [System.String]
@@ -445,7 +453,7 @@ function Publish-WikiContent
 
         Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
         Set-WikiFooter -ResourceModuleName $ResourceModuleName -Path $path
-        Copy-WikiFile -MainModulePath $MainModulePath -Path $path
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path -WikiSourceFolder $WikiSourceFolder
 
         Push-Location
         Set-Location -Path $path
@@ -558,18 +566,18 @@ function New-TempFolder
 
 <#
     .SYNOPSIS
-        Creates the Wiki side bar file from the list of markdown files in the path
+        Creates the Wiki side bar file from the list of markdown files in the path.
 
     .PARAMETER ResourceModuleName
-        The name of the resource module
+        The name of the resource module.
 
     .PARAMETER Path
-        The path of the Wiki page files
+        The path of the Wiki page files.
 
     .EXAMPLE
         Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
 
-        Creates the Wiki side bar from the list of markdown files in the path
+        Creates the Wiki side bar from the list of markdown files in the path.
 #>
 function Set-WikiSidebar
 {
@@ -595,10 +603,12 @@ function Set-WikiSidebar
     )
 
     $wikiFiles = Get-ChildItem -Path $Path -Filter '*.md'
+
     foreach ($file in $wikiFiles)
     {
         $wikiSidebar += "- [$($file.BaseName)]($($file.BaseName))"
     }
+
     Out-File -InputObject $wikiSideBar -FilePath $wikiSideBarFileFullName -Encoding ASCII
 }
 
@@ -642,7 +652,7 @@ function Set-WikiFooter
 
 <#
     .SYNOPSIS
-        Copies any Wiki files from the module into the Wiki.
+        Copies any Wiki files from the module into the Wiki overwriting any existing files.
 
     .PARAMETER MainModulePath
         The path of the module.
@@ -650,8 +660,11 @@ function Set-WikiFooter
     .PARAMETER Path
         The destination path for the Wiki files.
 
+    .PARAMETER WikiSourcePath
+        The name of the folder that contains the source Wiki files.
+
     .EXAMPLE
-        Copy-WikiFile -MainModulePath $MainModulePath -Path $path
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path -WikiSourcePath $wikiSourcePath
 
         Copies any Wiki files from the module into the Wiki.
 #>
@@ -666,17 +679,22 @@ function Copy-WikiFile
 
         [Parameter(Mandatory = $true)]
         [System.String]
-        $Path
+        $Path,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $WikiSourceFolder
     )
 
-    $wikiSourcePath = Join-Path -Path $MainModulePath -ChildPath 'WikiSource'
+    $wikiSourcePath = Join-Path -Path $MainModulePath -ChildPath $WikiSourceFolder
     Write-Verbose -Message ($localizedData.CopyWikiFilesMessage -f $wikiSourcePath)
 
     $wikiFiles = Get-ChildItem -Path $wikiSourcePath
     foreach ($file in $wikiFiles)
+
     {
         Write-Verbose -Message ($localizedData.CopyFileMessage -f $file.name)
-        Copy-Item -Path $file.fullname -Destination $Path
+        Copy-Item -Path $file.fullname -Destination $Path -Force
     }
 }
 
