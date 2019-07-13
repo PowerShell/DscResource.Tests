@@ -1022,6 +1022,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
         $script:publishWikiContent_parameters = @{
             RepoName           = $mockRepoName
             JobId              = $mockJobId
+            MainModulePath     = $mockPath
             ResourceModuleName = $mockResourceModuleName
             BuildVersion       = $mockbuildVersion
             GitUserEmail       = $mockGitUserEmail
@@ -1040,7 +1041,10 @@ Configuration CertificateExport_CertByFriendlyName_Config
             Mock -CommandName Expand-Archive
             Mock -CommandName Remove-Item
             Mock -CommandName Set-Location
-    }
+            Mock -CommandName Set-WikiSidebar
+            Mock -CommandName Set-WikiFooter
+            Mock -CommandName Copy-WikiFile
+        }
 
         Context 'When the Wiki Git repo is not found' {
             BeforeAll {
@@ -1281,6 +1285,158 @@ Configuration CertificateExport_CertByFriendlyName_Config
             }
         }
     }
+
+    Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Set-WikiSideBar' {
+        BeforeAll {
+            $mockSetWikiSideBarParms = @{
+                ResourceModuleName = 'TestResource'
+                Path               = $env:temp
+            }
+
+            $mockFileInfo = @(
+                @{
+                    Name     = 'resource1.md'
+                    BaseName = 'resource1'
+                    FullName = "$($env:temp)\resource1.md"
+                }
+            )
+
+            $wikiSideBarFileBaseName = '_Sidebar.md'
+            $wikiSideBarFileFullName = Join-Path -Path $mockSetWikiSideBarParms.Path -ChildPath $wikiSideBarFileBaseName
+
+            Mock -CommandName Out-File
+        }
+
+        Context 'When there are markdown files to add to the side bar' {
+            BeforeAll {
+                Mock -CommandName Get-ChildItem -MockWith { $mockFileInfo }
+            }
+
+            It 'Should not throw an exception' {
+                { Set-WikiSideBar @mockSetWikiSideBarParms -Verbose } | Should -Not -Throw
+            }
+
+            It 'Should call the expected mocks ' {
+                Assert-MockCalled `
+                    -CommandName Get-ChildItem `
+                    -ParameterFilter { $Path -eq $mockSetWikiSideBarParms.Path } `
+                    -Exactly -Times 1
+
+                Assert-MockCalled `
+                    -CommandName Out-File `
+                    -ParameterFilter { $FilePath -eq $wikiSideBarFileFullName } `
+                    -Exactly -Times 1
+            }
+        }
+    }
+
+    Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Set-WikiFooter' {
+        BeforeAll {
+            $mockSetWikiFooterParms = @{
+                ResourceModuleName = 'TestResource'
+                Path               = $env:temp
+            }
+
+            $mockWikiFooterPath = Join-Path -Path $mockSetWikiFooterParms.Path -ChildPath '_Footer.md'
+
+            Mock -CommandName Out-File
+        }
+
+        Context 'When there is no pre-existing Wiki footer file' {
+            BeforeAll {
+                Mock -CommandName Test-Path `
+                    -ParameterFilter { $Path -eq $mockWikiFooterPath } `
+                    -MockWith { $false }
+            }
+
+            It 'Should not throw an exception' {
+                { Set-WikiFooter @mockSetWikiFooterParms } | Should -Not -Throw
+            }
+
+            It 'Should create the footer file' {
+                Assert-MockCalled `
+                    -CommandName Out-File `
+                    -ParameterFilter { $FilePath -eq $mockWikiFooterPath } `
+                    -Exactly -Times 1
+            }
+        }
+
+        Context 'When there is a pre-existing Wiki footer file' {
+            BeforeAll {
+                Mock -CommandName Test-Path `
+                    -ParameterFilter { $Path -eq $mockWikiFooterPath } `
+                    -MockWith { $true }
+            }
+
+            It 'Should not throw an exception' {
+                { Set-WikiFooter @mockSetWikiFooterParms } | Should -Not -Throw
+            }
+
+            It 'Should not create the footer file' {
+                Assert-MockCalled `
+                    -CommandName Out-File `
+                    -ParameterFilter { $FilePath -eq $mockWikiFooterPath } `
+                    -Exactly -Times 0
+            }
+        }
+    }
+
+    Describe 'DscResource.DocumentationHelper\WikiPages.psm1\Copy-WikiFile' {
+        BeforeAll {
+            $mockCopyWikiFileParms = @{
+                MainModulePath   = "$env:temp\TestModule"
+                Path             = $env:temp
+                WikiSourceFolder = 'WikiSource'
+            }
+
+            $mockFileInfo = @(
+                @{
+                    Name     = 'Home.md'
+                    FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\Home.md"
+                }
+                @{
+                    Name     = 'image.png'
+                    FullName = "$($mockCopyWikiFilParms.MainModulePath)\WikiSource\image.png"
+                }
+            )
+
+            Mock -CommandName Copy-Item
+        }
+
+        Context 'When there are no files to copy' {
+            BeforeAll {
+                Mock -CommandName Get-ChildItem
+            }
+
+            It 'Should not throw an exception' {
+                { Copy-WikiFile @mockCopyWikiFileParms } | Should -Not -Throw
+            }
+
+            It 'Should not copy any files' {
+                Assert-MockCalled `
+                    -CommandName Copy-Item `
+                    -Exactly -Times 0
+            }
+        }
+
+        Context 'When there are files to copy' {
+            BeforeAll {
+                Mock -CommandName Get-ChildItem `
+                    -MockWith { $mockfileInfo }
+            }
+
+            It 'Should not throw an exception' {
+                { Copy-WikiFile @mockCopyWikiFileParms } | Should -Not -Throw
+            }
+
+            It 'Should copy the correct number of files' {
+                Assert-MockCalled `
+                    -CommandName Copy-Item `
+                    -ParameterFilter { $Destination -eq $env:temp } `
+                    -Exactly -Times 2
+            }
+        }
+    }
 }
 
 $modulePath = Join-Path -Path $moduleRootPath -ChildPath 'PowerShellHelp.psm1'
@@ -1428,7 +1584,6 @@ Configuration Example
     }
 }
 '
-
     Describe 'DscResource.DocumentationHelper\PowerShellHelp.psm1\New-DscResourcePowerShellHelp' {
         # Parameter filters
         $script:getChildItemSchema_parameterFilter = {

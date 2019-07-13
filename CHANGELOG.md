@@ -55,9 +55,17 @@
       the resource file.
     - There should be no additional localized string keys in the resource
       file that do not exist in the en-US resource file.
-- Added `Publish-WikiContent` helper function to publish auto-generated
-  Wiki files to the relevant DSC resource GitHub Wiki
-  ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
+  to the relevant DSC resource GitHub Wiki with sidebar, footer and WikiSource file
+  copying ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142),
+  [issue #227](https://github.com/PowerShell/DscResource.Tests/issues/227) and
+  [issue #228](https://github.com/PowerShell/DscResource.Tests/issues/228)).
+- Update New-DscResourcePowerShellHelp to output the PowerShell help files to
+  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Update New-DscResourcePowerShellHelp to optionally output the PowerShell help files to
+  the resource specific path and fix the example processing.
+- Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
+  ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 - Update New-DscResourcePowerShellHelp to optionally output the PowerShell
   help files to the resource specific path and fix the example processing.
   - The files are now outputted as UTF-8 (ASCII).

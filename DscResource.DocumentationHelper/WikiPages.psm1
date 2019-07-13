@@ -303,17 +303,26 @@ function Get-DscResourceWikiExampleContent
 
 <#
     .SYNOPSIS
-        Publishes the Wiki Content from an AppVeyor job artifact.
+        Publishes the Wiki Content from a module and AppVeyor job artifact.
 
     .DESCRIPTION
-        This function adds the content pages from the Wiki Content artifact of a specified
-        AppVeyor job to the Wiki of a specified GitHub repository.
+        This function publishes the content pages from the Wiki Content artifact
+        of a specified AppVeyor job along with any additional files stored in the
+        'WikiSource' directory of the repository and an auto-generated sidebar file
+        containing links to all the markdown files to the Wiki of a specified GitHub
+        repository.
 
     .PARAMETER RepoName
         The name of the Github Repo, in the format <account>/<repo>.
 
     .PARAMETER JobId
         The AppVeyor job id that contains the wiki artifact to publish.
+
+    .PARAMETER MainModulePath
+        The path of the DSC Resource Module.
+
+    .PARAMETER WikiSourceFolder
+        The name of the folder in the DSC Resource Module that contains any Wiki source files.
 
     .PARAMETER ResourceModuleName
         The name of the Dsc Resource Module.
@@ -332,9 +341,9 @@ function Get-DscResourceWikiExampleContent
 
     .EXAMPLE
         Publish-WikiContent -RepoName 'PowerShell/xActiveDirectory' -JobId 'imy2wgp1ylo9bcpb' -ResourceModuleName 'xActiveDirectory' `
-                            -BuildVersion 'v1.0.0'
+                            -MainModulePath 'C:\ModulePath' -BuildVersion 'v1.0.0'
 
-        Adds the Content pages from the AppVeyor Job artifact to the Wiki for the specified GitHub repository.
+        Adds the Content pages from the AppVeyor Job artifact and module path to the Wiki for the specified GitHub repository.
 
     .NOTES
         Appveyor - Push to remote Git repository from a build: https://www.appveyor.com/docs/how-to/git-push/
@@ -351,6 +360,16 @@ function Publish-WikiContent
         [Parameter()]
         [System.String]
         $JobId = $env:APPVEYOR_JOB_ID,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $MainModulePath = $env:APPVEYOR_BUILD_FOLDER,
+
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [System.String]
+        $WikiSourceFolder = 'WikiSource',
 
         [Parameter()]
         [System.String]
@@ -432,6 +451,10 @@ function Publish-WikiContent
         Expand-Archive -Path $wikiContentArtifactPath -DestinationPath $path -Force
         Remove-Item -Path $wikiContentArtifactPath
 
+        Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
+        Set-WikiFooter -ResourceModuleName $ResourceModuleName -Path $path
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path -WikiSourceFolder $WikiSourceFolder
+
         Push-Location
         Set-Location -Path $path
 
@@ -478,7 +501,7 @@ function Invoke-Git
     [CmdletBinding()]
     param
     (
-        [parameter(ValueFromRemainingArguments = $true)]
+        [Parameter(ValueFromRemainingArguments = $true)]
         [System.String[]]
         $Arguments
     )
@@ -539,6 +562,140 @@ function New-TempFolder
     while (-not $path)
 
     return $path
+}
+
+<#
+    .SYNOPSIS
+        Creates the Wiki side bar file from the list of markdown files in the path.
+
+    .PARAMETER ResourceModuleName
+        The name of the resource module.
+
+    .PARAMETER Path
+        The path of the Wiki page files.
+
+    .EXAMPLE
+        Set-WikiSidebar -ResourceModuleName $ResourceModuleName -Path $path
+
+        Creates the Wiki side bar from the list of markdown files in the path.
+#>
+function Set-WikiSidebar
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ResourceModuleName,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Path
+    )
+
+    $wikiSideBarFileBaseName = '_Sidebar.md'
+    $wikiSideBarFileFullName = Join-Path -Path $path -ChildPath $wikiSideBarFileBaseName
+
+    Write-Verbose -Message ($localizedData.GenerateWikiSidebarMessage -f $wikiSideBarFileBaseName)
+    $WikiSidebar = @(
+        "# $ResourceModuleName Module"
+        ' '
+    )
+
+    $wikiFiles = Get-ChildItem -Path $Path -Filter '*.md'
+
+    foreach ($file in $wikiFiles)
+    {
+        $wikiSidebar += "- [$($file.BaseName)]($($file.BaseName))"
+    }
+
+    Out-File -InputObject $wikiSideBar -FilePath $wikiSideBarFileFullName -Encoding ASCII
+}
+
+<#
+    .SYNOPSIS
+        Creates the Wiki footer file if one does not already exist.
+
+    .PARAMETER Path
+        The path for the Wiki footer file.
+
+    .EXAMPLE
+        Set-WikiFooter -Path $path
+
+        Creates the Wiki footer.
+#>
+function Set-WikiFooter
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ResourceModuleName,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Path
+    )
+
+    $wikiFooterFileBaseName = '_Footer.md'
+    $wikiFooterFileFullName = Join-Path -Path $path -ChildPath $wikiFooterFileBaseName
+
+    if (-not (Test-Path -Path $wikiFooterFileFullName))
+    {
+        Write-Verbose -Message ($localizedData.GenerateWikiFooterMessage -f $wikiFooterFileBaseName)
+        $wikiFooter = @()
+
+        Out-File -InputObject $wikiFooter -FilePath $wikiFooterFileFullName -Encoding ASCII
+    }
+}
+
+<#
+    .SYNOPSIS
+        Copies any Wiki files from the module into the Wiki overwriting any existing files.
+
+    .PARAMETER MainModulePath
+        The path of the module.
+
+    .PARAMETER Path
+        The destination path for the Wiki files.
+
+    .PARAMETER WikiSourceFolder
+        The name of the folder that contains the source Wiki files.
+
+    .EXAMPLE
+        Copy-WikiFile -MainModulePath $MainModulePath -Path $path -WikiSourcePath $wikiSourcePath
+
+        Copies any Wiki files from the module into the Wiki.
+#>
+function Copy-WikiFile
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $MainModulePath,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Path,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $WikiSourceFolder
+    )
+
+    $wikiSourcePath = Join-Path -Path $MainModulePath -ChildPath $WikiSourceFolder
+    Write-Verbose -Message ($localizedData.CopyWikiFilesMessage -f $wikiSourcePath)
+
+    $wikiFiles = Get-ChildItem -Path $wikiSourcePath
+    foreach ($file in $wikiFiles)
+
+    {
+        Write-Verbose -Message ($localizedData.CopyFileMessage -f $file.name)
+        Copy-Item -Path $file.fullname -Destination $Path -Force
+    }
 }
 
 Export-ModuleMember -Function New-DscResourceWikiSite, Publish-WikiContent

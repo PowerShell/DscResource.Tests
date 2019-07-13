@@ -813,6 +813,10 @@ To opt-in to this task, change the appveyor.yml to include the opt-in task
 By opting-in to the *PublishWikiContent* task, the test framework will publish the
 contents of a DSC Resource Module Wiki Content artifact to the relevant GitHub Wiki
 repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
+A Wiki Sidebar file will be generated, containing links to all of the markdown
+files in the Wiki, as well as as a Wiki Footer file. Any files contained within the
+`WikiSource` directory of the repository will also be published to the Wiki
+overriding any auto generated files.
 
 > **Note:** It is possible to override the deploy branch in appveyor.yml,
 > e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.
