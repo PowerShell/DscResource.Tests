@@ -24,44 +24,43 @@ $moduleName = $ExecutionContext.SessionState.Module
 $script:localizedData = Get-LocalizedData -ModuleName $moduleName -ModuleRoot $PSScriptRoot
 
 <#
-.SYNOPSIS
-New-DscResourcePowerShellHelp generates PowerShell compatible help files for a DSC
-resource module
+    .SYNOPSIS
+        New-DscResourcePowerShellHelp generates PowerShell compatible help files for a DSC
+        resource module
 
-.DESCRIPTION
-The New-DscResourcePowerShellHelp cmdlet will review all of the MOF based resources
-in a specified module directory and will inject PowerShell help files for each resource.
-These help files include details on the property types for each resource, as well as a text
-description and examples where they exist.
+    .DESCRIPTION
+        The New-DscResourcePowerShellHelp cmdlet will review all of the MOF based resources
+        in a specified module directory and will inject PowerShell help files for each resource.
+        These help files include details on the property types for each resource, as well as a text
+        description and examples where they exist.
 
-The help files are output to the OutputPath directory if specified, or if not, they are
-output to the releveant resource's 'en-US' directory.
+        The help files are output to the OutputPath directory if specified, or if not, they are
+        output to the releveant resource's 'en-US' directory.
 
-A README.md with a text description must exist in the resource's subdirectory for the
-help file to be generated.
+        A README.md with a text description must exist in the resource's subdirectory for the
+        help file to be generated.
 
-These help files can then be read by passing the name of the resource as a parameter to Get-Help.
+        These help files can then be read by passing the name of the resource as a parameter to Get-Help.
 
-.PARAMETER ModulePath
-The path to the root of the DSC resource module (where the PSD1 file is found, not the folder for
-each individual DSC resource)
+    .PARAMETER ModulePath
+        The path to the root of the DSC resource module (where the PSD1 file is found, not the folder for
+        each individual DSC resource)
 
-.EXAMPLE
-This example shows how to generate help for a specific module
+    .EXAMPLE
+        This example shows how to generate help for a specific module
 
-    New-DscResourcePowerShellHelp -ModulePath C:\repos\SharePointdsc
-
+        New-DscResourcePowerShellHelp -ModulePath C:\repos\SharePointdsc
 #>
 function New-DscResourcePowerShellHelp
 {
     [CmdletBinding()]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $ModulePath,
 
-        [parameter()]
+        [Parameter()]
         [System.String]
         $OutputPath
     )
@@ -70,7 +69,9 @@ function New-DscResourcePowerShellHelp
 
     $mofSearchPath = (Join-Path -Path $ModulePath -ChildPath '\**\*.schema.mof')
     $mofSchemas = Get-ChildItem -Path $mofSearchPath -Recurse
+
     Write-Verbose -Message ($script:localizedData.FoundMofFilesMessage -f $mofSchemas.Count, $ModulePath)
+
     $mofSchemas | ForEach-Object {
         $mofFileObject = $_
 
@@ -78,6 +79,7 @@ function New-DscResourcePowerShellHelp
             ($_.ClassName -eq $mofFileObject.Name.Replace('.schema.mof', '')) `
                 -and ($null -ne $_.FriendlyName)
         }
+
         $descriptionPath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath 'readme.md'
 
         if (Test-Path -Path $descriptionPath)
@@ -89,8 +91,11 @@ function New-DscResourcePowerShellHelp
             $output += [Environment]::NewLine + [Environment]::NewLine
 
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
-            $descriptionContent = $descriptionContent -replace "\n", "`n    "
-            $descriptionContent = $descriptionContent -replace "# Description\r\n    ", ".DESCRIPTION"
+
+            $descriptionContent = $descriptionContent -replace '\n', "`n    "
+            $descriptionContent = $descriptionContent -replace '# Description\r\n    ', '.DESCRIPTION'
+            $descriptionContent = $descriptionContent -replace '\r\n\s{4}\r\n', "`n`n"
+            $descriptionContent = $descriptionContent -replace '\s{4}$', ''
 
             $output += $descriptionContent
             $output += [Environment]::NewLine
@@ -150,8 +155,10 @@ function New-DscResourcePowerShellHelp
             {
                 $savePath = Join-Path -Path $mofFileObject.DirectoryName -ChildPath 'en-US' | Join-Path -ChildPath $outputFileName
             }
+
             Write-Verbose -Message ($script:localizedData.OutputHelpDocumentMessage -f $savePath)
-            $output | Out-File -FilePath $savePath -Encoding utf8 -Force
+
+            $output | Out-File -FilePath $savePath -Encoding ascii -Force
         }
         else
         {
