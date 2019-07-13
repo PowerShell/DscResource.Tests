@@ -7,18 +7,22 @@
 - Added issue templates.
 - Added the ability to temporary skip common test for debugging purposes
   ([issue #219](https://github.com/PowerShell/DscResource.Tests/issues/219)).
-- Added functionality to Install-ModuleFromPowerShellGallery helper function to allow using Nuget.exe
-  when it is already installed in the temp path. Addresses ([issue #301](https://github.com/PowerShell/DscResource.Tests/issues/301)).
-- Updated Unit tests to reflect the changes to the Install-ModuleFromPowerShellGallery helper function
-- Added a RequiredVersion for PSPKI (v3.3.0.0) in TestHelper because of a critical
-  issue in the recently released version (v3.4.0.1) of that module.
-- Improved Wiki documentation generation to address more example file types
-  and increased unit test coverage and function ([issue #256](https://github.com/PowerShell/DscResource.Tests/issues/256)).
-- Added .gitignore file and suppressed ```package-lock.json``` file from being
-  included in repo.
+- Added functionality to Install-ModuleFromPowerShellGallery helper function
+  to allow using Nuget.exe when it is already installed in the temp path.
+  Addresses ([issue #301](https://github.com/PowerShell/DscResource.Tests/issues/301)).
+- Updated Unit tests to reflect the changes to the Install-ModuleFromPowerShellGallery
+  helper function.
+- Added a RequiredVersion for PSPKI (v3.3.0.0) in TestHelper because of
+  a critical issue in the recently released version (v3.4.0.1) of that
+  module.
+- Improved Wiki documentation generation to address more example file
+  types and increased unit test coverage and function
+  ([issue #256](https://github.com/PowerShell/DscResource.Tests/issues/256)).
+- Added .gitignore file and suppressed ```package-lock.json``` file from
+  being included in repo.
 - Changes to AppVeyor.psm1
-  - Updated Invoke-AppveyorInstallTask to provide better informational messages
-    when installing each prerequisite
+  - Updated Invoke-AppveyorInstallTask to provide better informational
+    messages when installing each prerequisite
     ([issue #293](https://github.com/PowerShell/DscResource.Tests/issues/293)).
   - Added unit tests for Invoke-AppveyorInstallTask.
 - Changes to TestHelper.psm1
@@ -28,13 +32,12 @@
     correct download URL is now concatenated withing the helper function.
 - Now outputs a warning when a repository does not have a Tests folder
   ([issue #296](https://github.com/PowerShell/DscResource.Tests/issues/296)).
-- Update PSSA rule Measure-IfStatement to handle when there is a clause spanning
-  multiple rows and the first rows ends correctly with an open brace (see example
-  in the regression test for this issue)
+- Update PSSA rule Measure-IfStatement to handle when there is a clause
+  spanning multiple rows and the first rows ends correctly with an open
+  brace (see example in the regression test for this issue)
   ([issue #238](https://github.com/PowerShell/DscResource.Tests/issues/238)).
-- Update call to install PowerShellGet via Install-Module in AppVeyor.psm1 to
-  use AllowClobber
-  ([issue #310](https://github.com/PowerShell/DscResource.Tests/issues/310)).
+- Update call to install PowerShellGet via Install-Module in AppVeyor.psm1
+  to use AllowClobber ([issue #310](https://github.com/PowerShell/DscResource.Tests/issues/310)).
 - Fix MetaFixers Functions Pipeline Processing.
 - Added common opt-in tests for localization ([issue #145](https://github.com/PowerShell/DscResource.Tests/issues/145)).
   - Should have an en-US localization folder.
@@ -52,12 +55,14 @@
       the resource file.
     - There should be no additional localized string keys in the resource
       file that do not exist in the en-US resource file.
-- Added `Publish-WikiContent` helper function to publish auto-generated Wiki files
-  to the relevant DSC resource GitHub Wiki ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
-- Update New-DscResourcePowerShellHelp to optionally output the PowerShell help files to
-  the resource specific path and fix the example processing.
-- Added processing to `Test-PublishMetaData` for the InvalidGUID error from Test-ScriptFileInfo
-  ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
+- Added `Publish-WikiContent` helper function to publish auto-generated
+  Wiki files to the relevant DSC resource GitHub Wiki
+  ([issue #142](https://github.com/PowerShell/DscResource.Tests/issues/142)).
+- Update New-DscResourcePowerShellHelp to optionally output the PowerShell
+  help files to the resource specific path and fix the example processing.
+  - The files are now outputted as UTF-8 (ASCII).
+- Added processing to `Test-PublishMetaData` for the InvalidGUID error
+  from Test-ScriptFileInfo ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
 
 ## 0.3.0.0
 
