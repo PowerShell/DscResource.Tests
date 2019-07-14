@@ -71,6 +71,9 @@
   - The files are now outputted as UTF-8 (ASCII).
 - Added processing to `Test-PublishMetaData` for the InvalidGUID error
   from Test-ScriptFileInfo ([issue #330](https://github.com/PowerShell/DscResource.Tests/issues/330)).
+- Added PowerShell Script Analyzer rules to check the following
+  statements are in lower case: `if`,`foreach`,`do`,`while`,`for`,
+  `try`,`catch`,`enum`,`class` ([issue #224](https://github.com/PowerShell/DscResource.Tests/issues/224)).
 
 ## 0.3.0.0
 

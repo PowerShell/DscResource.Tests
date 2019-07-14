@@ -1049,6 +1049,23 @@ Describe 'Measure-IfStatement' {
                 $record.RuleName | Should -Be $ruleName
             }
         }
+
+        Context 'When if-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    If ($true)
+                    {
+                        return $true
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-IfStatement -IfStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'If')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -1186,6 +1203,24 @@ Describe 'Measure-IfStatement' {
                 $record | Should -BeNullOrEmpty
             }
         }
+
+        Context 'When if-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        If ($true)
+                        {
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'if')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 }
 
@@ -1256,6 +1291,26 @@ Describe 'Measure-ForEachStatement' {
             }
         }
 
+        Context 'When foreach-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        forEach ($stringText in $myArray)
+                        {
+                            $stringText
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-ForEachStatement -ForEachStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'foreach')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -1320,6 +1375,26 @@ Describe 'Measure-ForEachStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When foreach-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $myArray = @()
+                        forEach ($stringText in $myArray)
+                        {
+                            $stringText
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'foreach')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -1414,6 +1489,28 @@ Describe 'Measure-DoUntilStatement' {
                 $record.RuleName | Should -Be $ruleName
             }
         }
+
+        Context 'When Do-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        Do
+                        {
+                            $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-DoUntilStatement -DoUntilStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -1482,6 +1579,27 @@ Describe 'Measure-DoUntilStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When Do-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 0
+
+                        Do
+                        {
+                            $i++
+                        } until ($i -eq 2)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -1579,6 +1697,27 @@ Describe 'Measure-DoWhileStatement' {
             }
         }
 
+        Context 'When Do-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        Do
+                        {
+                            $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-DoWhileStatement -DoWhileStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -1647,6 +1786,27 @@ Describe 'Measure-DoWhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When Do-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        Do
+                        {
+                            $i--
+                        } while ($i -gt 0)
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'do')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -1743,6 +1903,28 @@ Describe 'Measure-WhileStatement' {
                 $record.RuleName | Should -Be $ruleName
             }
         }
+
+        Context 'When While-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        While ($i -gt 0)
+                        {
+                            $i--
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-WhileStatement -WhileStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'while')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -1811,6 +1993,27 @@ Describe 'Measure-WhileStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When While-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $i = 10
+
+                        While ($i -gt 0)
+                        {
+                            $i--
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'while')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -1917,6 +2120,30 @@ Describe 'Measure-SwitchStatement' {
             }
         }
 
+        Context 'When Switch-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        Switch ($value)
+                        {
+                            1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-SwitchStatement -SwitchStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'switch')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -2019,6 +2246,30 @@ Describe 'Measure-SwitchStatement' {
             }
         }
 
+        Context 'When Switch-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        $value = 1
+
+                        Switch ($value)
+                        {
+                            1
+                            {
+                                ''one''
+                            }
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'switch')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
         Context 'When Switch-statement follows style guideline' {
             It 'Should not write an error record' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
@@ -2109,6 +2360,25 @@ Describe 'Measure-ForStatement' {
             }
         }
 
+        Context 'When For-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        For ($a = 1; $a -lt 2; $a++)
+                        {
+                            $value = 1
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-ForStatement -ForStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'for')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -2171,6 +2441,25 @@ Describe 'Measure-ForStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.ForStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When For-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        For ($a = 1; $a -lt 2; $a++)
+                        {
+                            $value = 1
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'for')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -2272,6 +2561,29 @@ Describe 'Measure-TryStatement' {
             }
         }
 
+        Context 'When Try-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        Try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-TryStatement -TryStatementAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'try')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -2346,6 +2658,29 @@ Describe 'Measure-TryStatement' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -BeExactly 1
                 $record.Message | Should -Be $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context 'When Try-statement contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        Try
+                        {
+                            $value = 1
+                        }
+                        catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'try')
                 $record.RuleName | Should -Be $ruleName
             }
         }
@@ -2451,6 +2786,29 @@ Describe 'Measure-CatchClause' {
             }
         }
 
+        Context 'When Catch-clause contains upper case letters' {
+            It 'Should write the correct error record' {
+                $definition = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        Catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-CatchClause -CatchClauseAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'catch')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
     }
 
     Context 'When calling PSScriptAnalyzer' {
@@ -2529,6 +2887,29 @@ Describe 'Measure-CatchClause' {
             }
         }
 
+        Context 'When Catch-clause contains upper case letters' {
+            It 'Should write the correct error record' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    function Get-Something
+                    {
+                        try
+                        {
+                            $value = 1
+                        }
+                        Catch
+                        {
+                            throw
+                        }
+                    }
+                '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -BeExactly 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'catch')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
         Context 'When Catch-clause follows style guideline' {
             It 'Should not write an error record' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
@@ -2559,7 +2940,7 @@ Describe 'Measure-TypeDefinition' {
             $ruleName = 'Measure-TypeDefinition'
         }
 
-        Context 'Enum' {
+        Context 'When measuring Enum' {
             Context 'When Enum has an opening brace on the same line' {
                 It 'Should write the correct error record' {
                     $definition = '
@@ -2611,15 +2992,33 @@ Describe 'Measure-TypeDefinition' {
                     $record.RuleName | Should -Be $ruleName
                 }
             }
+
+            Context 'When Enum statement contains upper case letters' {
+                It 'Should write the correct error record' {
+                    $definition = '
+                        Enum Test
+                        {
+                            Good
+                            Bad
+                        }
+                    '
+
+                    $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                    $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
+                    ($record | Measure-Object).Count | Should -Be 1
+                    $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'enum')
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
         }
 
-        Context 'Class' {
+        Context 'When measuring Class' {
             Context 'When Class has an opening brace on the same line' {
                 It 'Should write the correct error record' {
                     $definition = '
                         class Test {
                             [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -2638,7 +3037,7 @@ Describe 'Measure-TypeDefinition' {
                     $definition = '
                         class Test
                         {   [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -2659,7 +3058,7 @@ Describe 'Measure-TypeDefinition' {
                         {
 
                             [int] $Good
-                            [Void] Bad()
+                            [void] Bad()
                             {
                             }
                         }
@@ -2669,6 +3068,26 @@ Describe 'Measure-TypeDefinition' {
                     $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
                     ($record | Measure-Object).Count | Should -Be 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
+
+            Context 'When Class statement contains upper case letters' {
+                It 'Should write the correct error record' {
+                    $definition = '
+                        Class Test
+                        {
+                            [int] $Good
+                            [void] Bad()
+                            {
+                            }
+                        }
+                    '
+
+                    $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                    $record = Measure-TypeDefinition -TypeDefinitionAst $mockAst[0]
+                    ($record | Measure-Object).Count | Should -Be 1
+                    $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'Class')
                     $record.RuleName | Should -Be $ruleName
                 }
             }
@@ -2683,7 +3102,7 @@ Describe 'Measure-TypeDefinition' {
             $ruleName = "$($script:ModuleName)\Measure-TypeDefinition"
         }
 
-        Context 'Enum' {
+        Context 'When measuring Enum' {
             Context 'When Enum has an opening brace on the same line' {
                 It 'Should write the correct error record' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
@@ -2732,15 +3151,32 @@ Describe 'Measure-TypeDefinition' {
                     $record.RuleName | Should -Be $ruleName
                 }
             }
+
+            Context 'When Enum statement contains upper case letters' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    Enum Test
+                    {
+                        Good
+                        Bad
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -BeExactly 1
+                    $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'Enum')
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
         }
 
-        Context 'Class' {
+        Context 'When measuring Class' {
             Context 'When Class has an opening brace on the same line' {
                 It 'Should write the correct error record' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                     class Test {
                         [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -2758,7 +3194,7 @@ Describe 'Measure-TypeDefinition' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                     class Test
                     {   [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -2778,7 +3214,7 @@ Describe 'Measure-TypeDefinition' {
                     {
 
                         [int] $Good
-                        [Void] Bad()
+                        [void] Bad()
                         {
                         }
                     }
@@ -2787,6 +3223,25 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
+
+            Context 'When Class statement contains upper case letters' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                    Class Test
+                    {
+                        [int] $Good
+                        [void] Bad()
+                        {
+                        }
+                    }
+                '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -BeExactly 1
+                    $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'Class')
                     $record.RuleName | Should -Be $ruleName
                 }
             }

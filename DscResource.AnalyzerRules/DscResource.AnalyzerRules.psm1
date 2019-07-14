@@ -246,6 +246,8 @@ function Measure-FunctionBlockBraces
     .DESCRIPTION
         Each if-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The if statement should also be in all lower case.
+        The else and elseif statements are not currently checked.
 
     .EXAMPLE
         Measure-IfStatement -IfStatementAst $ScriptBlockAst
@@ -305,6 +307,12 @@ function Measure-IfStatement
             $script:diagnosticRecord['Message'] = $localizedData.IfStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'if'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -319,6 +327,7 @@ function Measure-IfStatement
     .DESCRIPTION
         Each foreach-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The foreach statement should also be in all lower case.
 
     .EXAMPLE
         Measure-ForEachStatement -ForEachStatementAst $ScriptBlockAst
@@ -370,6 +379,12 @@ function Measure-ForEachStatement
             $script:diagnosticRecord['Message'] = $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'foreach'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -384,6 +399,7 @@ function Measure-ForEachStatement
     .DESCRIPTION
         Each DoUntil-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The do statement should also be in all lower case.
 
     .EXAMPLE
         Measure-DoUntilStatement -DoUntilStatementAst $ScriptBlockAst
@@ -435,6 +451,12 @@ function Measure-DoUntilStatement
             $script:diagnosticRecord['Message'] = $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -449,6 +471,7 @@ function Measure-DoUntilStatement
     .DESCRIPTION
         Each DoWhile-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The do statement should also be in all lower case.
 
     .EXAMPLE
         Measure-DoWhileStatement -DoWhileStatementAst $ScriptBlockAst
@@ -500,6 +523,12 @@ function Measure-DoWhileStatement
             $script:diagnosticRecord['Message'] = $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -514,6 +543,7 @@ function Measure-DoWhileStatement
     .DESCRIPTION
         Each while-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The while statement should also be in all lower case.
 
     .EXAMPLE
         Measure-WhileStatement -WhileStatementAst $ScriptBlockAst
@@ -565,6 +595,12 @@ function Measure-WhileStatement
             $script:diagnosticRecord['Message'] = $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'while'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -579,6 +615,7 @@ function Measure-WhileStatement
     .DESCRIPTION
         Each for-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The for statement should also be in all lower case.
 
     .EXAMPLE
         Measure-ForStatement -ForStatementAst $ScriptBlockAst
@@ -630,6 +667,12 @@ function Measure-ForStatement
             $script:diagnosticRecord['Message'] = $localizedData.ForStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'for'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -644,6 +687,7 @@ function Measure-ForStatement
     .DESCRIPTION
         Each switch-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The switch statement should also be in all lower case.
 
     .EXAMPLE
         Measure-SwitchStatement -SwitchStatementAst $ScriptBlockAst
@@ -699,6 +743,12 @@ function Measure-SwitchStatement
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'switch'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -713,6 +763,7 @@ function Measure-SwitchStatement
     .DESCRIPTION
         Each try-statement should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The try statement should also be in all lower case.
 
     .EXAMPLE
         Measure-TryStatement -TryStatementAst $ScriptBlockAst
@@ -764,6 +815,12 @@ function Measure-TryStatement
             $script:diagnosticRecord['Message'] = $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'try'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -778,6 +835,7 @@ function Measure-TryStatement
     .DESCRIPTION
         Each catch-clause should have the opening brace on a separate line.
         Also, the opening brace should be followed by a new line.
+        The catch statement should also be in all lower case.
 
     .EXAMPLE
         Measure-CatchClause -CatchClauseAst $ScriptBlockAst
@@ -829,6 +887,12 @@ function Measure-CatchClause
             $script:diagnosticRecord['Message'] = $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
+
+        if (Test-StatementContainsUpperCase @testParameters)
+        {
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'catch'
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } # if
     }
     catch
     {
@@ -842,6 +906,7 @@ function Measure-CatchClause
 
     .DESCRIPTION
         Each Class or Enum must be formatted correctly.
+        The class or enum statement should also be in all lower case.
 
     .EXAMPLE
         Measure-TypeDefinition -TypeDefinitionAst $ScriptBlockAst
@@ -895,6 +960,12 @@ function Measure-TypeDefinition
                 $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
+
+            if (Test-StatementContainsUpperCase @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'enum'
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
         } # if
         elseif ($TypeDefinitionAst.IsClass)
         {
@@ -913,6 +984,12 @@ function Measure-TypeDefinition
             if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
             {
                 $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } # if
+
+            if (Test-StatementContainsUpperCase @testParameters)
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'class'
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if

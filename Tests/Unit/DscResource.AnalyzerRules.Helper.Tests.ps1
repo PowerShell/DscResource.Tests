@@ -266,5 +266,31 @@ Describe 'DscResource.AnalyzerRules.Helper Unit Tests' {
                 }
             }
         }
+
+        Describe 'Test-StatementContainsUpperCase' {
+            Context 'When statement is all lower case' {
+                It 'Should return false' {
+                    $statementBlock = 'foreach ($a in $b)'
+
+                    Test-StatementContainsUpperCase -StatementBlock $statementBlock | Should -Be $false
+                }
+            }
+
+            Context 'When statement is all upper case' {
+                It 'Should return true' {
+                    $statementBlock = 'FOREACH ($a in $b)'
+
+                    Test-StatementContainsUpperCase -StatementBlock $statementBlock | Should -Be $true
+                }
+            }
+
+            Context 'When statement is starts with lower case but contains upper case letters' {
+                It 'Should return true' {
+                    $statementBlock = 'forEach ($a in $b)'
+
+                    Test-StatementContainsUpperCase -StatementBlock $statementBlock | Should -Be $true
+                }
+            }
+        }
     }
 }
