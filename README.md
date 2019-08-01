@@ -805,39 +805,6 @@ environment:
 * text eol=crlf
 ```
 
-### Publish Wiki Content
-
-To opt-in to this task, change the appveyor.yml to include the opt-in task
-*PublishWikiContent*, e.g. `Invoke-AppVeyorDeployTask -OptIn PublishWikiContent`.
-
-By opting-in to the *PublishWikiContent* task, the test framework will publish the
-contents of a DSC Resource Module Wiki Content artifact to the relevant GitHub Wiki
-repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
-A Wiki Sidebar file will be generated, containing links to all of the markdown
-files in the Wiki, as well as as a Wiki Footer file. Any files contained within the
-`WikiSource` directory of the repository will also be published to the Wiki
-overriding any auto generated files.
-
-> **Note:** It is possible to override the deploy branch in appveyor.yml,
-> e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.
-
-#### Requirements/dependencies for publishing Wiki Content
-
-- Publish only on 'master' build.
-- The `Invoke-AppveyorAfterTestTask` function must be present in the Appveyor
-  configuration with a Type of 'Wiki' to generate the Wiki artifact.
-- A GitHub Personal Access Token with `repo/public_repo` permissions for a user
-  that has at least `Collaborator` access to the relevant DSC Module GitHub repository
-  must be generated and then added as a
-  [secure variable](https://www.appveyor.com/docs/build-configuration/#secure-variables)
-  called `github_access_token` to the `environment` section of the repository's
-  `appveyor.yml` file.
-- The GitHub Wiki needs to be initialized on a repository before this function is run.
-
-> **Note:** Currently Wiki content files are only added or updated by the function,
-> not deleted. Any deletions must be done manually by cloning the Wiki repository and
-> deleting the required content.
-
 #### Contributor responsibilities
 
 Contributors that add or change an example to be published must make sure that
@@ -897,3 +864,36 @@ Contributors that add or change an example to be published must make sure that
         Defaults to 'Just some sample text to write to the file'.
 #>
 ```
+
+### Publish Wiki Content
+
+To opt-in to this task, change the appveyor.yml to include the opt-in task
+*PublishWikiContent*, e.g. `Invoke-AppVeyorDeployTask -OptIn PublishWikiContent`.
+
+By opting-in to the *PublishWikiContent* task, the test framework will publish the
+contents of a DSC Resource Module Wiki Content artifact to the relevant GitHub Wiki
+repository, but only if it is a 'master' branch build (`$env:APPVEYOR_REPO_BRANCH -eq 'master'`).
+A Wiki Sidebar file will be generated, containing links to all of the markdown
+files in the Wiki, as well as as a Wiki Footer file. Any files contained within the
+`WikiSource` directory of the repository will also be published to the Wiki
+overriding any auto generated files.
+
+> **Note:** It is possible to override the deploy branch in appveyor.yml,
+> e.g. `Invoke-AppVeyorDeployTask -Branch @('dev','my-working-branch')`.
+
+#### Requirements/dependencies for publishing Wiki Content
+
+- Publish only on 'master' build.
+- The `Invoke-AppveyorAfterTestTask` function must be present in the Appveyor
+  configuration with a Type of 'Wiki' to generate the Wiki artifact.
+- A GitHub Personal Access Token with `repo/public_repo` permissions for a user
+  that has at least `Collaborator` access to the relevant DSC Module GitHub repository
+  must be generated and then added as a
+  [secure variable](https://www.appveyor.com/docs/build-configuration/#secure-variables)
+  called `github_access_token` to the `environment` section of the repository's
+  `appveyor.yml` file.
+- The GitHub Wiki needs to be initialized on a repository before this function is run.
+
+> **Note:** Currently Wiki content files are only added or updated by the function,
+> not deleted. Any deletions must be done manually by cloning the Wiki repository and
+> deleting the required content.
