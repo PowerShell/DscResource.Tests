@@ -63,7 +63,6 @@ A full list of changes in each version can be found in the [change log](CHANGELO
 - [Deploy](#deploy)
   - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)
   - [Publish Wiki Content](#publish-wiki-content)
-- [Change Log](#change-log)
 
 <!-- /TOC -->
 
