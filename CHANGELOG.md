@@ -75,6 +75,7 @@
   statements are in lower case: `if`,`foreach`,`do`,`while`,`for`,
   `try`,`catch`,`enum`,`class` ([issue #224](https://github.com/PowerShell/DscResource.Tests/issues/224)).
 - Moved `Publish Wiki Content` section in the `README.md` to the correct location.
+- Removed the legacy `CHANGELOG` link in the README.md table of contents.
 
 ## 0.3.0.0
 
