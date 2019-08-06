@@ -388,7 +388,7 @@ The resource files are:
 
 - **[Unit_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/Unit/unit_test_template.ps1)**:
   Use to create a set of Unit Pester tests for a single DSC Resource.
-- **[Integration_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/integration/integration_test_template.ps1)**:
+- **[Integration_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/Integration/integration_test_template.ps1)**:
   Use to create a set of Integration Pester tests for a single DSC Resource.
 - **[Integration_Config_Template.ps1](https://github.com/PowerShell/DscResource.Template/blob/master/Tests/Integration/integration_test_template.config.ps1)**:
   Use to create a DSC Configuration file for a single DSC Resource. Used in
@@ -398,15 +398,16 @@ The resource files are:
 
 To see examples of the Unit/Integration tests in practice, see the NetworkingDsc
 MSFT_Firewall resource:
-[Unit Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Unit/MSFT_Firewall.Tests.ps1)
-[Integration Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall.Integration.Tests.ps1)
-[Resource DSC Configuration](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall_add.config.ps1)
+
+- [Unit Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Unit/MSFT_Firewall.Tests.ps1)
+- [Integration Tests](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall.Integration.Tests.ps1)
+- [Resource DSC Configuration](https://github.com/PowerShell/NetworkingDsc/blob/dev/Tests/Integration/MSFT_Firewall_add.config.ps1)
 
 ## Example Usage of DSCResource.Tests in AppVeyor.yml
 
 To automatically download and install the DscResource.Tests in an AppVeyor.yml
 file, please see the following sample AppVeyor.yml.
-[https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml)
+[https://github.com/PowerShell/DscResource.Template/blob/master/appveyor.yml](https://github.com/PowerShell/DscResource.Template/blob/master/appveyor.yml)
 
 ## AppVeyor Module
 
@@ -434,13 +435,14 @@ This module provides functions for building and testing DSC Resources in AppVeyo
 - **Invoke-AppVeyorDeployTask**: This task is used to perform the following tasks.
   It should be called under the deploy AppVeyor phase (the `deploy_script:`
   keyword in the *appveyor.yml*).
-  - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)).
+  - [Publish examples to PowerShell Gallery](#publish-examples-to-powershell-gallery)
+  - [Publish Wiki Content](#publish-wiki-content)
 
 ### Using AppVeyor.psm1 with the default shared model
 
 For an example of a AppVeyor.yml file for using the default shared model with a
 resource module, see the
-[DscResource.Template appveyor.yml](https://github.com/PowerShell/DscResources/blob/master/DscResource.Template/appveyor.yml).
+[DscResource.Template appveyor.yml](https://github.com/PowerShell/DscResource.Template/blob/master/appveyor.yml).
 
 ### Using AppVeyor.psm1 with harness model
 
