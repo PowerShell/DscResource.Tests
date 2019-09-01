@@ -284,7 +284,7 @@ function Measure-IfStatement
             and the first rows ends with a correct open brace. See example in
             regression test for #238.
         #>
-        $extentTextWithClauseRemoved = $IfStatementAst.Extent.Text.Replace($IfStatementAst.Clauses[0].Item1.Extent.Text,'')
+        $extentTextWithClauseRemoved = $IfStatementAst.Extent.Text.Replace($IfStatementAst.Clauses[0].Item1.Extent.Text, '')
 
         $testParameters = @{
             StatementBlock = $extentTextWithClauseRemoved
@@ -993,6 +993,57 @@ function Measure-TypeDefinition
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
+    }
+}
+
+<#
+    .SYNOPSIS
+        Validates all keywords.
+
+    .DESCRIPTION
+        Each keyword should be in all lower case.
+
+    .EXAMPLE
+        Measure-Keyword -TypeDefinitionAst $ScriptBlockAst
+
+    .INPUTS
+        [System.Management.Automation.Language.ScriptBlockAst]
+
+    .OUTPUTS
+        [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
+   .NOTES
+        None
+#>
+function Measure-Keyword
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.Language.ScriptBlockAst]
+        $ScriptBlockAst
+    )
+
+    try
+    {
+        $tokens = $null
+        [System.Management.Automation.Language.Parser]::ParseInput($ast.Extent.text, [ref]$tokens, $null)
+        $keywords = $tokens | Where-Object { $_.TokenFlags.HasFlag([System.Management.Automation.Language.TokenFlags]::Keyword) } | ForEach-Object Text
+        foreach ($keyword in $keywords)
+        {
+            if ($keywords -cmatch '[A-Z]+')
+            {
+                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $keyword
+                $script:diagnosticRecord -as $diagnosticRecordType
+            } #if
+        } #foreach
     }
     catch
     {

@@ -988,7 +988,7 @@ Describe 'Measure-IfStatement' {
 
                 $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
                 $record = Measure-IfStatement -IfStatementAst $mockAst[0]
-                $record |  Should -BeNullOrEmpty
+                $record | Should -BeNullOrEmpty
             }
         }
 
@@ -3242,6 +3242,58 @@ Describe 'Measure-TypeDefinition' {
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'Class')
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
+        }
+    }
+}
+
+Describe 'Measure-Keyword' {
+    Context "When calling the function directly" {
+        BeforeAll {
+            $astType = 'System.Management.Automation.Language.ScriptBlockAst'
+            $ruleName = 'Measure-Keyword'
+        }
+
+        Context "When function definition contains upper case letters" {
+            It "Should write the correct error record" {
+                $definition = '
+                        Function Test
+                        {
+                           return $true
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Keyword -ScriptBlockAst $mockAst[0]
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'function')
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+    }
+
+    Context "When calling PSScriptAnalyzer" {
+        BeforeAll {
+            $invokeScriptAnalyzerParameters = @{
+                CustomRulePath = $modulePath
+            }
+            $ruleName = "$($script:ModuleName)\Measure-Keyword"
+        }
+        Context "When measuring the keyword" {
+            Context "When function definition contains upper case letters" {
+                It "Should write the correct error record" {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        Function Test
+                        {
+                            return $true
+                        }
+                    '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -BeExactly 1
+                    $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'function')
                     $record.RuleName | Should -Be $ruleName
                 }
             }
