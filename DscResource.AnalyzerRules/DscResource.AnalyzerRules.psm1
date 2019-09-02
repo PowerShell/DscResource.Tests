@@ -35,8 +35,7 @@ $script:diagnosticRecord = @{
     .NOTES
         None
 #>
-function Measure-ParameterBlockParameterAttribute
-{
+function Measure-ParameterBlockParameterAttribute {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -47,8 +46,7 @@ function Measure-ParameterBlockParameterAttribute
         $ParameterAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $ParameterAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $ParameterAst
@@ -57,30 +55,22 @@ function Measure-ParameterBlockParameterAttribute
             If we are in a class the parameter attributes are not valid in Classes
             the ParameterValidation attributes are however
         #>
-        if (!$inAClass)
-        {
-            if ($ParameterAst.Attributes.TypeName.FullName -notcontains 'parameter')
-            {
+        if (!$inAClass) {
+            if ($ParameterAst.Attributes.TypeName.FullName -notcontains 'parameter') {
                 $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeMissing
 
                 $script:diagnosticRecord -as $script:diagnosticRecordType
-            }
-            elseif ($ParameterAst.Attributes[0].TypeName.FullName -ne 'parameter')
-            {
+            } elseif ($ParameterAst.Attributes[0].TypeName.FullName -ne 'parameter') {
                 $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeWrongPlace
 
                 $script:diagnosticRecord -as $script:diagnosticRecordType
-            }
-            elseif ($ParameterAst.Attributes[0].TypeName.FullName -cne 'Parameter')
-            {
+            } elseif ($ParameterAst.Attributes[0].TypeName.FullName -cne 'Parameter') {
                 $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterAttributeLowerCase
 
                 $script:diagnosticRecord -as $script:diagnosticRecordType
             }
         }
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -105,8 +95,7 @@ function Measure-ParameterBlockParameterAttribute
     .NOTES
         None
 #>
-function Measure-ParameterBlockMandatoryNamedArgument
-{
+function Measure-ParameterBlockMandatoryNamedArgument {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -117,8 +106,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
         $NamedAttributeArgumentAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
         [System.Boolean] $inAClass = Test-IsInClass -Ast $NamedAttributeArgumentAst
 
@@ -126,40 +114,28 @@ function Measure-ParameterBlockMandatoryNamedArgument
             Parameter Attributes are not valid in classes, and DscProperty does
             not use the (Mandatory = $true) format just DscProperty(Mandatory)
         #>
-        if (!$inAClass)
-        {
-            if ($NamedAttributeArgumentAst.ArgumentName -eq 'Mandatory')
-            {
+        if (!$inAClass) {
+            if ($NamedAttributeArgumentAst.ArgumentName -eq 'Mandatory') {
                 $script:diagnosticRecord['Extent'] = $NamedAttributeArgumentAst.Extent
 
-                if ($NamedAttributeArgumentAst)
-                {
+                if ($NamedAttributeArgumentAst) {
                     $invalidFormat = $false
-                    try
-                    {
+                    try {
                         $value = $NamedAttributeArgumentAst.Argument.SafeGetValue()
-                        if ($value -eq $false)
-                        {
+                        if ($value -eq $false) {
                             $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockNonMandatoryParameterMandatoryAttributeWrongFormat
 
                             $script:diagnosticRecord -as $script:diagnosticRecordType
-                        }
-                        elseif ($NamedAttributeArgumentAst.Argument.VariablePath.UserPath -cne 'true')
-                        {
+                        } elseif ($NamedAttributeArgumentAst.Argument.VariablePath.UserPath -cne 'true') {
+                            $invalidFormat = $true
+                        } elseif ($NamedAttributeArgumentAst.ArgumentName -cne 'Mandatory') {
                             $invalidFormat = $true
                         }
-                        elseif ($NamedAttributeArgumentAst.ArgumentName -cne 'Mandatory')
-                        {
-                            $invalidFormat = $true
-                        }
-                    }
-                    catch
-                    {
+                    } catch {
                         $invalidFormat = $true
                     }
 
-                    if ($invalidFormat)
-                    {
+                    if ($invalidFormat) {
                         $script:diagnosticRecord['Message'] = $localizedData.ParameterBlockParameterMandatoryAttributeWrongFormat
 
                         $script:diagnosticRecord -as $script:diagnosticRecordType
@@ -167,9 +143,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
                 }
             }
         }
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -194,8 +168,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
    .NOTES
         None
 #>
-function Measure-FunctionBlockBraces
-{
+function Measure-FunctionBlockBraces {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     param
@@ -206,8 +179,7 @@ function Measure-FunctionBlockBraces
         $FunctionDefinitionAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $FunctionDefinitionAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -215,26 +187,21 @@ function Measure-FunctionBlockBraces
             StatementBlock = $FunctionDefinitionAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.FunctionOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.FunctionOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.FunctionOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -261,8 +228,7 @@ function Measure-FunctionBlockBraces
    .NOTES
         None
 #>
-function Measure-IfStatement
-{
+function Measure-IfStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -273,8 +239,7 @@ function Measure-IfStatement
         $IfStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $IfStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -290,32 +255,26 @@ function Measure-IfStatement
             StatementBlock = $extentTextWithClauseRemoved
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.IfStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.IfStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.IfStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'if'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -341,8 +300,7 @@ function Measure-IfStatement
    .NOTES
         None
 #>
-function Measure-ForEachStatement
-{
+function Measure-ForEachStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -353,8 +311,7 @@ function Measure-ForEachStatement
         $ForEachStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $ForEachStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -362,32 +319,26 @@ function Measure-ForEachStatement
             StatementBlock = $ForEachStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForEachStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForEachStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'foreach'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -413,8 +364,7 @@ function Measure-ForEachStatement
    .NOTES
         None
 #>
-function Measure-DoUntilStatement
-{
+function Measure-DoUntilStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -425,8 +375,7 @@ function Measure-DoUntilStatement
         $DoUntilStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $DoUntilStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -434,32 +383,26 @@ function Measure-DoUntilStatement
             StatementBlock = $DoUntilStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoUntilStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoUntilStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -485,8 +428,7 @@ function Measure-DoUntilStatement
    .NOTES
         None
 #>
-function Measure-DoWhileStatement
-{
+function Measure-DoWhileStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -497,8 +439,7 @@ function Measure-DoWhileStatement
         $DoWhileStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $DoWhileStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -506,32 +447,26 @@ function Measure-DoWhileStatement
             StatementBlock = $DoWhileStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoWhileStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.DoWhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'do'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -557,8 +492,7 @@ function Measure-DoWhileStatement
    .NOTES
         None
 #>
-function Measure-WhileStatement
-{
+function Measure-WhileStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -569,8 +503,7 @@ function Measure-WhileStatement
         $WhileStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $WhileStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -578,32 +511,26 @@ function Measure-WhileStatement
             StatementBlock = $WhileStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.WhileStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.WhileStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.WhileStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'while'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -629,8 +556,7 @@ function Measure-WhileStatement
    .NOTES
         None
 #>
-function Measure-ForStatement
-{
+function Measure-ForStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -641,8 +567,7 @@ function Measure-ForStatement
         $ForStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $ForStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -650,32 +575,26 @@ function Measure-ForStatement
             StatementBlock = $ForStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.ForStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'for'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -701,8 +620,7 @@ function Measure-ForStatement
    .NOTES
         None
 #>
-function Measure-SwitchStatement
-{
+function Measure-SwitchStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -713,8 +631,7 @@ function Measure-SwitchStatement
         $SwitchStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $SwitchStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -727,31 +644,25 @@ function Measure-SwitchStatement
             switch-clause that is formatted wrong it will hit on that
             and return the wrong rule message.
         #>
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-        elseif (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        elseif (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.SwitchStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'switch'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -777,8 +688,7 @@ function Measure-SwitchStatement
    .NOTES
         None
 #>
-function Measure-TryStatement
-{
+function Measure-TryStatement {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -789,8 +699,7 @@ function Measure-TryStatement
         $TryStatementAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $TryStatementAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -798,32 +707,26 @@ function Measure-TryStatement
             StatementBlock = $TryStatementAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.TryStatementOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.TryStatementOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.TryStatementOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'try'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -849,8 +752,7 @@ function Measure-TryStatement
    .NOTES
         None
 #>
-function Measure-CatchClause
-{
+function Measure-CatchClause {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -861,8 +763,7 @@ function Measure-CatchClause
         $CatchClauseAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $CatchClauseAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -870,32 +771,26 @@ function Measure-CatchClause
             StatementBlock = $CatchClauseAst.Extent
         }
 
-        if (Test-StatementOpeningBraceOnSameLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceOnSameLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.CatchClauseOpeningBraceNotOnSameLine
             $script:diagnosticRecord -as $diagnosticRecordType
         }
 
-        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.CatchClauseOpeningBraceShouldBeFollowedByNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-        {
+        if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.CatchClauseOpeningBraceShouldBeFollowedByOnlyOneNewLine
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
 
-        if (Test-StatementContainsUpperCase @testParameters)
-        {
+        if (Test-StatementContainsUpperCase @testParameters) {
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'catch'
             $script:diagnosticRecord -as $diagnosticRecordType
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -920,8 +815,7 @@ function Measure-CatchClause
    .NOTES
         None
 #>
-function Measure-TypeDefinition
-{
+function Measure-TypeDefinition {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
@@ -932,8 +826,7 @@ function Measure-TypeDefinition
         $TypeDefinitionAst
     )
 
-    try
-    {
+    try {
         $script:diagnosticRecord['Extent'] = $TypeDefinitionAst.Extent
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
@@ -941,61 +834,49 @@ function Measure-TypeDefinition
             StatementBlock = $TypeDefinitionAst.Extent
         }
 
-        if ($TypeDefinitionAst.IsEnum)
-        {
-            if (Test-StatementOpeningBraceOnSameLine @testParameters)
-            {
+        if ($TypeDefinitionAst.IsEnum) {
+            if (Test-StatementOpeningBraceOnSameLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceNotOnSameLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-            {
+            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceShouldBeFollowedByNewLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-            {
+            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.EnumOpeningBraceShouldBeFollowedByOnlyOneNewLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementContainsUpperCase @testParameters)
-            {
+            if (Test-StatementContainsUpperCase @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'enum'
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if
-        elseif ($TypeDefinitionAst.IsClass)
-        {
-            if (Test-StatementOpeningBraceOnSameLine @testParameters)
-            {
+        elseif ($TypeDefinitionAst.IsClass) {
+            if (Test-StatementOpeningBraceOnSameLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceNotOnSameLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters)
-            {
+            if (Test-StatementOpeningBraceIsNotFollowedByNewLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceShouldBeFollowedByNewLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters)
-            {
+            if (Test-StatementOpeningBraceIsFollowedByMoreThanOneNewLine @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
 
-            if (Test-StatementContainsUpperCase @testParameters)
-            {
+            if (Test-StatementContainsUpperCase @testParameters) {
                 $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f 'class'
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if
-    }
-    catch
-    {
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }
@@ -1019,34 +900,29 @@ function Measure-TypeDefinition
    .NOTES
         None
 #>
-function Measure-Keyword
-{
+function Measure-Keyword {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
     Param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.Language.ScriptBlockAst]
-        $ScriptBlockAst
+        [System.Management.Automation.Language.Token[]]
+        $Token
     )
 
-    try
-    {
-        $tokens = $null
-        [System.Management.Automation.Language.Parser]::ParseInput($ast.Extent.text, [ref]$tokens, $null)
-        $keywords = $tokens | Where-Object { $_.TokenFlags.HasFlag([System.Management.Automation.Language.TokenFlags]::Keyword) } | ForEach-Object Text
-        foreach ($keyword in $keywords)
-        {
-            if ($keywords -cmatch '[A-Z]+')
-            {
-                $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $keyword
-                $script:diagnosticRecord -as $diagnosticRecordType
-            } #if
-        } #foreach
-    }
-    catch
-    {
+    try {
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
+
+        $upperCaseTokens = $Token.Where( { $_.TokenFlags.HasFlag([System.Management.Automation.Language.TokenFlags]::Keyword) -and
+                $_.Text -cmatch '[A-Z]+' })
+        foreach ($item in $upperCaseTokens) {
+            $script:diagnosticRecord['Extent'] = $item.Extent
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $item.Text
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } #if
+
+    } catch {
         $PSCmdlet.ThrowTerminatingError($PSItem)
     }
 }

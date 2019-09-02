@@ -57,6 +57,37 @@ function Get-AstFromDefinition
     return $definitionAst.FindAll($astFilter, $true)
 }
 
+<#
+    .SYNOPSIS
+        Helper function to return tokens,
+        to be able to test custom rules.
+
+    .PARAMETER ScriptDefinition
+        The script definition to return ast for.
+
+#>
+function Get-TokensFromDefinition
+{
+    [CmdletBinding()]
+    [OutputType([System.Management.Automation.Language.Token[]])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ScriptDefinition
+    )
+
+    $parseErrors = $token = $null
+    $definitionAst = [System.Management.Automation.Language.Parser]::ParseInput($ScriptDefinition, [ref] $token, [ref] $parseErrors)
+
+    if ($parseErrors)
+    {
+        throw $parseErrors
+    }
+
+    return $token
+}
+
 Describe 'Measure-ParameterBlockParameterAttribute' {
     Context 'When calling the function directly' {
         BeforeAll {
@@ -3252,7 +3283,6 @@ Describe 'Measure-TypeDefinition' {
 Describe 'Measure-Keyword' {
     Context "When calling the function directly" {
         BeforeAll {
-            $astType = 'System.Management.Automation.Language.ScriptBlockAst'
             $ruleName = 'Measure-Keyword'
         }
 
@@ -3265,8 +3295,8 @@ Describe 'Measure-Keyword' {
                         }
                     '
 
-                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
-                $record = Measure-Keyword -ScriptBlockAst $mockAst[0]
+                $token = Get-TokensFromDefinition -ScriptDefinition $definition
+                $record = Measure-Keyword -Token $token
                 ($record | Measure-Object).Count | Should -Be 1
                 $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'function')
                 $record.RuleName | Should -Be $ruleName
