@@ -889,10 +889,10 @@ function Measure-TypeDefinition {
         Each keyword should be in all lower case.
 
     .EXAMPLE
-        Measure-Keyword -TypeDefinitionAst $ScriptBlockAst
+        Measure-Keyword -Token $Token
 
     .INPUTS
-        [System.Management.Automation.Language.ScriptBlockAst]
+        [System.Management.Automation.Language.Token[]]
 
     .OUTPUTS
         [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
