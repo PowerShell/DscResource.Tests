@@ -3316,7 +3316,7 @@ Describe 'Measure-Keyword' {
         }
 
         Context 'When keyword does not contain upper case letters' {
-            It 'Should not return error record' {
+            It 'Should not return an error record' {
                 $definition = '
                         function Test
                         {
@@ -3357,7 +3357,7 @@ Describe 'Measure-Keyword' {
             }
 
             Context 'When keyword does not contain upper case letters' {
-                It 'Should not return error record' {
+                It 'Should not return an error record' {
                     $definition = '
                             function Test
                             {
