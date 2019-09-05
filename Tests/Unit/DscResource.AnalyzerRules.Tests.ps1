@@ -64,7 +64,6 @@ function Get-AstFromDefinition
 
     .PARAMETER ScriptDefinition
         The script definition to return ast for.
-
 #>
 function Get-TokensFromDefinition
 {
@@ -181,7 +180,7 @@ Describe 'Measure-ParameterBlockParameterAttribute' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-ParameterBlockParameterAttribute"
         }
@@ -495,7 +494,7 @@ Describe 'Measure-ParameterBlockMandatoryNamedArgument' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-ParameterBlockMandatoryNamedArgument"
         }
@@ -873,7 +872,7 @@ Describe 'Measure-FunctionBlockBraces' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-FunctionBlockBraces"
         }
@@ -1106,7 +1105,7 @@ Describe 'Measure-IfStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-IfStatement"
         }
@@ -1352,7 +1351,7 @@ Describe 'Measure-ForEachStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-ForEachStatement"
         }
@@ -1553,7 +1552,7 @@ Describe 'Measure-DoUntilStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-DoUntilStatement"
         }
@@ -1761,7 +1760,7 @@ Describe 'Measure-DoWhileStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-DoWhileStatement"
         }
@@ -1969,7 +1968,7 @@ Describe 'Measure-WhileStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-WhileStatement"
         }
@@ -2189,7 +2188,7 @@ Describe 'Measure-SwitchStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-SwitchStatement"
         }
@@ -2425,7 +2424,7 @@ Describe 'Measure-ForStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-ForStatement"
         }
@@ -2631,7 +2630,7 @@ Describe 'Measure-TryStatement' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-TryStatement"
         }
@@ -2857,7 +2856,7 @@ Describe 'Measure-CatchClause' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-CatchClause"
         }
@@ -3141,7 +3140,7 @@ Describe 'Measure-TypeDefinition' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
-                ExcludeRule = 'Measure-Keyword'
+                ExcludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-TypeDefinition"
         }
@@ -3294,13 +3293,13 @@ Describe 'Measure-TypeDefinition' {
 }
 
 Describe 'Measure-Keyword' {
-    Context "When calling the function directly" {
+    Context 'When calling the function directly' {
         BeforeAll {
             $ruleName = 'Measure-Keyword'
         }
 
-        Context "When function definition contains upper case letters" {
-            It "Should write the correct error record" {
+        Context 'When keyword contains upper case letters' {
+            It 'Should write the correct error record' {
                 $definition = '
                         Function Test
                         {
@@ -3315,18 +3314,34 @@ Describe 'Measure-Keyword' {
                 $record.RuleName | Should -Be $ruleName
             }
         }
+
+        Context 'When keyword does not contain upper case letters' {
+            It 'Should not return error record' {
+                $definition = '
+                        function Test
+                        {
+                           return $true
+                        }
+                    '
+
+                $token = Get-TokensFromDefinition -ScriptDefinition $definition
+                $record = Measure-Keyword -Token $token
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+        }
     }
 
-    Context "When calling PSScriptAnalyzer" {
+    Context 'When calling PSScriptAnalyzer' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
             $ruleName = "$($script:ModuleName)\Measure-Keyword"
         }
-        Context "When measuring the keyword" {
-            Context "When function definition contains upper case letters" {
-                It "Should write the correct error record" {
+
+        Context 'When measuring the keyword' {
+            Context 'When keyword contains upper case letters' {
+                It 'Should write the correct error record' {
                     $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         Function Test
                         {
@@ -3340,6 +3355,20 @@ Describe 'Measure-Keyword' {
                     $record.RuleName | Should -Be $ruleName
                 }
             }
+
+            Context 'When keyword does not contain upper case letters' {
+                It 'Should not return error record' {
+                    $definition = '
+                            function Test
+                            {
+                               return $true
+                            }
+                        '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -BeExactly 1
+                }
+        }
         }
     }
 }
