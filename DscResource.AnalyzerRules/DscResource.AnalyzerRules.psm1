@@ -1037,13 +1037,13 @@ function Measure-Keyword
 
         $keywordFlag = [System.Management.Automation.Language.TokenFlags]::Keyword
         $upperCaseTokens = $Token.Where( { $_.TokenFlags.HasFlag($keywordFlag) -and $_.Text -cmatch '[A-Z]+' })
+
         foreach ($item in $upperCaseTokens)
         {
             $script:diagnosticRecord['Extent'] = $item.Extent
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $item.Text
             $script:diagnosticRecord -as $diagnosticRecordType
         } #if
-
     }
     catch
     {
