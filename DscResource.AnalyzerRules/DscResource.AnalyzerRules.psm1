@@ -284,7 +284,7 @@ function Measure-IfStatement
             and the first rows ends with a correct open brace. See example in
             regression test for #238.
         #>
-        $extentTextWithClauseRemoved = $IfStatementAst.Extent.Text.Replace($IfStatementAst.Clauses[0].Item1.Extent.Text,'')
+        $extentTextWithClauseRemoved = $IfStatementAst.Extent.Text.Replace($IfStatementAst.Clauses[0].Item1.Extent.Text, '')
 
         $testParameters = @{
             StatementBlock = $extentTextWithClauseRemoved
@@ -993,6 +993,57 @@ function Measure-TypeDefinition
                 $script:diagnosticRecord -as $diagnosticRecordType
             } # if
         } # if
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
+    }
+}
+
+<#
+    .SYNOPSIS
+        Validates all keywords.
+
+    .DESCRIPTION
+        Each keyword should be in all lower case.
+
+    .EXAMPLE
+        Measure-Keyword -Token $Token
+
+    .INPUTS
+        [System.Management.Automation.Language.Token[]]
+
+    .OUTPUTS
+        [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
+   .NOTES
+        None
+#>
+function Measure-Keyword
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.Language.Token[]]
+        $Token
+    )
+
+    try
+    {
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
+
+        $keywordFlag = [System.Management.Automation.Language.TokenFlags]::Keyword
+        $upperCaseTokens = $Token.Where( { $_.TokenFlags.HasFlag($keywordFlag) -and $_.Text -cmatch '[A-Z]+' })
+
+        foreach ($item in $upperCaseTokens)
+        {
+            $script:diagnosticRecord['Extent'] = $item.Extent
+            $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $item.Text
+            $script:diagnosticRecord -as $diagnosticRecordType
+        } #if
     }
     catch
     {
