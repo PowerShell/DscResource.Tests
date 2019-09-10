@@ -3315,12 +3315,44 @@ Describe 'Measure-Keyword' {
             }
         }
 
+        Context 'When keyword is not followed by a single space' {
+            It 'Should write the correct error record' {
+                $definition = '
+                        if("example" -eq "example" -or "magic")
+                        {
+                            Write-Verbose -Message "Example found."
+                        }
+                    '
+
+                $token = Get-TokensFromDefinition -ScriptDefinition $definition
+                $record = Measure-Keyword -Token $token
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.OneSpaceBetweenKeywordAndParenthesis
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
         Context 'When keyword does not contain upper case letters' {
             It 'Should not return an error record' {
                 $definition = '
                         function Test
                         {
                            return $true
+                        }
+                    '
+
+                $token = Get-TokensFromDefinition -ScriptDefinition $definition
+                $record = Measure-Keyword -Token $token
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+        }
+
+        Context 'When keyword is followed by a single space' {
+            It 'Should not return an error record' {
+                $definition = '
+                        if ("example" -eq "example" -or "magic")
+                        {
+                            Write-Verbose -Message "Example found."
                         }
                     '
 
@@ -3356,9 +3388,25 @@ Describe 'Measure-Keyword' {
                 }
             }
 
+            Context 'When keyword is not followed by a single space' {
+                It 'Should write the correct error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                            if("example" -eq "example" -or "magic")
+                            {
+                                Write-Verbose -Message "Example found."
+                            }
+                        '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -Be 1
+                    $record.Message | Should -Be $localizedData.OneSpaceBetweenKeywordAndParenthesis
+                    $record.RuleName | Should -Be $ruleName
+                }
+            }
+
             Context 'When keyword does not contain upper case letters' {
                 It 'Should not return an error record' {
-                    $definition = '
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                             function Test
                             {
                                return $true
@@ -3366,9 +3414,22 @@ Describe 'Measure-Keyword' {
                         '
 
                     $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
-                    ($record | Measure-Object).Count | Should -BeExactly 1
+                    ($record | Measure-Object).Count | Should -BeExactly 0
                 }
-        }
+            }
+
+            Context 'When keyword is followed by a single space' {
+                It 'Should not return an error record' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                            if ("example" -eq "example" -or "magic")
+                            {
+                                Write-Verbose -Message "Example found."
+                            }
+                        '
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -Be 0
+                }
+            }
         }
     }
 }
