@@ -3367,6 +3367,7 @@ Describe 'Measure-Keyword' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
+                IncludeRule    = 'Measure-Keyword'
             }
             $ruleName = "$($script:ModuleName)\Measure-Keyword"
         }
