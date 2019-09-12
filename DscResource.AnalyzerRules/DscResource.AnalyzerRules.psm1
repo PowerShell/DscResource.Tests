@@ -1039,7 +1039,7 @@ function Measure-Keyword
         $keywords = $Token.Where{ $_.TokenFlags.HasFlag($keywordFlag) }
         $upperCaseTokens = $keywords.Where{ $_.Text -cmatch '[A-Z]+' }
 
-        $tokenWithNoSpace = $keywords.Where{ $_.Extent.StartScriptPosition.Line -match '[a-z]+\(.*' }
+        $tokenWithNoSpace = $keywords.Where{ $_.Extent.StartScriptPosition.Line -match "$($_.Extent.Text)\(.*" }
 
         foreach ($item in $upperCaseTokens)
         {
