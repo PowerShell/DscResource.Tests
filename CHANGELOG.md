@@ -77,7 +77,7 @@
 - Moved `Publish Wiki Content` section in the `README.md` to the correct location.
 - Removed the legacy `CHANGELOG` link in the `README.md` table of contents.
 - Fixed broken links and formatting in the `README.md` file.
-- Added Measure-Keyword function to check if all keywords are in lower case.
+- Added Measure-Keyword function to check if all keywords are in lower case and if followed by parentheses, that there is a single space in between.
 
 ## 0.3.0.0
 
