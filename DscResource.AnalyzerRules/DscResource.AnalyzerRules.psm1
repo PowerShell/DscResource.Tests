@@ -1061,4 +1061,68 @@ function Measure-Keyword
     }
 }
 
+<#
+    .SYNOPSIS
+    Validates all hashtables.
+
+    .DESCRIPTION
+    Hashtables should have the correct format
+
+    .EXAMPLE
+    PS C:\> Measure-Hashtable -HashtableAst $HashtableAst
+
+    .INPUTS
+    [System.Management.Automation.Language.HashtableAst]
+
+    .OUTPUTS
+    [Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]]
+
+    .NOTES
+    None
+#>
+function Measure-Hashtable
+{
+    [CmdletBinding()]
+    [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.Language.HashtableAst]
+        $HashtableAst
+    )
+    try
+    {
+        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
+
+        $hashtableLines = $HashtableAst.Extent.Text -split '\n'
+
+        #hashtable should start with '@{' and end with '}'
+        if ($hashtableLines[0] -ne '@{' -or $hashtableLines[-1] -notmatch '\s*}')
+        {
+            $script:diagnosticRecord['Extent'] = $HashtableAst.Extent
+            $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
+            $script:diagnosticRecord -as $diagnosticRecordType
+        }
+        else
+        {
+            $initialIndent = ([regex]::Match($HashtableAst.Extent.StartScriptPosition.Line, '(\s*)(?=\w)')).Length
+            $expectedLineIndent = $initialIndent + 5
+            foreach ($keyValuePair in $HashtableAst.KeyValuePairs)
+            {
+                if ($keyValuePair.Item1.Extent.StartColumnNumber -ne $expectedLineIndent)
+                {
+                    $script:diagnosticRecord['Extent'] = $HashtableAst.Extent
+                    $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
+                    $script:diagnosticRecord -as $diagnosticRecordType
+                    break
+                }
+            }
+        }
+    }
+    catch
+    {
+        $PSCmdlet.ThrowTerminatingError($PSItem)
+    }
+}
+
 Export-ModuleMember -Function Measure-*
