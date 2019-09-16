@@ -3434,3 +3434,72 @@ Describe 'Measure-Keyword' {
         }
     }
 }
+
+Describe 'Measure-Hashtable' {
+    Context "When calling the function directly" {
+        BeforeAll {
+            $ruleName = 'Measure-Hashtable'
+            $astType = 'System.Management.Automation.Language.HashtableAst'
+        }
+
+        Context 'When hashtable is not correctly formatted' {
+            It 'Hashtable defined on a single line' {
+                $definition = '
+                        $hashtable = @{Key1 = "Value1";Key2 = 2;Key3 = "3"}
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+            It 'Hashtable partially correct formatted' {
+                $definition = '
+                        $hashtable = @{ Key1 = "Value1"
+                        Key2 = 2
+                        Key3 = "3" }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+        }
+
+        Context "When hashtable is correctly formatted" {
+            It "Correctly formatted non-nested hashtable" {
+                $definition = '
+                        $hashtable = @{
+                            Key1 = "Value1"
+                            Key2 = 2
+                            Key3 = "3"
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+            It "Correctly formatted nested hashtable" {
+                $definition = '
+                        $hashtable = @{
+                            Key1 = "Value1"
+                            Key2 = 2
+                            Key3 = @{
+                                Key3Key1 = "ExampleText"
+                                Key3Key2 = 42
+                            }
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+        }
+    }
+}

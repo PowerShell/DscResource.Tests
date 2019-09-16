@@ -1087,34 +1087,38 @@ function Measure-Hashtable
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.Language.HashtableAst]
+        [System.Management.Automation.Language.HashtableAst[]]
         $HashtableAst
     )
     try
     {
-        $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
-
-        $hashtableLines = $HashtableAst.Extent.Text -split '\n'
-
-        #hashtable should start with '@{' and end with '}'
-        if ($hashtableLines[0] -ne '@{' -or $hashtableLines[-1] -notmatch '\s*}')
+        foreach ($hashtable in $HashtableAst)
         {
-            $script:diagnosticRecord['Extent'] = $HashtableAst.Extent
-            $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
-            $script:diagnosticRecord -as $diagnosticRecordType
-        }
-        else
-        {
-            $initialIndent = ([regex]::Match($HashtableAst.Extent.StartScriptPosition.Line, '(\s*)(?=\w)')).Length
-            $expectedLineIndent = $initialIndent + 5
-            foreach ($keyValuePair in $HashtableAst.KeyValuePairs)
+            $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
+
+            $hashtableLines = $hashtable.Extent.Text -split '\n'
+
+            #hashtable should start with '@{' and end with '}'
+            if ($hashtableLines[0] -notmatch '@{\r' -or $hashtableLines[-1] -notmatch '\s*}')
             {
-                if ($keyValuePair.Item1.Extent.StartColumnNumber -ne $expectedLineIndent)
+                $script:diagnosticRecord['Extent'] = $hashtable.Extent
+                $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
+                $script:diagnosticRecord -as $diagnosticRecordType
+            }
+            else
+            {
+                #we alredy checked that the first line is correctly formatted. Getting the starting indentation here
+                $initialIndent = ([regex]::Match($hashtable.Extent.StartScriptPosition.Line, '(\s*)')).Length
+                $expectedLineIndent = $initialIndent + 5
+                foreach ($keyValuePair in $hashtable.KeyValuePairs)
                 {
-                    $script:diagnosticRecord['Extent'] = $HashtableAst.Extent
-                    $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
-                    $script:diagnosticRecord -as $diagnosticRecordType
-                    break
+                    if ($keyValuePair.Item1.Extent.StartColumnNumber -ne $expectedLineIndent)
+                    {
+                        $script:diagnosticRecord['Extent'] = $hashtable.Extent
+                        $script:diagnosticRecord['Message'] = $localizedData.HashtableShouldHaveCorrectFormat
+                        $script:diagnosticRecord -as $diagnosticRecordType
+                        break
+                    }
                 }
             }
         }
