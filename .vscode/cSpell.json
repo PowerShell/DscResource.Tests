@@ -19,7 +19,8 @@
         "subfolders",
         "PSPKI",
         "gitignore",
-        "Nuget"
+        "Nuget",
+        "Hashtable"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
