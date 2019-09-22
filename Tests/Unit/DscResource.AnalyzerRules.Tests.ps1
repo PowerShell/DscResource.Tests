@@ -3436,8 +3436,7 @@ Describe 'Measure-Keyword' {
 }
 
 Describe 'Measure-Hashtable' {
-
-    Context "When calling the function directly" {
+    Context 'When calling the function directly' {
         BeforeAll {
             $ruleName = 'Measure-Hashtable'
             $astType = 'System.Management.Automation.Language.HashtableAst'
@@ -3485,9 +3484,22 @@ Describe 'Measure-Hashtable' {
                 $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
                 $record.RuleName | Should -Be $ruleName
             }
+
+            It 'Correctly formatted empty hashtable' {
+                $definition = '
+                        $hashtable = @{ }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+
+            }
         }
 
-        Context "When hashtable is correctly formatted" {
+        Context 'When hashtable is correctly formatted' {
             It "Correctly formatted non-nested hashtable" {
                 $definition = '
                         $hashtable = @{
@@ -3501,7 +3513,8 @@ Describe 'Measure-Hashtable' {
                 $record = Measure-Hashtable -HashtableAst $mockAst
                 ($record | Measure-Object).Count | Should -Be 0
             }
-            It "Correctly formatted nested hashtable" {
+
+            It 'Correctly formatted nested hashtable' {
                 $definition = '
                         $hashtable = @{
                             Key1 = "Value1"
@@ -3517,17 +3530,28 @@ Describe 'Measure-Hashtable' {
                 $record = Measure-Hashtable -HashtableAst $mockAst
                 ($record | Measure-Object).Count | Should -Be 0
             }
+
+            It 'Correctly formatted empty hashtable' {
+                $definition = '
+                        $hashtable = @{}
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 0
+            }
         }
     }
 
-    Context "When calling PSScriptAnalyzer" {
+    Context 'When calling PSScriptAnalyzer' {
         BeforeAll {
             $invokeScriptAnalyzerParameters = @{
                 CustomRulePath = $modulePath
             }
             $ruleName = "$($script:ModuleName)\Measure-Hashtable"
         }
-         Context 'When hashtable is not correctly formatted' {
+
+        Context 'When hashtable is not correctly formatted' {
             It 'Hashtable defined on a single line' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         $hashtable = @{Key1 = "Value1";Key2 = 2;Key3 = "3"}
@@ -3553,7 +3577,7 @@ Describe 'Measure-Hashtable' {
             }
 
             It 'Hashtable indentation not correct' {
-                $invokeScriptAnalyzerParameters['ScriptDefinition'] ='
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         $hashtable = @{
                             Key1 = "Value1"
                             Key2 = 2
@@ -3566,11 +3590,21 @@ Describe 'Measure-Hashtable' {
                 $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
                 $record.RuleName | Should -Be $ruleName
             }
+
+            It 'Incorrectly formatted empty hashtable' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        $hashtable = @{ }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
         }
 
-        Context "When hashtable is correctly formatted" {
-            It "Correctly formatted non-nested hashtable" {
-                $invokeScriptAnalyzerParameters['ScriptDefinition'] ='
+        Context 'When hashtable is correctly formatted' {
+            It 'Correctly formatted non-nested hashtable' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         $hashtable = @{
                             Key1 = "Value1"
                             Key2 = 2
@@ -3581,8 +3615,9 @@ Describe 'Measure-Hashtable' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 0
             }
-            It "Correctly formatted nested hashtable" {
-                $invokeScriptAnalyzerParameters['ScriptDefinition'] ='
+
+            It 'Correctly formatted nested hashtable' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         $hashtable = @{
                             Key1 = "Value1"
                             Key2 = 2
@@ -3591,6 +3626,15 @@ Describe 'Measure-Hashtable' {
                                 Key3Key2 = 42
                             }
                         }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+
+            It 'Correctly formatted empty hashtable' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        $hashtable = @{}
                     '
 
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
