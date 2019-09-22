@@ -1047,6 +1047,7 @@ function Measure-Keyword
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $item.Text
             $script:diagnosticRecord -as $diagnosticRecordType
         }
+
         foreach ($item in $tokenWithNoSpace)
         {
             $script:diagnosticRecord['Extent'] = $item.Extent
