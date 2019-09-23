@@ -1036,14 +1036,24 @@ function Measure-Keyword
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
         $keywordFlag = [System.Management.Automation.Language.TokenFlags]::Keyword
-        $upperCaseTokens = $Token.Where( { $_.TokenFlags.HasFlag($keywordFlag) -and $_.Text -cmatch '[A-Z]+' })
+        $keywords = $Token.Where{ $_.TokenFlags.HasFlag($keywordFlag) }
+        $upperCaseTokens = $keywords.Where{ $_.Text -cmatch '[A-Z]+' }
+
+        $tokenWithNoSpace = $keywords.Where{ $_.Extent.StartScriptPosition.Line -match "$($_.Extent.Text)\(.*" }
 
         foreach ($item in $upperCaseTokens)
         {
             $script:diagnosticRecord['Extent'] = $item.Extent
             $script:diagnosticRecord['Message'] = $localizedData.StatementsContainsUpperCaseLetter -f $item.Text
             $script:diagnosticRecord -as $diagnosticRecordType
-        } #if
+        }
+
+        foreach ($item in $tokenWithNoSpace)
+        {
+            $script:diagnosticRecord['Extent'] = $item.Extent
+            $script:diagnosticRecord['Message'] = $localizedData.OneSpaceBetweenKeywordAndParenthesis
+            $script:diagnosticRecord -as $diagnosticRecordType
+        }
     }
     catch
     {

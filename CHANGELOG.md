@@ -78,6 +78,7 @@
 - Removed the legacy `CHANGELOG` link in the `README.md` table of contents.
 - Fixed broken links and formatting in the `README.md` file.
 - Added Measure-Keyword function to check if all keywords are in lower case.
+  - If a keyword is followed by parentheses,there should be a single space between them.
 
 ## 0.3.0.0
 
