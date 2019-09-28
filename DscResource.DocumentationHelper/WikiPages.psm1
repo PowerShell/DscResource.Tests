@@ -70,10 +70,10 @@ function New-DscResourceWikiSite
     foreach ($mofSchemaFile in $mofSchemaFiles)
     {
         $mofSchema = Get-MofSchemaObject -FileName $mofSchemaFile.FullName |
-            Where-Object -FilterScript {
-                ($_.ClassName -eq $mofSchemaFile.Name.Replace('.schema.mof', '')) `
-                    -and ($null -ne $_.FriendlyName)
-            }
+        Where-Object -FilterScript {
+            ($_.ClassName -eq $mofSchemaFile.Name.Replace('.schema.mof', '')) `
+                -and ($null -ne $_.FriendlyName)
+        }
 
         $descriptionPath = Join-Path -Path $mofSchemaFile.DirectoryName -ChildPath 'readme.md'
 
@@ -105,9 +105,9 @@ function New-DscResourceWikiSite
                 }
 
                 $null = $output.Append("| **$($property.Name)** " + `
-                    "| $($property.State) " + `
-                    "| $dataType " + `
-                    "| $($property.Description) |")
+                        "| $($property.State) " + `
+                        "| $dataType " + `
+                        "| $($property.Description) |")
 
                 if ([string]::IsNullOrEmpty($property.ValueMap) -ne $true)
                 {
@@ -120,7 +120,7 @@ function New-DscResourceWikiSite
             $descriptionContent = Get-Content -Path $descriptionPath -Raw
 
             # Change the description H1 header to an H2
-            $descriptionContent = $descriptionContent -replace '# Description','## Description'
+            $descriptionContent = $descriptionContent -replace '# Description', '## Description'
             $null = $output.AppendLine()
             $null = $output.AppendLine($descriptionContent)
 
@@ -266,7 +266,7 @@ function Get-DscResourceWikiExampleContent
                 Write-Debug -Message 'Not Currently Processing Block'
 
                 # Check the current line
-                if ($exampleLine.TrimStart() -eq  '<#PSScriptInfo')
+                if ($exampleLine.TrimStart() -eq '<#PSScriptInfo')
                 {
                     Write-Debug -Message 'PSScriptInfo Block Started'
 
@@ -404,11 +404,11 @@ function Publish-WikiContent
     try
     {
         Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
-        Invoke-Git config --global core.autocrlf true
+        Invoke-Git -Arguments 'config --global core.autocrlf true'
 
         $wikiRepoName = "https://github.com/$RepoName.wiki.git"
         Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
-        Invoke-Git clone $wikiRepoName $path --quiet
+        Invoke-Git -Arguments 'clone', "$wikiRepoName" , "$path" , '--quiet'
 
         $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
         Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
@@ -459,20 +459,20 @@ function Publish-WikiContent
         Set-Location -Path $path
 
         Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
-        Invoke-Git config --local user.email $GitUserEmail
-        Invoke-Git config --local user.name $GitUserName
-        Invoke-Git remote set-url origin "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
+        Invoke-Git -Arguments 'config', '--local', 'user.email', "$GitUserEmail"
+        Invoke-Git -Arguments 'config', '--local', 'user.name', "$GitUserName"
+        Invoke-Git -Arguments 'remote', 'set-url' , 'origin' , "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
 
         Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage
-        Invoke-Git add *
+        Invoke-Git -Arguments 'add', '*'
 
         Write-Verbose -Message ($localizedData.CommitAndTagRepoChangesMessage -f $BuildVersion)
-        Invoke-Git commit --message ($localizedData.UpdateWikiCommitMessage -f $JobId) --quiet
-        Invoke-Git tag --annotate $BuildVersion --message $BuildVersion
+        Invoke-Git -Arguments 'commit', '--message', ($localizedData.UpdateWikiCommitMessage -f $JobId), '--quiet'
+        Invoke-Git -Arguments 'tag', '--annotate', $BuildVersion , '--message', $BuildVersion
 
         Write-Verbose -Message $localizedData.PushUpdatedRepoMessage
-        Invoke-Git push origin --quiet
-        Invoke-Git push origin $BuildVersion --quiet
+        Invoke-Git -Arguments 'push', 'origin', '--quiet'
+        Invoke-Git -Arguments 'push', 'origin', $BuildVersion, '--quiet'
 
         Pop-Location
     }

@@ -284,9 +284,9 @@ InModuleScope -ModuleName 'DscResource.Container' {
                 $mockMissedCommand[1].Command
             )
 
-            Mock -CommandName 'Write-Host' -MockWith {
-                if ($Object -match $mockTestOutputStringMissedCommand1 `
-                        -or $Object -match $mockTestOutputStringMissedCommand2)
+            Mock -CommandName 'Write-Output' -MockWith {
+                if ($Inputobject -match $mockTestOutputStringMissedCommand1 `
+                        -or $Inputobject -match $mockTestOutputStringMissedCommand2)
                 {
                     $script:countNumberOfMissedCommandWritten += 1
                 }
@@ -327,7 +327,7 @@ InModuleScope -ModuleName 'DscResource.Container' {
 
                 $script:countNumberOfMissedCommandWritten | Should -Be 0
 
-                Assert-MockCalled -CommandName 'Write-Host' -Exactly -Times 2
+                Assert-MockCalled -CommandName 'Write-Output' -Exactly -Times 2
             }
         }
     }

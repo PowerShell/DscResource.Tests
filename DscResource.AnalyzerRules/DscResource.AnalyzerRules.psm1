@@ -39,7 +39,7 @@ function Measure-ParameterBlockParameterAttribute
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -109,7 +109,7 @@ function Measure-ParameterBlockMandatoryNamedArgument
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -265,7 +265,7 @@ function Measure-IfStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -345,7 +345,7 @@ function Measure-ForEachStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -417,7 +417,7 @@ function Measure-DoUntilStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -489,7 +489,7 @@ function Measure-DoWhileStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -561,7 +561,7 @@ function Measure-WhileStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -633,7 +633,7 @@ function Measure-ForStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -705,7 +705,7 @@ function Measure-SwitchStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -781,7 +781,7 @@ function Measure-TryStatement
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -853,7 +853,7 @@ function Measure-CatchClause
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -924,7 +924,7 @@ function Measure-TypeDefinition
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -1023,7 +1023,7 @@ function Measure-Keyword
 {
     [CmdletBinding()]
     [OutputType([Microsoft.Windows.Powershell.ScriptAnalyzer.Generic.DiagnosticRecord[]])]
-    Param
+    param
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
