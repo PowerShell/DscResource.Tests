@@ -41,47 +41,47 @@ function New-Nuspec
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $PackageName,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $Version,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $Author,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $Owners,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $DestinationPath,
 
         [Parameter()]
-        [String]
+        [System.String]
         $LicenseUrl,
 
         [Parameter()]
-        [String]
+        [System.String]
         $ProjectUrl,
 
         [Parameter()]
-        [String]
+        [System.String]
         $IconUrl,
 
         [Parameter()]
-        [String]
+        [System.String]
         $PackageDescription,
 
         [Parameter()]
-        [String]
+        [System.String]
         $ReleaseNotes,
 
         [Parameter()]
-        [String]
+        [System.String]
         $Tags
     )
 
@@ -97,21 +97,21 @@ function New-Nuspec
     <owners>$Owners</owners>
 "@
 
-    if (-not [String]::IsNullOrEmpty($LicenseUrl))
+    if (-not [System.String]::IsNullOrEmpty($LicenseUrl))
     {
         $nuspecFileContent += @"
     <licenseUrl>$LicenseUrl</licenseUrl>
 "@
     }
 
-    if (-not [String]::IsNullOrEmpty($ProjectUrl))
+    if (-not [System.String]::IsNullOrEmpty($ProjectUrl))
     {
         $nuspecFileContent += @"
     <projectUrl>$ProjectUrl</projectUrl>
 "@
     }
 
-    if (-not [String]::IsNullOrEmpty($IconUrl))
+    if (-not [System.String]::IsNullOrEmpty($IconUrl))
     {
         $nuspecFileContent += @"
     <iconUrl>$IconUrl</iconUrl>
@@ -156,11 +156,11 @@ function Install-ModuleFromPowerShellGallery
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $ModuleName,
 
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $DestinationPath
     )
 
@@ -285,22 +285,22 @@ function Initialize-TestEnvironment
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $DscModuleName,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $DscResourceName,
 
         [Parameter(Mandatory = $true)]
         [ValidateSet('Unit', 'Integration')]
-        [String]
+        [System.String]
         $TestType,
 
         [Parameter()]
         [ValidateSet('Mof', 'Class')]
-        [String]
+        [System.String]
         $ResourceType = 'Mof'
     )
 
@@ -522,13 +522,14 @@ function Test-FileContainsClassResource
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $FilePath
     )
 
     $fileAst = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$null, [ref]$null)
+    $attributeAst = $fileAst.FindAll( { $args[0] -is [System.Management.Automation.Language.AttributeAst] }, $false)
 
-    foreach ($fileAttributeAst in $fileAst.FindAll( { $args[0] -is [System.Management.Automation.Language.AttributeAst] }, $false))
+    foreach ($fileAttributeAst in $attributeAst)
     {
         if ($fileAttributeAst.Extent.Text -ieq '[DscResource()]')
         {
@@ -558,7 +559,7 @@ function Get-ClassResourceNameFromFile
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $FilePath
     )
 
@@ -595,7 +596,7 @@ function Test-ModuleContainsScriptResource
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $ModulePath
     )
 
@@ -619,7 +620,7 @@ function Test-ModuleContainsClassResource
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $ModulePath
     )
 
@@ -650,7 +651,7 @@ function Get-Psm1FileList
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $FilePath
     )
 
@@ -671,7 +672,7 @@ function Get-FileParseErrors
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $FilePath
     )
 
@@ -699,7 +700,7 @@ function Get-TextFilesList
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $Root
     )
 
@@ -747,7 +748,7 @@ function Get-ModuleScriptResourceNames
     param
     (
         [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
-        [String]
+        [System.String]
         $ModulePath
     )
 
@@ -847,7 +848,7 @@ function Get-SuppressedPSSARuleNameList
     param
     (
         [Parameter(Mandatory = $true)]
-        [String]
+        [System.String]
         $FilePath
     )
 
@@ -860,7 +861,9 @@ function Get-SuppressedPSSARuleNameList
 
     foreach ($attributeAst in $attributeAsts)
     {
-        if ([System.Diagnostics.CodeAnalysis.SuppressMessageAttribute].FullName.ToLower().Contains($attributeAst.TypeName.FullName.ToLower()))
+        $messageAttributeName = [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute].FullName.ToLower()
+
+        if ($messageAttributeName.Contains($attributeAst.TypeName.FullName.ToLower()))
         {
             $suppressedPSSARuleNames += $attributeAst.PositionalArguments.Extent.Text
         }
@@ -1255,9 +1258,9 @@ function Get-ResourceModulesInConfiguration
         } # foreach
 
         # Did a module get identified when stepping through the elements?
-        if (-not [String]::IsNullOrEmpty($moduleName))
+        if (-not [System.String]::IsNullOrEmpty($moduleName))
         {
-            if ([String]::IsNullOrEmpty($moduleVersion))
+            if ([System.String]::IsNullOrEmpty($moduleVersion))
             {
                 $listedModules += @{
                     Name = $moduleName
@@ -1401,7 +1404,7 @@ function Get-DscIntegrationTestOrderNumber
     (
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $Path
     )
 
@@ -1476,7 +1479,7 @@ function Get-DscTestContainerInformation
     (
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $Path
     )
 
@@ -1627,7 +1630,7 @@ function Set-PSModulePath
     (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter()]
@@ -1670,10 +1673,10 @@ function Write-Info
         $ForegroundColor = 'Yellow'
     )
 
-    $curentColor = $host.ui.RawUI.ForegroundColor
-    $host.ui.RawUI.ForegroundColor = $ForegroundColor
+    $curentColor = $host.UI.RawUI.ForegroundColor
+    $host.UI.RawUI.ForegroundColor = $ForegroundColor
     Write-Information -MessageData "[Build Info] [UTC $([System.DateTime]::UtcNow)] $message"
-    $host.ui.RawUI.ForegroundColor = $curentColor
+    $host.UI.RawUI.ForegroundColor = $curentColor
 }
 
 <#
@@ -2045,7 +2048,7 @@ function Write-PsScriptAnalyzerWarning
         $PssaRuleOutput,
 
         [Parameter(Mandatory = $true)]
-        [string]
+        [System.String]
         $RuleType
     )
 
@@ -2055,6 +2058,7 @@ function Write-PsScriptAnalyzerWarning
     foreach ($ruleNameGroup in $ruleCollection)
     {
         Write-Warning -Message "The following PSScriptAnalyzer rule '$($ruleNameGroup.Name)' errors need to be fixed:"
+
         foreach ($rule in $ruleNameGroup.Group)
         {
             Write-Warning -Message "$($rule.ScriptName) (Line $($rule.Line)): $($rule.Message)"

@@ -723,11 +723,11 @@ function Out-MissedCommand
         Write-Info -ForegroundColor Red -Message ($script:localizedData.MissedCommandsInCodeCoverage -f $MissedCommand.Count)
 
         [PSCustomObject[]] $MissedCommand = $MissedCommand |
-        Select-Object -Property @{
-            Name = 'File'; Expression = {
-                $_.File -replace ("$env:APPVEYOR_BUILD_FOLDER\" -replace '\\', '\\')
-            }
-        }, Function, Line, Command
+            Select-Object -Property @{
+                Name = 'File'; Expression = {
+                    $_.File -replace ("$env:APPVEYOR_BUILD_FOLDER\" -replace '\\', '\\')
+                }
+            }, Function, Line, Command
 
         $fileFieldMaxLength = ($MissedCommand.File | Measure-Object -Maximum -Property Length).Maximum
         $functionFieldMaxLength = ($MissedCommand.Function | Measure-Object -Maximum -Property Length).Maximum

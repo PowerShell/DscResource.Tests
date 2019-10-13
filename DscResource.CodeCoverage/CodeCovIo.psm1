@@ -40,6 +40,7 @@ function Add-UniqueFileLineToTable
 
     # file paths need to be relative to repo root when querying GIT
     Push-Location -LiteralPath $RepoRoot
+
     try
     {
         Write-Verbose -Message "running git ls-files" -Verbose

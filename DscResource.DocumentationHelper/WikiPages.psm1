@@ -70,10 +70,10 @@ function New-DscResourceWikiSite
     foreach ($mofSchemaFile in $mofSchemaFiles)
     {
         $mofSchema = Get-MofSchemaObject -FileName $mofSchemaFile.FullName |
-        Where-Object -FilterScript {
-            ($_.ClassName -eq $mofSchemaFile.Name.Replace('.schema.mof', '')) `
-                -and ($null -ne $_.FriendlyName)
-        }
+            Where-Object -FilterScript {
+                ($_.ClassName -eq $mofSchemaFile.Name.Replace('.schema.mof', '')) `
+                    -and ($null -ne $_.FriendlyName)
+            }
 
         $descriptionPath = Join-Path -Path $mofSchemaFile.DirectoryName -ChildPath 'readme.md'
 
@@ -404,11 +404,11 @@ function Publish-WikiContent
     try
     {
         Write-Verbose -Message $script:localizedData.ConfigGlobalGitMessage
-        Invoke-Git -Arguments 'config --global core.autocrlf true'
+        Invoke-Git -Arguments 'config', '--global', 'core.autocrlf', 'true'
 
         $wikiRepoName = "https://github.com/$RepoName.wiki.git"
         Write-Verbose -Message ($script:localizedData.CloneWikiGitRepoMessage -f $WikiRepoName)
-        Invoke-Git -Arguments 'clone', "$wikiRepoName" , "$path" , '--quiet'
+        Invoke-Git -Arguments 'clone', $wikiRepoName , $path , '--quiet'
 
         $jobArtifactsUrl = "$appVeyorApiUrl/buildjobs/$JobId/artifacts"
         Write-Verbose -Message ($localizedData.DownloadAppVeyorArtifactDetailsMessage -f $JobId, $jobArtifactsUrl)
@@ -459,8 +459,8 @@ function Publish-WikiContent
         Set-Location -Path $path
 
         Write-Verbose -Message $script:localizedData.ConfigLocalGitMessage
-        Invoke-Git -Arguments 'config', '--local', 'user.email', "$GitUserEmail"
-        Invoke-Git -Arguments 'config', '--local', 'user.name', "$GitUserName"
+        Invoke-Git -Arguments 'config', '--local', 'user.email', $GitUserEmail
+        Invoke-Git -Arguments 'config', '--local', 'user.name', $GitUserName
         Invoke-Git -Arguments 'remote', 'set-url' , 'origin' , "https://$($GitUserName):$($GithubAccessToken)@github.com/$RepoName.wiki.git"
 
         Write-Verbose -Message $localizedData.AddWikiContentToGitRepoMessage

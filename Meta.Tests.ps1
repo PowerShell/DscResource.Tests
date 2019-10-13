@@ -47,7 +47,7 @@ else
 
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
 
-if (-not (Test-Path $dscResourcesFolderFilePath))
+if (-not (Test-Path -Path $dscResourcesFolderFilePath))
 {
     $dscResourcesFolderFilePath = $moduleRootFilePath
 }
@@ -935,9 +935,10 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 {
                     if ($dscResourcesFolderFilePath -eq $moduleRootFilePath)
                     {
-                        #reverting back to defaults
+                        # Reverting back to defaults
                         $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
                     }
+
                     $gulpArgumentList = @(
                         'test-mdsyntax',
                         '--silent',
