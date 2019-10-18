@@ -1410,15 +1410,15 @@ InModuleScope $script:ModuleName {
             BeforeAll {
                 $testMessageText = 'UnitTestTestMessage'
 
-                Mock -CommandName 'Write-Host' -ParameterFilter {
-                    $Message -match $testMessageText
+                Mock -CommandName 'Write-Information' -ParameterFilter {
+                    $Messagedata -match $testMessageText
                 }
             }
 
             It 'Should call the correct Cmdlets and not throw' {
                 { Write-Info -Message $testMessageText -ForegroundColor 'Red' } | Should -Not -Throw
 
-                Assert-MockCalled -CommandName 'Write-Host' -Exactly -Times 1 -Scope It
+                Assert-MockCalled -CommandName 'Write-Information' -Exactly -Times 1 -Scope It
             }
         }
     }

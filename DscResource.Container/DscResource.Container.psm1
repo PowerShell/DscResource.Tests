@@ -554,7 +554,7 @@ function Out-TestResult
     if ($ShowOnlyFailed.IsPresent)
     {
         $testsToOutput = $TestResult |
-            Where-Object -FilterScript {
+        Where-Object -FilterScript {
             $_.Passed -eq $false
         }
     }
@@ -564,7 +564,7 @@ function Out-TestResult
     }
 
     $uniqueDescribeBlockName = $testsToOutput |
-        Select-Object -ExpandProperty 'Describe' -Unique
+    Select-Object -ExpandProperty 'Describe' -Unique
 
     foreach ($describeBlockName in $uniqueDescribeBlockName)
     {
@@ -576,7 +576,7 @@ function Out-TestResult
                 the It-block is directly in a Describe-block).
             #>
             $uniqueContextBlockName = $testsToOutput |
-                Where-Object -FilterScript {
+            Where-Object -FilterScript {
                 $_.Describe -eq $describeBlockName -and $_.Context -ne ''
             } | Select-Object -ExpandProperty 'Context' -Unique
 
@@ -584,7 +584,7 @@ function Out-TestResult
             {
                 Context -Name $contextBlockName {
                     $itBlocks = $testsToOutput |
-                        Where-Object -FilterScript {
+                    Where-Object -FilterScript {
                         $_.Describe -eq $describeBlockName `
                             -and $_.Context -eq $contextBlockName
                     }
@@ -603,7 +603,7 @@ function Out-TestResult
                 in a Describe-block).
             #>
             $itBlocks = $testsToOutput |
-                Where-Object -FilterScript {
+            Where-Object -FilterScript {
                 $_.Describe -eq $describeBlockName `
                     -and $_.Context -eq ''
             }
@@ -622,7 +622,7 @@ function Out-TestResult
     }
 
     # End with a blank line to show where the output of results end.
-    Write-Host -Object ''
+    Write-Output -InputObject ''
 }
 
 <#
@@ -660,9 +660,9 @@ function Write-PesterItBlock
     # Check if the It-block failed.
     if ($itBlockError.Count -ne 0)
     {
-        Write-Host -Object ''
-        Write-Host -ForegroundColor 'Red' -Object ($script:localizedData.ItBlockFailureMessage -f $TestResult.FailureMessage)
-        Write-Host -Object ''
+        Write-Output -InputObject ''
+        Write-Info -ForegroundColor 'Red' -Object ($script:localizedData.ItBlockFailureMessage -f $TestResult.FailureMessage)
+        Write-Output -InputObject ''
 
         $itBlockError = $null
     }
@@ -719,22 +719,22 @@ function Out-MissedCommand
     if ($MissedCommand.Count -gt 0)
     {
         # Start with a blank line to show where the output of missed commands start.
-        Write-Host -Object ''
-        Write-Host -ForegroundColor Red -Object ($script:localizedData.MissedCommandsInCodeCoverage -f $MissedCommand.Count)
+        Write-Output -InputObject ''
+        Write-Info -ForegroundColor Red -Message ($script:localizedData.MissedCommandsInCodeCoverage -f $MissedCommand.Count)
 
         [PSCustomObject[]] $MissedCommand = $MissedCommand |
             Select-Object -Property @{
-            Name = 'File'; Expression = {
-                $_.File -replace ("$env:APPVEYOR_BUILD_FOLDER\" -replace '\\', '\\')
-            }
-        }, Function, Line, Command
+                Name = 'File'; Expression = {
+                    $_.File -replace ("$env:APPVEYOR_BUILD_FOLDER\" -replace '\\', '\\')
+                }
+            }, Function, Line, Command
 
         $fileFieldMaxLength = ($MissedCommand.File | Measure-Object -Maximum -Property Length).Maximum
         $functionFieldMaxLength = ($MissedCommand.Function | Measure-Object -Maximum -Property Length).Maximum
         $lineFieldMaxLength = 5
 
         # Write out header
-        Write-Host -Object ('{0}{1}{2}{3}' -f @(
+        Write-Output -InputObject ('{0}{1}{2}{3}' -f @(
                 'File'.PadRight($fileFieldMaxLength + 1)
                 'Function'.PadRight($functionFieldMaxLength + 1)
                 'Line'.PadLeft($lineFieldMaxLength).PadRight($lineFieldMaxLength + 1)
@@ -743,7 +743,7 @@ function Out-MissedCommand
         )
 
         # Write out header underlines
-        Write-Host -Object ('{0}{1}{2}{3}' -f @(
+        Write-Output -InputObject ('{0}{1}{2}{3}' -f @(
                 '----'.PadRight($fileFieldMaxLength + 1)
                 '--------'.PadRight($functionFieldMaxLength + 1)
                 '----'.PadLeft($lineFieldMaxLength).PadRight($lineFieldMaxLength + 1)
@@ -754,7 +754,7 @@ function Out-MissedCommand
         # Write out missed commands
         foreach ($currentMissedCommand in $MissedCommand)
         {
-            Write-Host -Object ('{0}{1}{2}{3}' -f @(
+            Write-Output -InputObject ('{0}{1}{2}{3}' -f @(
                     $currentMissedCommand.File.PadRight($fileFieldMaxLength + 1)
                     $currentMissedCommand.Function.PadRight($functionFieldMaxLength + 1)
                     $currentMissedCommand.Line.ToString().PadLeft(5).PadRight(6)
@@ -771,9 +771,9 @@ function Out-MissedCommand
     }
     else
     {
-        Write-Host -Object $script:localizedData.NoMissedCommandsInCodeCoverage
+        Write-Output -InputObject $script:localizedData.NoMissedCommandsInCodeCoverage
     }
 
     # End with a blank line to show where the output of missed commands end.
-    Write-Host -Object ''
+    Write-Output -InputObject ''
 }

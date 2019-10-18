@@ -40,7 +40,9 @@ function Add-UniqueFileLineToTable
 
     # file paths need to be relative to repo root when querying GIT
     Push-Location -LiteralPath $RepoRoot
-    try {
+
+    try
+    {
         Write-Verbose -Message "running git ls-files" -Verbose
 
         # Get the list of files as Git sees them
@@ -51,8 +53,8 @@ function Add-UniqueFileLineToTable
         {
             #Find the file as Git sees it
             $file = $command.File
-            $fileKey = $file.replace($RepoRoot,'').TrimStart('\').replace('\','/')
-            $fileKey = $fileKeys.where{$_ -like $fileKey}
+            $fileKey = $file.replace($RepoRoot, '').TrimStart('\').replace('\', '/')
+            $fileKey = $fileKeys.where{ $_ -like $fileKey }
 
             if ($null -eq $fileKey)
             {
@@ -69,19 +71,19 @@ function Add-UniqueFileLineToTable
 
             if (!$FileLine.ContainsKey($fileKey))
             {
-                $FileLine.add($fileKey, @{ $TableName = @{}})
+                $FileLine.add($fileKey, @{ $TableName = @{ } })
             }
 
             if (!$FileLine.$fileKey.ContainsKey($TableName))
             {
-                $FileLine.$fileKey.Add($TableName,@{})
+                $FileLine.$fileKey.Add($TableName, @{ })
             }
 
             $lines = $FileLine.($fileKey).$TableName
             $lineKey = $($command.line)
             if (!$lines.ContainsKey($lineKey))
             {
-                $lines.Add($lineKey,1)
+                $lines.Add($lineKey, 1)
             }
             else
             {
@@ -107,7 +109,7 @@ function Add-UniqueFileLineToTable
 function Test-CodeCoverage
 {
     [CmdletBinding()]
-    param(
+    param (
         [Parameter(Mandatory = $true)]
         [Object]
         $CodeCoverage
@@ -137,9 +139,9 @@ function Test-CodeCoverage
 function Export-CodeCovIoJson
 {
     [CmdletBinding()]
-    param(
+    param (
         [Parameter(Mandatory = $true)]
-        [ValidateScript({Test-CodeCoverage -CodeCoverage $_})]
+        [ValidateScript( { Test-CodeCoverage -CodeCoverage $_ })]
         [Object]
         $CodeCoverage,
 
@@ -174,12 +176,12 @@ function Export-CodeCovIoJson
     }
 
     # A table of the file key then a sub-tables of `misses` and `hits` lines.
-    $FileLine  = @{}
+    $FileLine = @{ }
 
     # define common parameters
-    $addUniqueFileLineParams= @{
+    $addUniqueFileLineParams = @{
         FileLine = $FileLine
-        RepoRoo = $RepoRoot
+        RepoRoo  = $RepoRoot
     }
 
     <#
@@ -192,29 +194,29 @@ function Export-CodeCovIoJson
     Add-UniqueFileLineToTable -Command $CodeCoverage.HitCommands -TableName 'hits' @addUniqueFileLineParams
 
     # Create the results structure
-    $resultLineData = @{}
-    $resultMessages = @{}
-    $result         = @{
+    $resultLineData = @{ }
+    $resultMessages = @{ }
+    $result = @{
         coverage = $resultLineData
         messages = $resultMessages
     }
 
     foreach ($file in $FileLine.Keys)
     {
-        $hit     = 0
+        $hit = 0
         $partial = 0
-        $missed  = 0
+        $missed = 0
         Write-Verbose -Message "summarizing for file: $file"
 
         # Get the hits, if they exist
-        $hits = @{}
+        $hits = @{ }
         if ($FileLine.$file.ContainsKey('hits'))
         {
             $hits = $FileLine.$file.hits
         }
 
         # Get the misses, if they exist
-        $misses = @{}
+        $misses = @{ }
         if ($FileLine.$file.ContainsKey('misses'))
         {
             $misses = $FileLine.$file.misses
@@ -234,7 +236,7 @@ function Export-CodeCovIoJson
         }
 
         $lineData = @()
-        $messages = @{}
+        $messages = @{ }
 
         <#
             produce the results
@@ -289,8 +291,8 @@ function Export-CodeCovIoJson
             }
         }
 
-        $resultLineData.Add($file,$lineData)
-        $resultMessages.add($file,$messages)
+        $resultLineData.Add($file, $lineData)
+        $resultMessages.add($file, $messages)
     }
 
     $commitOutput = @(&git.exe log -1 --pretty=format:%H)
@@ -299,7 +301,7 @@ function Export-CodeCovIoJson
     Write-Verbose -Message "Branch: $Branch"
 
     $json = $result | ConvertTo-Json
-    $json = $json.Replace('"!null!"','null')
+    $json = $json.Replace('"!null!"', 'null')
 
     $json | Out-File -Encoding ascii -LiteralPath $Path -Force
     return $Path

@@ -4,7 +4,7 @@
 #>
 # Suppressing this because we need to generate a mocked credentials that will be passed along to the examples that are needed in the tests.
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
-param()
+param ()
 
 Set-StrictMode -Version 'Latest'
 $errorActionPreference = 'Stop'
@@ -46,6 +46,11 @@ else
 }
 
 $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
+
+if (-not (Test-Path -Path $dscResourcesFolderFilePath))
+{
+    $dscResourcesFolderFilePath = $moduleRootFilePath
+}
 
 # Identify the repository root path of the resource module
 $repoRootPath = $moduleRootFilePath
@@ -217,7 +222,7 @@ Describe 'Common Tests - File Formatting' {
         $markdownFileExtensions = @('.md')
 
         $markdownFiles = $textFiles |
-            Where-Object { $markdownFileExtensions -contains $_.Extension }
+        Where-Object { $markdownFileExtensions -contains $_.Extension }
 
         foreach ($markdownFile in $markdownFiles)
         {
@@ -633,7 +638,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
                             # Get the list of additional modules required by the example
                             $requiredModules = Get-ResourceModulesInConfiguration -ConfigurationPath $exampleToValidate.FullName |
-                                Where-Object -Property Name -ne $moduleName
+                            Where-Object -Property Name -ne $moduleName
 
                             if ($requiredModules)
                             {
@@ -654,8 +659,8 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
                             # Get the first one that matches.
                             $existingCommand = Get-ChildItem -Path 'function:' |
-                                Where-Object { $_.Name -in $commandName } |
-                                Select-Object -First 1
+                            Where-Object { $_.Name -in $commandName } |
+                            Select-Object -First 1
 
                             if ($existingCommand)
                             {
@@ -664,7 +669,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
                                 $exampleCommand = Get-Command -Name $existingCommandName -ErrorAction SilentlyContinue
                                 if ($exampleCommand)
                                 {
-                                    $exampleParameters = @{}
+                                    $exampleParameters = @{ }
 
                                     # Remove any common parameters that are available.
                                     $commandParameters = $exampleCommand.Parameters.Keys | Where-Object -FilterScript {
@@ -755,7 +760,7 @@ Describe 'Common Tests - Validate Example Files' -Tag 'Examples' {
 
         if ($env:APPVEYOR -eq $true)
         {
-            Remove-item -Path $powershellModulePath -Recurse -Force -Confirm:$false
+            Remove-Item -Path $powershellModulePath -Recurse -Force -Confirm:$false
 
             # Restore the load of the module to ensure future tests have access to it
             Import-Module -Name (Join-Path -Path $moduleRootFilePath `
@@ -807,15 +812,15 @@ Describe 'Common Tests - Validate Example Files To Be Published' -Tag 'Examples'
                 }
 
                 $duplicateGuid = $exampleScriptMetadata |
-                    Group-Object -Property Guid |
-                    Where-Object { $_.Count -gt 1 }
+                Group-Object -Property Guid |
+                Where-Object { $_.Count -gt 1 }
 
                 if ($duplicateGuid -and $duplicateGuid.Count -gt 0)
                 {
                     $duplicateGuid |
-                        ForEach-Object -Process {
-                            Write-Warning -Message ('Guid {0} is duplicated in the files ''{1}''' -f $_.Name, ($_.Group.Name -join ', '))
-                        }
+                    ForEach-Object -Process {
+                        Write-Warning -Message ('Guid {0} is duplicated in the files ''{1}''' -f $_.Name, ($_.Group.Name -join ', '))
+                    }
                 }
 
                 $duplicateGuid | Should -BeNullOrEmpty
@@ -824,7 +829,7 @@ Describe 'Common Tests - Validate Example Files To Be Published' -Tag 'Examples'
             foreach ($exampleToValidate in $exampleScriptFiles)
             {
                 $exampleDescriptiveName = Join-Path -Path (Split-Path -Path $exampleToValidate.Directory -Leaf) `
-                                                    -ChildPath (Split-Path -Path $exampleToValidate -Leaf)
+                    -ChildPath (Split-Path -Path $exampleToValidate -Leaf)
 
                 Context -Name "When publishing example '$exampleDescriptiveName'" {
                     It 'Should pass testing of script file metadata' -Skip:(!$optIn) {
@@ -843,7 +848,7 @@ Describe 'Common Tests - Validate Example Files To Be Published' -Tag 'Examples'
 
         if ($env:APPVEYOR -eq $true)
         {
-            Remove-item -Path $powershellModulePath -Recurse -Force -Confirm:$false
+            Remove-Item -Path $powershellModulePath -Recurse -Force -Confirm:$false
 
             # Restore the load of the module to ensure future tests have access to it
             Import-Module -Name (Join-Path -Path $moduleRootFilePath `
@@ -923,11 +928,16 @@ Describe 'Common Tests - Validate Markdown Files' -Tag 'Markdown' {
                 $markdownlintSettingsFilePath = $null
             }
 
-            It "Should not have errors in any markdown files" {
+            It "Should not have errors in any markdown files"  {
 
                 $mdErrors = 0
                 try
                 {
+                    if ($dscResourcesFolderFilePath -eq $moduleRootFilePath)
+                    {
+                        # Reverting back to defaults
+                        $dscResourcesFolderFilePath = Join-Path -Path $moduleRootFilePath -ChildPath 'DscResources'
+                    }
 
                     $gulpArgumentList = @(
                         'test-mdsyntax',
@@ -1066,8 +1076,8 @@ Describe 'Common Tests - Spellcheck Files' -Tag 'Spellcheck' {
     else
     {
         Write-Warning -Message ('Unable to run cSpell to spellcheck markdown files. Please ' + `
-            'be sure that you have installed nodejs and npm in order ' + `
-            'to have this text execute.')
+                'be sure that you have installed nodejs and npm in order ' + `
+                'to have this text execute.')
 
         $skipDependency = $true
     }
@@ -1119,11 +1129,11 @@ Describe 'Common Tests - Spellcheck Files' -Tag 'Spellcheck' {
             )
 
             $startProcessParameters = @{
-                FilePath = 'cspell'
+                FilePath     = 'cspell'
                 ArgumentList = $cSpellArgumentList
-                Wait = $true
-                PassThru = $true
-                NoNewWindow = $true
+                Wait         = $true
+                PassThru     = $true
+                NoNewWindow  = $true
             }
 
             $process = Start-Process @startProcessParameters
@@ -1194,9 +1204,9 @@ Describe 'Common Tests - Validate Markdown Links' -Tag 'Markdown' {
     $markdownFileExtensions = @('.md')
 
     $markdownFiles = Get-TextFilesList $moduleRootFilePath |
-        Where-Object -FilterScript {
-            $markdownFileExtensions -contains $_.Extension
-        }
+    Where-Object -FilterScript {
+        $markdownFileExtensions -contains $_.Extension
+    }
 
     foreach ($markdownFileToValidate in $markdownFiles)
     {
@@ -1206,7 +1216,7 @@ Describe 'Common Tests - Validate Markdown Links' -Tag 'Markdown' {
             It "Should not contain any broken links" -Skip:(!$optIn) {
                 $getMarkdownLinkParameters = @{
                     BrokenOnly = $true
-                    Path = $markdownFileToValidate.FullName
+                    Path       = $markdownFileToValidate.FullName
                 }
 
                 # Make sure it always returns an array even if Get-MarkdownLink returns $null.
@@ -1262,7 +1272,7 @@ Describe 'Common Tests - Validate Localization' {
                 {
                     $foldersToTest += @{
                         Folder = $folder.Name
-                        Path = $folder.FullName
+                        Path   = $folder.FullName
                     }
                 }
             }
@@ -1363,10 +1373,10 @@ Describe 'Common Tests - Validate Localization' {
                 }
 
                 $astFilter = {
-                     $args[0] -is [System.Management.Automation.Language.StringConstantExpressionAst] `
-                    -and $args[0].Parent -is [System.Management.Automation.Language.MemberExpressionAst] `
-                    -and $args[0].Parent.Expression -is [System.Management.Automation.Language.VariableExpressionAst] `
-                    -and $args[0].Parent.Expression.VariablePath.UserPath -eq 'script:localizedData'
+                    $args[0] -is [System.Management.Automation.Language.StringConstantExpressionAst] `
+                        -and $args[0].Parent -is [System.Management.Automation.Language.MemberExpressionAst] `
+                        -and $args[0].Parent.Expression -is [System.Management.Automation.Language.VariableExpressionAst] `
+                        -and $args[0].Parent.Expression.VariablePath.UserPath -eq 'script:localizedData'
                 }
 
                 $localizationStringConstantsAst = $definitionAst.FindAll($astFilter, $true)
@@ -1426,15 +1436,15 @@ Describe 'Common Tests - Validate Localization' {
                         We want all regardless of casing.
                     #>
                     $localizationFolders = Get-ChildItem -Path $folder.FullName -Directory -Filter '*-*' |
-                        Where-Object -FilterScript {
-                            $_.Name -ne 'en-US'
-                        }
+                    Where-Object -FilterScript {
+                        $_.Name -ne 'en-US'
+                    }
 
                     foreach ($localizationFolder in $localizationFolders)
                     {
                         $otherLanguagesToTest += @{
-                            Folder = $folder.Name
-                            Path = $folder.FullName
+                            Folder             = $folder.Name
+                            Path               = $folder.FullName
                             LocalizationFolder = $localizationFolder.Name
                         }
                     }
@@ -1508,8 +1518,8 @@ Describe 'Common Tests - Validate Localization' {
                 {
                     $testCases_CompareAgainstEnglishLocalizedKeys += @{
                         LocalizationFolder = $testCase.LocalizationFolder
-                        Folder = $testCase.Folder
-                        LocalizedKey = $localizedKey
+                        Folder             = $testCase.Folder
+                        LocalizedKey       = $localizedKey
                     }
                 }
 
@@ -1517,8 +1527,8 @@ Describe 'Common Tests - Validate Localization' {
                 {
                     $testCases_MissingEnglishLocalizedKeys += @{
                         LocalizationFolder = $testCase.LocalizationFolder
-                        Folder = $testCase.Folder
-                        LocalizedKey = $localizedKey
+                        Folder             = $testCase.Folder
+                        LocalizedKey       = $localizedKey
                     }
                 }
 
