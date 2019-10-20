@@ -9,6 +9,7 @@
     "powershell.codeFormatting.whitespaceInsideBrace": false,
     "powershell.codeFormatting.ignoreOneLineBlock": false,
     "powershell.codeFormatting.preset": "Custom",
+    "powershell.scriptAnalysis.settingsPath": ".vscode\\analyzersettings.psd1",
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
 }

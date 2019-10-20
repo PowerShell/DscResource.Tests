@@ -23,8 +23,8 @@ This example parses a MOF schema file
 function Get-MofSchemaObject
 {
     [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
+    param (
+        [Parameter(Mandatory = $true)]
         [string]
         $FileName
     )
@@ -35,8 +35,8 @@ function Get-MofSchemaObject
     $currentResult = @{
         ClassVersion = $null
         FriendlyName = $null
-        ClassName = $null
-        Attributes = @()
+        ClassName    = $null
+        Attributes   = @()
     }
 
     $currentComment = ""
@@ -90,10 +90,10 @@ function Get-MofSchemaObject
         {
             $results += $currentResult
             $currentResult = @{
-                ClassVersion = $null
-                FriendlyName = $null
-                ClassName = $null
-                Attributes = @()
+                ClassVersion  = $null
+                FriendlyName  = $null
+                ClassName     = $null
+                Attributes    = @()
                 Documentation = $null
             }
         }
@@ -114,13 +114,13 @@ function Get-MofSchemaObject
             }
 
             $attributeValue = @{
-                State = $null
+                State            = $null
                 EmbeddedInstance = $null
-                ValueMap = $null
-                DataType = $null
-                Name = $null
-                Description = $null
-                IsArray = $false
+                ValueMap         = $null
+                DataType         = $null
+                Name             = $null
+                Description      = $null
+                IsArray          = $false
             }
 
             $start = $currentLine.IndexOf("[") + 1
@@ -159,9 +159,9 @@ function Get-MofSchemaObject
                 }
             }
 
-            $nonMetadata = $currentLine.Replace(";","").Substring($metadataEnd + 1)
+            $nonMetadata = $currentLine.Replace(";", "").Substring($metadataEnd + 1)
 
-            $nonMetadataObjects =  $nonMetadata -split '\s+'
+            $nonMetadataObjects = $nonMetadata -split '\s+'
             $attributeValue.DataType = $nonMetadataObjects[1]
             $attributeValue.Name = $nonMetadataObjects[2]
 

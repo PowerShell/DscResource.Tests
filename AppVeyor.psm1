@@ -35,6 +35,7 @@ function Invoke-AppveyorInstallTask
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
+        [Parameter()]
         [Version]
         $PesterMaximumVersion
     )
@@ -1003,7 +1004,6 @@ function Invoke-AppveyorTestScriptTask
 #>
 function Invoke-AppveyorAfterTestTask
 {
-
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
@@ -1234,7 +1234,6 @@ function Push-TestArtifact
 #>
 function Invoke-AppVeyorDeployTask
 {
-
     [CmdletBinding(DefaultParameterSetName = 'Default')]
     param
     (
