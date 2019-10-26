@@ -1035,8 +1035,9 @@ function Measure-Keyword
     {
         $script:diagnosticRecord['RuleName'] = $PSCmdlet.MyInvocation.InvocationName
 
+        $keywordsToIgnore = @('configuration')
         $keywordFlag = [System.Management.Automation.Language.TokenFlags]::Keyword
-        $keywords = $Token.Where{ $_.TokenFlags.HasFlag($keywordFlag) }
+        $keywords = $Token.Where{ $_.TokenFlags.HasFlag($keywordFlag) -and $_.Kind -ne 'DynamicKeyword' -and $keywordsToIgnore -notcontains $_.Text }
         $upperCaseTokens = $keywords.Where{ $_.Text -cmatch '[A-Z]+' }
 
         $tokenWithNoSpace = $keywords.Where{ $_.Extent.StartScriptPosition.Line -match "$($_.Extent.Text)\(.*" }
