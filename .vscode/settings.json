@@ -6,6 +6,7 @@
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceAroundOperator": true,
     "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.whitespaceInsideBrace": false,
     "powershell.codeFormatting.ignoreOneLineBlock": false,
     "powershell.codeFormatting.preset": "Custom",
     "powershell.scriptAnalysis.settingsPath": ".vscode\\analyzersettings.psd1",
