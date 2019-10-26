@@ -71,12 +71,17 @@ function Add-UniqueFileLineToTable
 
             if (!$FileLine.ContainsKey($fileKey))
             {
-                $FileLine.add($fileKey, @{ $TableName = @{ } })
+                $FileLine.add(
+                    $fileKey,
+                    @{
+                        $TableName = @{}
+                    }
+                )
             }
 
             if (!$FileLine.$fileKey.ContainsKey($TableName))
             {
-                $FileLine.$fileKey.Add($TableName, @{ })
+                $FileLine.$fileKey.Add($TableName, @{})
             }
 
             $lines = $FileLine.($fileKey).$TableName
@@ -176,7 +181,7 @@ function Export-CodeCovIoJson
     }
 
     # A table of the file key then a sub-tables of `misses` and `hits` lines.
-    $FileLine = @{ }
+    $FileLine = @{}
 
     # define common parameters
     $addUniqueFileLineParams = @{
@@ -194,8 +199,8 @@ function Export-CodeCovIoJson
     Add-UniqueFileLineToTable -Command $CodeCoverage.HitCommands -TableName 'hits' @addUniqueFileLineParams
 
     # Create the results structure
-    $resultLineData = @{ }
-    $resultMessages = @{ }
+    $resultLineData = @{}
+    $resultMessages = @{}
     $result = @{
         coverage = $resultLineData
         messages = $resultMessages
@@ -209,14 +214,14 @@ function Export-CodeCovIoJson
         Write-Verbose -Message "summarizing for file: $file"
 
         # Get the hits, if they exist
-        $hits = @{ }
+        $hits = @{}
         if ($FileLine.$file.ContainsKey('hits'))
         {
             $hits = $FileLine.$file.hits
         }
 
         # Get the misses, if they exist
-        $misses = @{ }
+        $misses = @{}
         if ($FileLine.$file.ContainsKey('misses'))
         {
             $misses = $FileLine.$file.misses
@@ -236,7 +241,7 @@ function Export-CodeCovIoJson
         }
 
         $lineData = @()
-        $messages = @{ }
+        $messages = @{}
 
         <#
             produce the results

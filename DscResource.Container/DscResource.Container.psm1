@@ -724,7 +724,8 @@ function Out-MissedCommand
 
         [PSCustomObject[]] $MissedCommand = $MissedCommand |
             Select-Object -Property @{
-                Name = 'File'; Expression = {
+                Name       = 'File'
+                Expression = {
                     $_.File -replace ("$env:APPVEYOR_BUILD_FOLDER\" -replace '\\', '\\')
                 }
             }, Function, Line, Command
