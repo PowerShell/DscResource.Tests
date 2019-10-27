@@ -43,4 +43,5 @@ ClassOpeningBraceNotOnSameLine = Class should not have the open brace on the sam
 ClassOpeningBraceShouldBeFollowedByNewLine = Opening brace on Class should be followed by a new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
 ClassOpeningBraceShouldBeFollowedByOnlyOneNewLine = Opening brace on Class should only be followed by one new line. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
 OneSpaceBetweenKeywordAndParenthesis = If a keyword is followed by a parenthesis, there should be single space between the keyword and the parenthesis. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#one-newline-after-opening-brace
+HashtableShouldHaveCorrectFormat = Hashtable is not correctly formatted. See https://github.com/PowerShell/DscResources/blob/master/StyleGuidelines.md#correct-format-for-hashtables-or-objects
 '@
