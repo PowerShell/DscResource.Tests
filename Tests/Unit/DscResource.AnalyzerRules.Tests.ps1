@@ -3635,7 +3635,8 @@ Describe 'Measure-Hashtable' {
 
             It 'Correctly formatted empty hashtable' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
-                        $hashtable = @{}
+                        $hashtable = @{ }
+                        $hashtableNoSpace = @{}
                     '
 
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
