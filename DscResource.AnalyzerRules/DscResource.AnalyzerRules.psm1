@@ -1096,7 +1096,7 @@ function Measure-Hashtable
         foreach ($hashtable in $HashtableAst)
         {
             # Empty hashtables should be ignored
-            if ($hashtable.extent.Text -eq '@{}' -and $hashtable.extent.Text -eq '@{ }')
+            if ($hashtable.extent.Text -eq '@{}' -or $hashtable.extent.Text -eq '@{ }')
             {
                 continue
             }
