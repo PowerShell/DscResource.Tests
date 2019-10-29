@@ -3488,14 +3488,12 @@ Describe 'Measure-Hashtable' {
             It 'Correctly formatted empty hashtable' {
                 $definition = '
                         $hashtable = @{ }
+                        $hashtableNoSpace = @{}
                     '
 
                 $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
                 $record = Measure-Hashtable -HashtableAst $mockAst
-                ($record | Measure-Object).Count | Should -Be 1
-                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
-                $record.RuleName | Should -Be $ruleName
-
+                ($record | Measure-Object).Count | Should -Be 0
             }
         }
 
@@ -3533,7 +3531,8 @@ Describe 'Measure-Hashtable' {
 
             It 'Correctly formatted empty hashtable' {
                 $definition = '
-                        $hashtable = @{}
+                        $hashtableNoSpace = @{}
+                        $hashtable = @{ }
                     '
 
                 $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
@@ -3591,6 +3590,7 @@ Describe 'Measure-Hashtable' {
                 $record.RuleName | Should -Be $ruleName
             }
 
+            <# Commented out until PSSCriptAnalyzer fix is published.
             It 'Incorrectly formatted empty hashtable' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
                         $hashtable = @{ }
@@ -3600,6 +3600,7 @@ Describe 'Measure-Hashtable' {
                 $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
                 $record.RuleName | Should -Be $ruleName
             }
+            #>
         }
 
         Context 'When hashtable is correctly formatted' {
@@ -3634,7 +3635,8 @@ Describe 'Measure-Hashtable' {
 
             It 'Correctly formatted empty hashtable' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
-                        $hashtable = @{}
+                        $hashtable = @{ }
+                        $hashtableNoSpace = @{}
                     '
 
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters

@@ -20,7 +20,8 @@
         "PSPKI",
         "gitignore",
         "Nuget",
-        "Hashtable"
+        "Hashtable",
+        "Hashtables"
     ],
     "ignoreRegExpList": [
         "AppVeyor",
