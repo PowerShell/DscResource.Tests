@@ -32,11 +32,12 @@ function Get-MofSchemaObject
 
     try
     {
-        # Workaround for OMI_BaseResource inheritance not resolving.
+        #region Workaround for OMI_BaseResource inheritance not resolving.
         $filePath = (Resolve-Path -Path $FileName).Path
         $tempFilePath = Join-Path -Path $env:TEMP -ChildPath "$((New-Guid).Guid).tmp"
         $rawContent = (Get-Content -Path $filePath -Raw) -replace ': OMI_BaseResource', $null
-        Set-Content -LiteralPath $tempFilePath -Value $rawContent
+        Set-Content -LiteralPath $tempFilePath -Value $rawContent -ErrorAction Stop
+        #endregion
 
         $exceptionCollection = [System.Collections.ObjectModel.Collection[System.Exception]]::new()
         $moduleInfo = [System.Tuple]::Create('Module', [System.Version]'1.0.0')
@@ -44,6 +45,10 @@ function Get-MofSchemaObject
         $class = [Microsoft.PowerShell.DesiredStateConfiguration.Internal.DscClassCache]::ImportClasses(
             $tempFilePath, $moduleInfo, $exceptionCollection
         )
+    }
+    catch
+    {
+        throw "Failed to import classes from file $FileName. Error $_"
     }
     finally
     {
@@ -72,8 +77,8 @@ function Get-MofSchemaObject
     }
 
     @{
-        ClassName = $class.CimClassName
-        Attributes = $attributes
+        ClassName    = $class.CimClassName
+        Attributes   = $attributes
         ClassVersion = $class.CimClassQualifiers.Where({$_.Name -eq 'ClassVersion'}).Value
         FriendlyName = $class.CimClassQualifiers.Where({$_.Name -eq 'FriendlyName'}).Value
     }
