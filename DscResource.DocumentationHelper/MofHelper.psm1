@@ -33,10 +33,16 @@ function Get-MofSchemaObject
     try
     {
         #region Workaround for OMI_BaseResource inheritance not resolving.
+
         $filePath = (Resolve-Path -Path $FileName).Path
         $tempFilePath = Join-Path -Path $env:TEMP -ChildPath "$((New-Guid).Guid).tmp"
-        $rawContent = (Get-Content -Path $filePath -Raw) -replace ': OMI_BaseResource', $null
+        $moduleName = (Split-Path -Path $filePath -Leaf).Replace('.schema.mof',$null)
+        $rawContent = (Get-Content -Path $filePath -Raw) -replace "$moduleName : OMI_BaseResource", $moduleName
         Set-Content -LiteralPath $tempFilePath -Value $rawContent -ErrorAction Stop
+
+        #.NET methods don't like PowerShell drives
+        $tempFilePath = Convert-Path -Path $tempFilePath
+
         #endregion
 
         $exceptionCollection = [System.Collections.ObjectModel.Collection[System.Exception]]::new()
@@ -68,7 +74,7 @@ function Get-MofSchemaObject
         @{
             Name             = $property.Name
             State            = $state
-            DateType         = $property.CimType
+            DataType         = $property.CimType
             ValueMap         = $property.Qualifiers.Where({$_.Name -eq 'ValueMap'}).Value
             IsArray          = $property.CimType -gt 16
             Description      = $property.Qualifiers.Where({$_.Name -eq 'Description'}).Value
