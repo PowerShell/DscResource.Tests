@@ -5,7 +5,6 @@ $modulePath = Join-Path -Path $moduleRootPath -ChildPath 'MofHelper.psm1'
 Import-Module -Name $modulePath -Force
 
 InModuleScope -ModuleName 'MofHelper' {
-
     $script:className = 'MSFT_MofHelperTest'
     $script:fileName = '{0}.schema.mof' -f $script:ClassName
     $script:tempFileName = '{0}.tmp' -f $script:fileName
