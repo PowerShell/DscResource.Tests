@@ -3313,6 +3313,27 @@ Describe 'Measure-Keyword' {
                 $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'function')
                 $record.RuleName | Should -Be $ruleName
             }
+
+            It 'Should ignore DSC keywords' {
+                $definition = '
+                    Configuration FileDSC
+                    {
+
+                        Node $AllNodes.NodeName
+                        {
+                            File "Fil1"
+                            {
+                                Ensure       = "Absent"
+                                DestinationPath = C:\temp\test.txt
+                            }
+                        }
+                    }
+                '
+
+                $token = Get-TokensFromDefinition -ScriptDefinition $definition
+                $record = Measure-Keyword -Token $token
+                ($record | Measure-Object).Count | Should -Be 0
+            }
         }
 
         Context 'When keyword is not followed by a single space' {
@@ -3386,6 +3407,25 @@ Describe 'Measure-Keyword' {
                     ($record | Measure-Object).Count | Should -BeExactly 1
                     $record.Message | Should -Be ($localizedData.StatementsContainsUpperCaseLetter -f 'function')
                     $record.RuleName | Should -Be $ruleName
+                }
+
+                It 'Should ignore DSC keywords' {
+                    $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        Configuration FileDSC
+                        {
+                            Node $AllNodes.NodeName
+                            {
+                                File "Fil1"
+                                {
+                                    Ensure       = "Absent"
+                                    DestinationPath = C:\temp\test.txt
+                                }
+                            }
+                        }
+                    '
+
+                    $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                    ($record | Measure-Object).Count | Should -BeExactly 0
                 }
             }
 
