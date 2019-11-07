@@ -81,6 +81,7 @@
   - If a keyword is followed by parentheses,there should be a single space between them.
   - DSC Keywords are ignored.
 - Added Measure-Hashtable function to check if a hashtable is correctly formatted.
+  - Empty hashtables with white space are ignored.
 - Turn on the Custom Script Analyzer Rules meta test.
 
 ## 0.3.0.0
