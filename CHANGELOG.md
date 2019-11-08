@@ -79,6 +79,7 @@
 - Fixed broken links and formatting in the `README.md` file.
 - Added Measure-Keyword function to check if all keywords are in lower case.
   - If a keyword is followed by parentheses,there should be a single space between them.
+  - DSC Keywords are ignored.
 - Added Measure-Hashtable function to check if a hashtable is correctly formatted.
   - Empty hashtables with white space are ignored.
 - Turn on the Custom Script Analyzer Rules meta test.
