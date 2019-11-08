@@ -83,6 +83,7 @@
 - Added Measure-Hashtable function to check if a hashtable is correctly formatted.
   - Empty hashtables with white space are ignored.
 - Turn on the Custom Script Analyzer Rules meta test.
+- Rewrite of Get-MofSchemaObject to use internal methods instead of text based parsing.
 
 ## 0.3.0.0
 

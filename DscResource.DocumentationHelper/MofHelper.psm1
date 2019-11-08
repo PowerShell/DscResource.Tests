@@ -23,158 +23,71 @@ This example parses a MOF schema file
 function Get-MofSchemaObject
 {
     [CmdletBinding()]
+    [OutputType([System.Collections.Hashtable])]
     param (
         [Parameter(Mandatory = $true)]
         [string]
         $FileName
     )
-    $contents = Get-Content $FileName
 
-    $results = @()
-
-    $currentResult = @{
-        ClassVersion = $null
-        FriendlyName = $null
-        ClassName    = $null
-        Attributes   = @()
-    }
-
-    $currentComment = ""
-    $currentlyInCommentBlock = $false
-    $partialLine = $null
-    foreach ($textLine in $contents)
+    try
     {
-        if ($textLine.StartsWith("/*"))
+        #region Workaround for OMI_BaseResource inheritance not resolving.
+
+        $filePath = (Resolve-Path -Path $FileName).Path
+        $tempFilePath = Join-Path -Path $env:TEMP -ChildPath "DscMofHelper_$((New-Guid).Guid).tmp"
+        $moduleName = (Split-Path -Path $filePath -Leaf).Replace('.schema.mof',$null)
+        $rawContent = (Get-Content -Path $filePath -Raw) -replace "$moduleName : OMI_BaseResource", $moduleName
+        Set-Content -LiteralPath $tempFilePath -Value $rawContent -ErrorAction Stop
+
+        # .NET methods don't like PowerShell drives
+        $tempFilePath = Convert-Path -Path $tempFilePath
+
+        #endregion
+
+        $exceptionCollection = [System.Collections.ObjectModel.Collection[System.Exception]]::new()
+        $moduleInfo = [System.Tuple]::Create('Module', [System.Version]'1.0.0')
+
+        $class = [Microsoft.PowerShell.DesiredStateConfiguration.Internal.DscClassCache]::ImportClasses(
+            $tempFilePath, $moduleInfo, $exceptionCollection
+        )
+    }
+    catch
+    {
+        throw "Failed to import classes from file $FileName. Error $_"
+    }
+    finally
+    {
+        Remove-Item -LiteralPath $tempFilePath -Force
+    }
+
+    $attributes = foreach ($property in $class.CimClassProperties)
+    {
+        $state = switch ($property.flags)
         {
-            $currentlyInCommentBlock = $true
+            {$_ -band [Microsoft.Management.Infrastructure.CimFlags]::Key}      {'Key'}
+            {$_ -band [Microsoft.Management.Infrastructure.CimFlags]::Required} {'Required'}
+            {$_ -band [Microsoft.Management.Infrastructure.CimFlags]::ReadOnly} {'Read'}
+            default                                                             {'Write'}
         }
-        elseif ($textLine.StartsWith("*/"))
-        {
-            $currentlyInCommentBlock = $false
-        }
-        elseif ($currentlyInCommentBlock -eq $true)
-        {
-            # Ignore lines in comment blocks
-        }
-        elseif ($textLine -match "ClassVersion" -or $textLine -match "FriendlyName")
-        {
-            if ($textLine -match "ClassVersion(`"*.`")")
-            {
-                $start = $textLine.IndexOf("ClassVersion(`"") + 14
-                $end = $textLine.IndexOf("`")", $start)
-                $currentResult.ClassVersion = $textLine.Substring($start, $end - $start)
-            }
 
-            if ($textLine -match "FriendlyName(`"*.`")")
-            {
-                $start = $textLine.IndexOf("FriendlyName(`"") + 14
-                $end = $textLine.IndexOf("`")", $start)
-                $currentResult.FriendlyName = $textLine.Substring($start, $end - $start)
-            }
-        }
-        elseif ($textLine -match "^\s*class ")
-        {
-            $start = $textLine.ToLower().IndexOf("class ") + 6
-            $end = $textLine.IndexOf(" ", $start)
-            if ($end -eq -1)
-            {
-                $end = $textLine.Length
-            }
-            $currentResult.ClassName = $textLine.Substring($start, $end - $start)
-        }
-        elseif ($textLine.Trim() -eq "{" -or [string]::IsNullOrEmpty($textLine.Trim()))
-        {
-            # Ignore lines that are only brackets
-        }
-        elseif ($textLine.Trim() -eq "};")
-        {
-            $results += $currentResult
-            $currentResult = @{
-                ClassVersion  = $null
-                FriendlyName  = $null
-                ClassName     = $null
-                Attributes    = @()
-                Documentation = $null
-            }
-        }
-        elseif (!$textLine.TrimEnd().EndsWith(';'))
-        {
-            $partialLine += $textLine
-        }
-        else
-        {
-            if ($partialLine)
-            {
-                [string] $currentLine = $partialLine + $textLine
-                $partialLine = $null
-            }
-            else
-            {
-                $currentLine = $textLine
-            }
-
-            $attributeValue = @{
-                State            = $null
-                EmbeddedInstance = $null
-                ValueMap         = $null
-                DataType         = $null
-                Name             = $null
-                Description      = $null
-                IsArray          = $false
-            }
-
-            $start = $currentLine.IndexOf("[") + 1
-            $end = $currentLine.IndexOf("]", $start)
-            $metadataEnd = $end
-            $length = $end - $start
-            $metadataObjects = @()
-
-            # Does this assume that the metadata is on the same line?
-            if ($length -gt 0)
-            {
-                $metadata = $currentLine.Substring($start, $end - $start)
-                $metadataObjects = $metadata.Split(",")
-                $attributeValue.State = $metadataObjects[0]
-            }
-
-            $metadataObjects | ForEach-Object {
-                if ($_.Trim().StartsWith("EmbeddedInstance"))
-                {
-                    $start = $currentLine.IndexOf("EmbeddedInstance(`"") + 18
-                    $end = $currentLine.IndexOf("`")", $start)
-                    $attributeValue.EmbeddedInstance = $currentLine.Substring($start, $end - $start)
-                }
-                if ($_.Trim().StartsWith("ValueMap"))
-                {
-                    $start = $currentLine.IndexOf("ValueMap{") + 9
-                    $end = $currentLine.IndexOf("}", $start)
-                    $valueMap = $currentLine.Substring($start, $end - $start)
-                    $attributeValue.ValueMap = $valueMap.Replace("`"", "").Split(",")
-                }
-                if ($_.Trim().StartsWith("Description"))
-                {
-                    $start = $currentLine.IndexOf("Description(`"") + 13
-                    $end = $currentLine.IndexOf("`")", $start)
-                    $attributeValue.Description = $currentLine.Substring($start, $end - $start)
-                }
-            }
-
-            $nonMetadata = $currentLine.Replace(";", "").Substring($metadataEnd + 1)
-
-            $nonMetadataObjects = $nonMetadata -split '\s+'
-            $attributeValue.DataType = $nonMetadataObjects[1]
-            $attributeValue.Name = $nonMetadataObjects[2]
-
-            if ($attributeValue.Name -and $attributeValue.Name.EndsWith("[]") -eq $true)
-            {
-                $attributeValue.Name = $attributeValue.Name.Replace("[]", "")
-                $attributeValue.IsArray = $true
-            }
-
-            $currentResult.Attributes += $attributeValue
+        @{
+            Name             = $property.Name
+            State            = $state
+            DataType         = $property.CimType
+            ValueMap         = $property.Qualifiers.Where({$_.Name -eq 'ValueMap'}).Value
+            IsArray          = $property.CimType -gt 16
+            Description      = $property.Qualifiers.Where({$_.Name -eq 'Description'}).Value
+            EmbeddedInstance = $property.Qualifiers.Where({$_.Name -eq 'EmbeddedInstance'}).Value
         }
     }
-    return $results
+
+    @{
+        ClassName    = $class.CimClassName
+        Attributes   = $attributes
+        ClassVersion = $class.CimClassQualifiers.Where({$_.Name -eq 'ClassVersion'}).Value
+        FriendlyName = $class.CimClassQualifiers.Where({$_.Name -eq 'FriendlyName'}).Value
+    }
 }
 
 Export-ModuleMember -Function *
