@@ -82,7 +82,7 @@
   - DSC Keywords are ignored.
 - Added Measure-Hashtable function to check if a hashtable is correctly formatted.
   - Empty hashtables with white space are ignored.
-  - Fix issues with LF
+  - Fix issues with LF.
 - Turn on the Custom Script Analyzer Rules meta test.
 - Rewrite of Get-MofSchemaObject to use internal methods instead of text based parsing.
 
