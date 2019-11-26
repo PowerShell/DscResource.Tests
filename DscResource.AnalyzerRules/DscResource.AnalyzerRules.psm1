@@ -1110,7 +1110,7 @@ function Measure-Hashtable
             $hashtableLines = $hashtable.Extent.Text -split '\n'
 
             # Hashtable should start with '@{' and end with '}'
-            if (($hashtableLines[0] -notmatch '@{\r' -and $hashtableLines[0] -notmatch '@{') -or
+            if (($hashtableLines[0] -notmatch '\s*@?{\r' -and $hashtableLines[0] -notmatch '\s*@?{$') -or
                 $hashtableLines[-1] -notmatch '\s*}')
             {
                 $script:diagnosticRecord['Extent'] = $hashtable.Extent

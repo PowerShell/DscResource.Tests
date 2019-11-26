@@ -3537,6 +3537,62 @@ Describe 'Measure-Hashtable' {
             }
         }
 
+        Context 'When composite resource is not correctly formatted' {
+            It 'Composite resource defined on a single line' {
+                $definition = '
+                        configuration test {
+                            Script test
+                            { GetScript =  {}; SetScript = {}; TestScript = {}
+                            }
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+            It 'Composite resource partially correct formatted' {
+                $definition = '
+                        configuration test {
+                            Script test
+                            { GetScript =  {}
+                                SetScript = {}
+                                TestScript = {}
+                            }
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+            It 'Composite resource indentation not correct' {
+                $definition = '
+                        configuration test {
+                            Script test
+                            {
+                                GetScript =  {}
+                                 SetScript = {}
+                                  TestScript = {}
+                            }
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+        }
+
         Context 'When hashtable is correctly formatted' {
             It "Correctly formatted non-nested hashtable" {
                 $definition = '
@@ -3579,6 +3635,26 @@ Describe 'Measure-Hashtable' {
                 $record = Measure-Hashtable -HashtableAst $mockAst
                 ($record | Measure-Object).Count | Should -Be 0
             }
+        }
+
+        Context 'When composite resource is correctly formatted' {
+            It "Correctly formatted non-nested hashtable" {
+                $definition = '
+                        configuration test {
+                            Script test
+                            {
+                                GetScript = {};
+                                SetScript = {};
+                                TestScript = {}
+                            }
+                        }
+                    '
+
+                $mockAst = Get-AstFromDefinition -ScriptDefinition $definition -AstType $astType
+                $record = Measure-Hashtable -HashtableAst $mockAst
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+
         }
     }
 
@@ -3643,6 +3719,60 @@ Describe 'Measure-Hashtable' {
             #>
         }
 
+        Context 'When composite resource is not correctly formatted' {
+            It 'Composite resource defined on a single line' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        configuration test {
+                            Script test
+                            { GetScript =  {}; SetScript = {}; TestScript = {}
+                            }
+                        }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+
+            }
+
+            It 'Composite resource partially correct formatted' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        configuration test {
+                            Script test
+                            { GetScript =  {}
+                                SetScript = {}
+                                TestScript = {}
+                            }
+                        }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+            It 'Composite resource indentation not correct' {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        configuration test {
+                            Script test
+                            {
+                                GetScript =  {}
+                                 SetScript = {}
+                                  TestScript = {}
+                            }
+                        }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -Be 1
+                $record.Message | Should -Be $localizedData.HashtableShouldHaveCorrectFormat
+                $record.RuleName | Should -Be $ruleName
+            }
+
+        }
+
         Context 'When hashtable is correctly formatted' {
             It 'Correctly formatted non-nested hashtable' {
                 $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
@@ -3682,6 +3812,25 @@ Describe 'Measure-Hashtable' {
                 $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
                 ($record | Measure-Object).Count | Should -Be 0
             }
+        }
+
+        Context 'When composite resource is correctly formatted' {
+            It "Correctly formatted non-nested hashtable" {
+                $invokeScriptAnalyzerParameters['ScriptDefinition'] = '
+                        configuration test {
+                            Script test
+                            {
+                                GetScript = {};
+                                SetScript = {};
+                                TestScript = {}
+                            }
+                        }
+                    '
+
+                $record = Invoke-ScriptAnalyzer @invokeScriptAnalyzerParameters
+                ($record | Measure-Object).Count | Should -Be 0
+            }
+
         }
     }
 }
