@@ -86,6 +86,8 @@
   - Fix issue with DSC composite resources.
 - Turn on the Custom Script Analyzer Rules meta test.
 - Rewrite of Get-MofSchemaObject to use internal methods instead of text based parsing.
+- Fixed error when generating Wiki content for MOF that contains an array type
+  ([issue #357](https://github.com/PowerShell/DscResource.Tests/issues/357)).
 
 ## 0.3.0.0
 
