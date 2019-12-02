@@ -28,7 +28,7 @@ InModuleScope -ModuleName 'WikiPages' {
         Attributes   = @(
             @{
                 State            = 'Key'
-                DataType         = 'String'
+                DataType         = [Microsoft.Management.Infrastructure.CimType]::String
                 ValueMap         = @()
                 IsArray          = $false
                 Name             = 'Id'
@@ -37,7 +37,7 @@ InModuleScope -ModuleName 'WikiPages' {
             },
             @{
                 State            = 'Write'
-                DataType         = 'String'
+                DataType         = [Microsoft.Management.Infrastructure.CimType]::String
                 ValueMap         = @( 'Value1', 'Value2', 'Value3' )
                 IsArray          = $false
                 Name             = 'Enum'
@@ -45,8 +45,17 @@ InModuleScope -ModuleName 'WikiPages' {
                 EmbeddedInstance = ''
             },
             @{
+                State            = 'Write'
+                DataType         = [Microsoft.Management.Infrastructure.CimType]::String
+                ValueMap         = @()
+                IsArray          = $true
+                Name             = 'Array'
+                Description      = 'Array Description.'
+                EmbeddedInstance = ''
+            },
+            @{
                 State            = 'Required'
-                DataType         = 'Uint32'
+                DataType         = [Microsoft.Management.Infrastructure.CimType]::UInt32
                 ValueMap         = @()
                 IsArray          = $false
                 Name             = 'Int'
@@ -55,7 +64,7 @@ InModuleScope -ModuleName 'WikiPages' {
             },
             @{
                 State            = 'Read'
-                DataType         = 'String'
+                DataType         = [Microsoft.Management.Infrastructure.CimType]::String
                 ValueMap         = @()
                 IsArray          = $false
                 Name             = 'Read'
@@ -113,6 +122,7 @@ The description of the resource.
 | --- | --- | --- | --- | --- |
 | **Id** | Key | String | Id Description ||
 | **Enum** | Write | String | Enum Description. |Value1, Value2, Value3|
+| **Array** | Write | String[] | Array Description. ||
 | **Int** | Required | Uint32 | Int Description. ||
 | **Read** | Read | String | Read Description. ||
 
@@ -204,33 +214,28 @@ Configuration Example
                     -MockWith { $script:mockSchemaFiles }
 
                 Mock `
-                    -CommandName Get-MofSchemaObject `
-                    -ParameterFilter $script:getMofSchemaObjectSchema_parameterfilter `
-                    -MockWith { $script:mockGetMofSchemaObject }
-
-                Mock `
-                    -CommandName Test-Path `
-                    -ParameterFilter $script:getTestPathReadme_parameterFilter `
-                    -MockWith { $true }
-
-                Mock `
-                    -CommandName Get-Content `
-                    -ParameterFilter $script:getContentReadme_parameterFilter `
-                    -MockWith { $script:mockGetContentReadme }
-
-                Mock `
                     -CommandName Get-ChildItem `
                     -ParameterFilter $script:getChildItemExample_parameterFilter `
                     -MockWith { $script:mockExampleFiles }
 
                 Mock `
+                    -CommandName Get-MofSchemaObject `
+                    -MockWith { $script:mockGetMofSchemaObject }
+
+                Mock `
+                    -CommandName Test-Path `
+                    -MockWith { $true }
+
+                Mock `
+                    -CommandName Get-Content `
+                    -MockWith { $script:mockGetContentReadme }
+
+                Mock `
                     -CommandName Get-DscResourceWikiExampleContent `
-                    -ParameterFilter $script:getDscResourceWikiExampleContent_parameterFilter `
                     -MockWith { $script:mockExampleContent }
 
                 Mock `
-                    -CommandName Out-File `
-                    -ParameterFilter $script:outFile_parameterFilter
+                    -CommandName Out-File
             }
 
             It 'Should not throw an exception' {
@@ -1080,7 +1085,7 @@ Configuration CertificateExport_CertByFriendlyName_Config
                 BeforeAll {
                     Mock -CommandName Invoke-RestMethod `
                     -ParameterFilter $script:invokeRestMethodJobArtifacts_parameterFilter `
-                    -MockWith { Throw $mockInvokeRestMethodJobIdNotFoundMessage }
+                    -MockWith { throw $mockInvokeRestMethodJobIdNotFoundMessage }
                 }
 
                 It 'Should throw the correct exception' {

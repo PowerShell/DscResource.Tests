@@ -96,7 +96,7 @@ function New-DscResourceWikiSite
 
                 if ($property.IsArray)
                 {
-                    $dataType += '[]'
+                    $dataType = $dataType.ToString() + '[]'
                 }
 
                 if ($property.EmbeddedInstance -eq 'MSFT_Credential')
